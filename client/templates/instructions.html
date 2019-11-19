@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <h1>{{ seg_name }}</h1>
+    {% for instruction in instructions %}
+        <div class="row">
+            <div class="col-md-1">
+                <code>{{ instruction.index }}</code>
+            </div>
+            <div class="col-md-2">
+                <code>{{ instruction.label }}</code>
+            </div>
+            <div class="col-md-1">
+                <code>{{ instruction.command }}</code>
+            </div>
+            <div class="col-md-8">
+                <code>{{ instruction.operands }}</code>
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}

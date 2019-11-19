@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <h1>{{ macro_name }}</h1>
+    <br>
+    <table class="table table-bordered table-sm table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col">Label</th>
+            <th scope="col">Dsp</th>
+            <th scope="col">Length</th>
+            <th scope="col">Name</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for label_ref in symbol_table %}
+            <tr>
+                <td><code>{{ label_ref.label }}</code></td>
+                <td><code>{{ label_ref.dsp }}</code></td>
+                <td><code>{{ label_ref.length }}</code></td>
+                <td><code>{{ label_ref.name }}</code></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

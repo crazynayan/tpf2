@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+    <h1>TPF Analyzer</h1>
+    <br>
+    <div class="list-group">
+        <a class="list-group-item list-group-item-primary" href="{{ url_for('segments') }}">
+            View Segments
+        </a>
+        <br>
+        <a class="list-group-item list-group-item-primary" href="{{ url_for('macros') }}">
+            View Macros
+        </a>
+        <br>
+        <a class="list-group-item list-group-item-primary" href="{{ url_for('test_data') }}">
+            Test Data
+        </a>
+    </div>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'bootstrap/base.html' %}
+
+{% block title %}
+    {% if title %}
+        {{ title }} - TPF Analyzer
+    {% else %}
+        TPF Analyzer
+    {% endif %}
+{% endblock %}
+
+{% block navbar %}
+    <div class="container">
+        <nav class="navbar navbar-dark bg-dark navbar-expand-sm">
+            <a class="navbar-brand" href="{{ url_for('home') }}">TA</a>
+            <button class="navbar-toggler" data-toggle="collapse" data-target="#navbarMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarMenu">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{{ url_for('segments') }}">Segments</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{{ url_for('macros') }}">Macros</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{{ url_for('test_data') }}">Test Data</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item active">
+                        {% if current_user.is_anonymous %}
+                            <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                        {% else %}
+                            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <br>
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block app_content %}
+        {% endblock %}
+    </div>
+{% endblock %}
