@@ -1,4 +1,4 @@
-from flask import flash, redirect, url_for, render_template, request
+from flask import flash, redirect, url_for, render_template, request, session
 from flask_login import UserMixin, current_user, login_user, logout_user
 from flask_wtf import FlaskForm
 from werkzeug.urls import url_parse
@@ -51,5 +51,6 @@ def login() -> str:
 
 @tpf2_app.route('/logout')
 def logout():
+    session.pop('test_data', None)
     logout_user()
     return redirect(url_for('home'))

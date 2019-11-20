@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <h1>Test Data</h1>
+    <div class="row">
+        <div class="col-md-4">Test Data Name</div>
+        <div class="col-md-4">{{ test_data.name }}</div>
+    </div>
+    <div class="row">
+        <div class="col-md-4">Segment Name</div>
+        <div class="col-md-4">{{ test_data.seg_name }}</div>
+    </div>
+    <h2>Output</h2>
+    <p>At least one output is required.</p>
+    <div class="list-group list-group-item list-group-item-secondary">Output - Registers</div>
+    <br>
+    {% if test_data.output and test_data.output.regs %}
+        <div class="row">
+            {% for reg in test_data.output.regs %}
+                <div class="col-md-1 text-center">{{ reg }}</div>
+            {% endfor %}
+        </div>
+        <br>
+    {% endif %}
+    <div class="list-group list-group-item list-group-item-primary">
+        <a href="{{ url_for('add_output_registers') }}">Add Registers</a>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-4">
+            {{ wtf.quick_form(form) }}
+        </div>
+    </div>
+    {#        {% for core in test_data.output.cores %}#}
+    {#            <h6>{{ core.macro_name }}</h6>#}
+    {#            {% for field_byte in core.field_bytes %}#}
+    {#                <div class="row">#}
+    {#                    <div class="col-md-2">#}
+    {#                        {{ field_byte.field }}#}
+    {#                    </div>#}
+    {#                    <div class="col-md-2">#}
+    {#                        {{ field_byte.data_bytes }}#}
+    {#                    </div>#}
+    {#                </div>#}
+    {#            {% endfor %}#}
+    {#        {% endfor %}#}
+
+{% endblock %}

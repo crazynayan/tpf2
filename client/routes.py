@@ -53,8 +53,3 @@ def symbol_table_view(macro_name: str):
         return redirect(url_for('login'))
     return render_template('symbol_table.html', title='Symbol Table', symbol_table=symbol_table, macro_name=macro_name)
 
-
-@tpf2_app.route('/test_data')
-@login_required
-def test_data():
-    return render_template('home.html')
