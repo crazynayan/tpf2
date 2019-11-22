@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <h1>{{ test_data.name }} ({{ test_data.seg_name }})</h1>
+    <br>
+    <div class="list-group list-group-item list-group-item-primary">
+        <a href="{{ url_for('test_data_run', test_data_id=test_data.id) }}">Run {{ test_data.seg_name }}</a>
+    </div>
+    <br>
+    <h2>Output</h2>
+    <div class="list-group list-group-item list-group-item-secondary">Output - Registers</div>
+    {% if test_data.outputs and test_data.outputs.regs %}
+        <br>
+        <div class="row">
+            {% for reg in test_data.outputs.regs %}
+                <div class="col-md-1 text-center">{{ reg }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}

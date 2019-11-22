@@ -19,7 +19,7 @@
                 <div class="navbar-nav mr-auto">
                     <a class="nav-item active nav-link" href="{{ url_for('segments') }}">Segments</a>
                     <a class="nav-item active nav-link" href="{{ url_for('macros') }}">Macros</a>
-                    <a class="nav-item active nav-link" href="{{ url_for('create_test_data') }}">Test Data</a>
+                    <a class="nav-item active nav-link" href="{{ url_for('get_all_test_data') }}">Test Data</a>
                 </div>
                 <div class="navbar-nav ml-auto">
                     {% if current_user.is_anonymous %}

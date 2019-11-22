@@ -15,9 +15,9 @@
     <p>At least one output is required.</p>
     <div class="list-group list-group-item list-group-item-secondary">Output - Registers</div>
     <br>
-    {% if test_data.output and test_data.output.regs %}
+    {% if test_data.outputs and test_data.outputs.regs %}
         <div class="row">
-            {% for reg in test_data.output.regs %}
+            {% for reg in test_data.outputs.regs %}
                 <div class="col-md-1 text-center">{{ reg }}</div>
             {% endfor %}
         </div>
@@ -32,18 +32,4 @@
             {{ wtf.quick_form(form) }}
         </div>
     </div>
-    {#        {% for core in test_data.output.cores %}#}
-    {#            <h6>{{ core.macro_name }}</h6>#}
-    {#            {% for field_byte in core.field_bytes %}#}
-    {#                <div class="row">#}
-    {#                    <div class="col-md-2">#}
-    {#                        {{ field_byte.field }}#}
-    {#                    </div>#}
-    {#                    <div class="col-md-2">#}
-    {#                        {{ field_byte.data_bytes }}#}
-    {#                    </div>#}
-    {#                </div>#}
-    {#            {% endfor %}#}
-    {#        {% endfor %}#}
-
 {% endblock %}

@@ -56,5 +56,31 @@ class Server:
             return list()
         return response.json()['symbol_table']
 
+    def get_all_test_data(self) -> List[dict]:
+        response = requests.get(f'{self.SERVER_URL}/test_data', headers=self.auth_header)
+        if response.status_code != 200:
+            return list()
+        return response.json()
+
+    def get_test_data(self, test_data_id: str) -> dict:
+        response = requests.get(f'{self.SERVER_URL}/test_data/{test_data_id}', headers=self.auth_header)
+        if response.status_code != 200:
+            return dict()
+        test_data: dict = response.json()
+        test_data['outputs'] = test_data['outputs'][0]
+        test_data['id'] = test_data_id
+        return test_data
+
+    def run_test_data(self, test_data_id: str) -> dict:
+        response = requests.get(f'{self.SERVER_URL}/test_data/{test_data_id}/run', headers=self.auth_header)
+        if response.status_code != 200:
+            return dict()
+        test_data = response.json()
+        outputs = test_data['outputs']
+        if 'regs' in outputs and outputs['regs']:
+            test_data['outputs']['regs'] = {reg: (value, f"{value & tpf2_app.config['REG_MAX']:08X}")
+                                            for reg, value in outputs['regs'].items()}
+        return test_data
+
 
 server = Server()

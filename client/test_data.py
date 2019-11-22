@@ -48,6 +48,27 @@ class RegisterForm(FlaskForm):
     save = SubmitField('Save & Continue - Add Further Data')
 
 
+@tpf2_app.route('/test_data')
+@login_required
+def get_all_test_data():
+    test_data_list = server.get_all_test_data()
+    return render_template('test_data_list.html', title='Test Data', test_data_list=test_data_list)
+
+
+@tpf2_app.route('/test_data/<string:test_data_id>')
+@login_required
+def get_test_data(test_data_id):
+    test_data = server.get_test_data(test_data_id)
+    return render_template('test_data_view.html', title='Test Data', test_data=test_data)
+
+
+@tpf2_app.route('/test_data/<string:test_data_id>/run')
+@login_required
+def test_data_run(test_data_id: str):
+    test_data = server.run_test_data(test_data_id)
+    return render_template('test_data_result.html', title='Results', test_data=test_data)
+
+
 @tpf2_app.route('/test_data/main', methods=['GET', 'POST'])
 @login_required
 def create_test_data():
@@ -61,7 +82,7 @@ def create_test_data():
         test_data['seg_name'] = form.seg_name.data
     else:
         test_data = form.data
-        test_data['output'] = dict()
+        test_data['outputs'] = dict()
     session['test_data'] = test_data
     return redirect(url_for('confirm_test_data'))
 
@@ -76,7 +97,7 @@ def confirm_test_data():
     form = ConfirmForm()
     if not form.validate_on_submit():
         return render_template('test_data_confirm.html', title='Confirm Test Data', test_data=test_data, form=form)
-    if not test_data['output']:
+    if not test_data['outputs']:
         flash('You need to add at least one output')
         return redirect(url_for('confirm_test_data'))
     flash('Test Data Created')
@@ -84,7 +105,7 @@ def confirm_test_data():
     return redirect(url_for('home'))
 
 
-@tpf2_app.route('/test_data/output/registers', methods=['GET', 'POST'])
+@tpf2_app.route('/test_data/outputs/registers', methods=['GET', 'POST'])
 @login_required
 def add_output_registers():
     test_data = session.get('test_data', None)
@@ -96,6 +117,6 @@ def add_output_registers():
         return render_template('test_data_form.html', title='Add Registers', form=form)
     registers = [value for reg, value in vars(form).items()
                  if reg.startswith('r') and isinstance(value, BooleanField)]
-    test_data['output']['regs'] = [reg.label.text for reg in registers if reg.data]
+    test_data['outputs']['regs'] = {reg.label.text: 0 for reg in registers if reg.data}
     session['test_data'] = test_data
     return redirect(url_for('confirm_test_data'))

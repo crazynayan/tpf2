@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <h1>Result - {{ test_data.name }}</h1>
+    {% if test_data.outputs.regs %}
+        <div class="list-group list-group-item list-group-item-primary">Registers</div>
+        <br>
+        {% for reg, values in test_data.outputs.regs.items() %}
+            <div class="row">
+                <div class="col-md-1">{{ reg }}</div>
+                {% for value in values %}
+                    <div class="col-md-2 text-right">{{ value }}</div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endblock %}
