@@ -1,4 +1,6 @@
+from base64 import b64decode
 from typing import Dict, List
+from urllib.parse import quote
 
 import requests
 from requests import Response
@@ -80,7 +82,40 @@ class Server:
         if 'regs' in outputs and outputs['regs']:
             test_data['outputs']['regs'] = {reg: (value, f"{value & tpf2_app.config['REG_MAX']:08X}")
                                             for reg, value in outputs['regs'].items()}
+        if 'cores' in outputs and outputs['cores']:
+            for core in test_data['outputs']['cores']:
+                for field_byte in core['field_bytes']:
+                    data = b64decode(field_byte['data'])
+                    hex_data = data.hex().upper()
+                    number_data = 'NA'
+                    if len(hex_data) <= 8:
+                        number_data = int(hex_data, 16)
+                    if len(hex_data) == 4 and number_data > 0x7FFF:
+                        number_data -= 0x10000
+                    if len(hex_data) == 8 and number_data > 0x7FFFFFFF:
+                        number_data -= 0x100000000
+                    char_data = data.decode('cp037')
+                    field_byte['data'] = [hex_data, number_data, char_data]
         return test_data
+
+    def search_field(self, field_name: str) -> dict:
+        field_name = quote(field_name)
+        response = requests.get(f'{self.SERVER_URL}/fields/{field_name}', headers=self.auth_header)
+        if response.status_code != 200:
+            return dict()
+        return response.json()
+
+    def create_test_data(self, test_data: dict) -> dict:
+        response = requests.post(f'{self.SERVER_URL}/test_data', json=test_data, headers=self.auth_header)
+        if response.status_code != 200:
+            return dict()
+        return response.json()
+
+    def delete_test_data(self, test_data_id: str) -> dict:
+        response = requests.delete(f'{self.SERVER_URL}/test_data/{test_data_id}', headers=self.auth_header)
+        if response.status_code != 200:
+            return dict()
+        return response.json()
 
 
 server = Server()

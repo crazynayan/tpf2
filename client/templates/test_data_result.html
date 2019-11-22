@@ -4,15 +4,31 @@
 {% block app_content %}
     <h1>Result - {{ test_data.name }}</h1>
     {% if test_data.outputs.regs %}
-        <div class="list-group list-group-item list-group-item-primary">Registers</div>
+        <br>
+        <div class="list-group list-group-item list-group-item-secondary">Registers</div>
         <br>
         {% for reg, values in test_data.outputs.regs.items() %}
             <div class="row">
-                <div class="col-md-1">{{ reg }}</div>
+                <div class="col-md-4 text-center">{{ reg }}</div>
                 {% for value in values %}
-                    <div class="col-md-2 text-right">{{ value }}</div>
+                    <div class="col-md-4 text-center">{{ value }}</div>
                 {% endfor %}
             </div>
+        {% endfor %}
+        <br>
+        <div class="list-group list-group-item list-group-item-secondary">Fields</div>
+        <br>
+        {% for core in test_data.outputs.cores %}
+            {% for field_byte in core.field_bytes %}
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <pre>{{ field_byte.field }}</pre>
+                    </div>
+                    {% for value in field_byte.data %}
+                        <div class="col-md-3 text-center"><kbd>{{ value }}</kbd></div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
         {% endfor %}
     {% endif %}
 {% endblock %}

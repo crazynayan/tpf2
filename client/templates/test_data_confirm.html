@@ -2,34 +2,51 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <h1>Test Data</h1>
-    <div class="row">
-        <div class="col-md-4">Test Data Name</div>
-        <div class="col-md-4">{{ test_data.name }}</div>
-    </div>
-    <div class="row">
-        <div class="col-md-4">Segment Name</div>
-        <div class="col-md-4">{{ test_data.seg_name }}</div>
-    </div>
-    <h2>Output</h2>
-    <p>At least one output is required.</p>
-    <div class="list-group list-group-item list-group-item-secondary">Output - Registers</div>
-    <br>
-    {% if test_data.outputs and test_data.outputs.regs %}
-        <div class="row">
-            {% for reg in test_data.outputs.regs %}
-                <div class="col-md-1 text-center">{{ reg }}</div>
-            {% endfor %}
-        </div>
-        <br>
-    {% endif %}
-    <div class="list-group list-group-item list-group-item-primary">
-        <a href="{{ url_for('add_output_registers') }}">Add Registers</a>
-    </div>
+    <h1>{{ test_data.name }} ({{ test_data.seg_name }})</h1>
     <br>
     <div class="row">
         <div class="col-md-4">
             {{ wtf.quick_form(form) }}
         </div>
+        <div class="col-md-4">
+            <a class="btn btn-danger"
+               href="{{ url_for('cancel_test_data') }}">
+                Cancel Test Data Creation
+            </a>
+        </div>
     </div>
+    <h2>Output</h2>
+    <p>At least one output is required.</p>
+    <div class="list-group list-group-item list-group-item-secondary">Output - Registers</div>
+    {% if test_data.outputs and test_data.outputs.regs %}
+        <br>
+        <div class="row">
+            {% for reg in test_data.outputs.regs %}
+                <div class="col-md-1 text-center">{{ reg }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <br>
+    <a class="list-group list-group-item list-group-item-success" href="{{ url_for('add_output_registers') }}">
+        Add Registers
+    </a>
+    <br>
+    <div class="list-group list-group-item list-group-item-secondary">Output - Fields</div>
+    {% if test_data.outputs and test_data.outputs.cores %}
+        {% for core in test_data.outputs.cores %}
+            <br>
+            <div class="row">
+                <div class="col-md-2 text-center font-weight-bold">
+                    {{ core.macro_name }}{% if core.base_reg != 'R0' %} (core.base_reg){% endif %}
+                </div>
+                {% for field_byte in core.field_bytes %}
+                    <div class="col-md-2 text-center">{{ field_byte.field }} ({{ field_byte.length }})</div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% endif %}
+    <br>
+    <a class="list-group list-group-item list-group-item-success" href="{{ url_for('search_output_fields') }}">
+        Add Fields
+    </a>
 {% endblock %}
