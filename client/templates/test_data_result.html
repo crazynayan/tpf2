@@ -9,9 +9,11 @@
         <br>
         {% for reg, values in test_data.outputs.regs.items() %}
             <div class="row">
-                <div class="col-md-4 text-center">{{ reg }}</div>
+                <div class="col-md-4 text-center">
+                    <pre>{{ reg }}</pre>
+                </div>
                 {% for value in values %}
-                    <div class="col-md-4 text-center">{{ value }}</div>
+                    <div class="col-md-4 text-center"><kbd>{{ value }}</kbd></div>
                 {% endfor %}
             </div>
         {% endfor %}

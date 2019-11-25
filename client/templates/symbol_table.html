@@ -15,10 +15,18 @@
         <tbody>
         {% for label_ref in symbol_table %}
             <tr>
-                <td><code>{{ label_ref.label }}</code></td>
-                <td><code>{{ label_ref.dsp }}</code></td>
-                <td><code>{{ label_ref.length }}</code></td>
-                <td><code>{{ label_ref.name }}</code></td>
+                <td>
+                    <pre>{{ label_ref.label }}</pre>
+                </td>
+                <td>
+                    <pre>{{ label_ref.dsp }}</pre>
+                </td>
+                <td>
+                    <pre>{{ label_ref.length }}</pre>
+                </td>
+                <td>
+                    <pre>{{ label_ref.name }}</pre>
+                </td>
             </tr>
         {% endfor %}
         </tbody>

@@ -5,16 +5,20 @@
     <h1>{{ test_data.name }} ({{ test_data.seg_name }})</h1>
     <br>
     <div class="row">
-        <div class="col-md-4">
-            {{ wtf.quick_form(form) }}
+        <div class="col-md-6">
+            <form action="" method="post" novalidate>
+                {{ form.hidden_tag() }}
+                {{ form.confirm(class="btn btn-primary btn-block text-center") }}
+            </form>
         </div>
-        <div class="col-md-4">
-            <a class="btn btn-danger"
+        <div class="col-md-6">
+            <a class="btn btn-danger btn-block"
                href="{{ url_for('cancel_test_data') }}">
                 Cancel Test Data Creation
             </a>
         </div>
     </div>
+    <br>
     <h2>Output</h2>
     <p>At least one output is required.</p>
     <div class="list-group list-group-item list-group-item-secondary">Output - Registers</div>
@@ -27,8 +31,8 @@
         </div>
     {% endif %}
     <br>
-    <a class="list-group list-group-item list-group-item-success" href="{{ url_for('add_output_registers') }}">
-        Add Registers
+    <a class="btn btn-block btn-success" href="{{ url_for('add_output_registers') }}">
+        Add Output Registers
     </a>
     <br>
     <div class="list-group list-group-item list-group-item-secondary">Output - Fields</div>
@@ -46,7 +50,33 @@
         {% endfor %}
     {% endif %}
     <br>
-    <a class="list-group list-group-item list-group-item-success" href="{{ url_for('search_output_fields') }}">
-        Add Fields
+    <a class="btn btn-block btn-success" href="{{ url_for('search_output_fields') }}">
+        Add Output Fields
+    </a>
+    <br>
+    <h2>Input</h2>
+    <br>
+    <div class="list-group list-group-item list-group-item-secondary">Input - Fields</div>
+    {% for core in test_data.cores %}
+        <br>
+        <div class="row">
+            <div class="col-md-2 text-center font-weight-bold">
+                {{ core.macro_name }}
+            </div>
+        </div>
+        {% for field_byte in core.field_bytes %}
+            <div class="row">
+                <div class="col-md-3 text-center">
+                    <pre>{{ field_byte.field }}</pre>
+                </div>
+                {% for value in field_byte.data %}
+                    <div class="col-md-3 text-center"><kbd>{{ value }}</kbd></div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% endfor %}
+    <br>
+    <a class="btn btn-block btn-success" href="{{ url_for('search_input_fields') }}">
+        Add Input Fields
     </a>
 {% endblock %}

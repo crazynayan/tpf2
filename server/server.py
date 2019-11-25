@@ -1,4 +1,4 @@
-from base64 import b64decode
+from base64 import b64decode, b64encode
 from typing import Dict, List
 from urllib.parse import quote
 
@@ -71,7 +71,24 @@ class Server:
         test_data: dict = response.json()
         test_data['outputs'] = test_data['outputs'][0]
         test_data['id'] = test_data_id
+        for core in test_data['cores']:
+            for field_byte in core['field_bytes']:
+                field_byte['data'] = self._decode_data(field_byte['data'])
         return test_data
+
+    @staticmethod
+    def _decode_data(encoded_data) -> List[str]:
+        data = b64decode(encoded_data)
+        hex_data = data.hex().upper()
+        number_data = 'NA'
+        if len(hex_data) <= 8:
+            number_data = int(hex_data, 16)
+        if len(hex_data) == 4 and number_data > 0x7FFF:
+            number_data -= 0x10000
+        if len(hex_data) == 8 and number_data > 0x7FFFFFFF:
+            number_data -= tpf2_app.config['REG_MAX'] + 1
+        char_data = data.decode('cp037')
+        return [hex_data, number_data, char_data]
 
     def run_test_data(self, test_data_id: str) -> dict:
         response = requests.get(f'{self.SERVER_URL}/test_data/{test_data_id}/run', headers=self.auth_header)
@@ -83,19 +100,9 @@ class Server:
             test_data['outputs']['regs'] = {reg: (value, f"{value & tpf2_app.config['REG_MAX']:08X}")
                                             for reg, value in outputs['regs'].items()}
         if 'cores' in outputs and outputs['cores']:
-            for core in test_data['outputs']['cores']:
+            for core in outputs['cores']:
                 for field_byte in core['field_bytes']:
-                    data = b64decode(field_byte['data'])
-                    hex_data = data.hex().upper()
-                    number_data = 'NA'
-                    if len(hex_data) <= 8:
-                        number_data = int(hex_data, 16)
-                    if len(hex_data) == 4 and number_data > 0x7FFF:
-                        number_data -= 0x10000
-                    if len(hex_data) == 8 and number_data > 0x7FFFFFFF:
-                        number_data -= 0x100000000
-                    char_data = data.decode('cp037')
-                    field_byte['data'] = [hex_data, number_data, char_data]
+                    field_byte['data'] = self._decode_data(field_byte['data'])
         return test_data
 
     def search_field(self, field_name: str) -> dict:
@@ -106,6 +113,9 @@ class Server:
         return response.json()
 
     def create_test_data(self, test_data: dict) -> dict:
+        for core in test_data['cores']:
+            for field_byte in core['field_bytes']:
+                field_byte['data'] = b64encode(bytes.fromhex(field_byte['data'][0])).decode()
         response = requests.post(f'{self.SERVER_URL}/test_data', json=test_data, headers=self.auth_header)
         if response.status_code != 200:
             return dict()

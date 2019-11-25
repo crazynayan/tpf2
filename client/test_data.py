@@ -1,6 +1,7 @@
+from functools import wraps
 from urllib.parse import quote, unquote
 
-from flask import render_template, url_for, redirect, flash, session, request
+from flask import render_template, url_for, redirect, flash, session, request, Response
 from flask_login import login_required
 from flask_wtf import FlaskForm
 from werkzeug.datastructures import MultiDict
@@ -77,6 +78,59 @@ class FieldLengthForm(FlaskForm):
             raise ValidationError('Invalid Base Register')
 
 
+class FieldDataForm(FlaskForm):
+    field_data = StringField("Enter Data - Default is hex for even number of hex character. Odd number of digit will"
+                             "be treated as integer of 4 bytes. Rest is string. Prefix with quote to enforce string",
+                             validators=[DataRequired()])
+    save = SubmitField('Save & Continue - Add Further Data')
+
+    @staticmethod
+    def validate_field_data(_, field_data):
+        field_data.data = field_data.data.strip().upper()
+        if field_data.data.startswith("'"):
+            if len(field_data.data) == 1:
+                flash("There needs to be some text after a single quote '")
+                raise ValidationError("Invalid field data")
+            field_data.data = field_data.data[1:].encode('cp037').hex().upper()
+            return
+        if field_data.data.startswith("-"):
+            if len(field_data.data) == 1 or not field_data.data[1:].isdigit():
+                flash("Invalid Negative Number")
+                raise ValidationError("Invalid field data")
+            neg_data = int(field_data.data)
+            if neg_data < -0x80000000:
+                flash(f"Negative Number cannot be less than {-0x80000000}")
+                raise ValidationError("Invalid field data")
+            field_data.data = f"{neg_data & tpf2_app.config['REG_MAX']:08X}"
+            return
+        if len(field_data.data) % 2 == 1 and field_data.data.isdigit():
+            number_data = int(field_data.data)
+            if number_data > 0x7FFFFFFF:
+                flash(f"Number cannot be greater than {0x7FFFFFFF}")
+                raise ValidationError("Invalid field data")
+            field_data.data = f"{number_data:08X}"
+            return
+        try:
+            int(field_data.data, 16)
+            if len(field_data.data) % 2:
+                field_data.data = f"0{field_data.data}"
+            return
+        except ValueError:
+            field_data.data = field_data.data.encode('cp037').hex().upper()
+        return
+
+
+def test_data_required(func):
+    @wraps(func)
+    def test_data_wrapper(*args, **kwargs):
+        if not session.get('test_data', None):
+            flash('Create Test Data')
+            return redirect(url_for('create_test_data'))
+        return func(*args, **kwargs)
+
+    return test_data_wrapper
+
+
 @tpf2_app.route('/test_data')
 @login_required
 def get_all_test_data():
@@ -134,11 +188,9 @@ def cancel_test_data():
 
 @tpf2_app.route('/test_data/confirm', methods=['GET', 'POST'])
 @login_required
+@test_data_required
 def confirm_test_data():
-    test_data = session.get('test_data', None)
-    if not test_data:
-        flash('Create Test Data')
-        return redirect(url_for('create_test_data'))
+    test_data = session['test_data']
     form = ConfirmForm()
     if not form.validate_on_submit():
         return render_template('test_data_confirm.html', title='Confirm Test Data', test_data=test_data, form=form)
@@ -154,11 +206,9 @@ def confirm_test_data():
 
 @tpf2_app.route('/test_data/outputs/registers', methods=['GET', 'POST'])
 @login_required
+@test_data_required
 def add_output_registers():
-    test_data = session.get('test_data', None)
-    if not test_data:
-        flash('Create Test Data')
-        return redirect(url_for('create_test_data'))
+    test_data = session['test_data']
     form = RegisterForm()
     if not form.validate_on_submit():
         return render_template('test_data_form.html', title='Add Registers', form=form)
@@ -169,13 +219,7 @@ def add_output_registers():
     return redirect(url_for('confirm_test_data'))
 
 
-@tpf2_app.route('/test_data/outputs/fields', methods=['GET', 'POST'])
-@login_required
-def search_output_fields():
-    test_data = session.get('test_data', None)
-    if not test_data:
-        flash('Create Test Data')
-        return redirect(url_for('create_test_data'))
+def _search_field(redirect_route: str) -> Response:
     form = FieldSearchForm()
     if not form.validate_on_submit():
         return render_template('test_data_form.html', title='Search Fields', form=form)
@@ -187,16 +231,28 @@ def search_output_fields():
     field_name = quote(label_ref['label'])
     macro_name = label_ref['name']
     length = label_ref['length']
-    return redirect(url_for('add_output_field', field_name=field_name, macro_name=macro_name, length=length))
+    return redirect(url_for(redirect_route, field_name=field_name, macro_name=macro_name, length=length))
+
+
+@tpf2_app.route('/test_data/outputs/fields', methods=['GET', 'POST'])
+@login_required
+@test_data_required
+def search_output_fields() -> Response:
+    return _search_field('add_output_field')
+
+
+@tpf2_app.route('/test_data/inputs/fields', methods=['GET', 'POST'])
+@login_required
+@test_data_required
+def search_input_fields():
+    return _search_field('add_input_field')
 
 
 @tpf2_app.route('/test_data/outputs/fields/add', methods=['GET', 'POST'])
 @login_required
+@test_data_required
 def add_output_field():
-    test_data = session.get('test_data', None)
-    if not test_data:
-        flash('Create Test Data')
-        return redirect(url_for('create_test_data'))
+    test_data = session['test_data']
     field_name = unquote(request.args.get('field_name', str()))
     macro_name = request.args.get('macro_name', str())
     if 'cores' not in test_data['outputs']:
@@ -225,5 +281,38 @@ def add_output_field():
         field_byte = {'field': field_name}
         core['field_bytes'].append(field_byte)
     field_byte['length'] = form.length.data
+    session['test_data'] = test_data
+    return redirect(url_for('confirm_test_data'))
+
+
+@tpf2_app.route('/test_data/inputs/fields/add', methods=['GET', 'POST'])
+@login_required
+@test_data_required
+def add_input_field():
+    test_data = session['test_data']
+    field_name = unquote(request.args.get('field_name', str()))
+    macro_name = request.args.get('macro_name', str())
+    form = FieldDataForm()
+    if not form.validate_on_submit():
+        return render_template('test_data_form.html', title=f"{field_name} ({macro_name})", form=form)
+    if 'cores' not in test_data:
+        test_data['cores'] = list()
+    cores = test_data['cores']
+    core = next((core for core in cores if core['macro_name'] == macro_name), None)
+    if not core:
+        core = {'macro_name': macro_name, 'field_bytes': list()}
+        cores.append(core)
+    field_byte = next((field_byte for field_byte in core['field_bytes'] if field_byte['field'] == field_name), None)
+    if not field_byte:
+        field_byte = {'field': field_name}
+        core['field_bytes'].append(field_byte)
+    hex_data = form.field_data.data
+    number_data = 'NA'
+    if len(hex_data) <= 8:
+        number_data = int(hex_data, 16)
+        if number_data > 0x7FFFFFFF:
+            number_data -= tpf2_app.config['REG_MAX'] + 1
+    char_data = bytes.fromhex(hex_data).decode('cp037')
+    field_byte['data'] = [hex_data, number_data, char_data]
     session['test_data'] = test_data
     return redirect(url_for('confirm_test_data'))

@@ -5,16 +5,16 @@
     {% for instruction in instructions %}
         <div class="row">
             <div class="col-md-1">
-                <code>{{ instruction.index }}</code>
+                <pre>{{ instruction.index }}</pre>
             </div>
             <div class="col-md-2">
-                <code>{{ instruction.label }}</code>
+                <pre>{{ instruction.label }}</pre>
             </div>
             <div class="col-md-1">
-                <code>{{ instruction.command }}</code>
+                <pre>{{ instruction.command }}</pre>
             </div>
             <div class="col-md-8">
-                <code>{{ instruction.operands }}</code>
+                <pre>{{ instruction.operands }}</pre>
             </div>
         </div>
     {% endfor %}
