@@ -13,4 +13,4 @@ login.login_view = 'login'
 # noinspection PyPep8
 from client import routes
 from client.user import login, logout
-from client import test_data
+from client import test_data_routes

@@ -1,123 +1,16 @@
 from functools import wraps
+from typing import List
 from urllib.parse import quote, unquote
 
 from flask import render_template, url_for, redirect, flash, session, request, Response
 from flask_login import login_required
-from flask_wtf import FlaskForm
 from werkzeug.datastructures import MultiDict
-from wtforms import StringField, SubmitField, BooleanField, IntegerField
-from wtforms.validators import DataRequired, ValidationError, NumberRange
+from wtforms import BooleanField
 
 from client import tpf2_app
+from client.test_data_forms import DeleteForm, TestDataForm, ConfirmForm, FieldSearchForm, FieldLengthForm, \
+    FieldDataForm, RegisterForm, RegisterFieldDataForm
 from server.server import server
-
-
-class TestDataForm(FlaskForm):
-    name = StringField('Name of Test Data (Must be unique in the system)', validators=[DataRequired()])
-    seg_name = StringField('Segment Name (Must exists in the system)', validators=[DataRequired()])
-    save = SubmitField('Save & Continue - Add Further Data')
-
-    @staticmethod
-    def validate_seg_name(_, seg_name):
-        seg_name.data = seg_name.data.upper()
-        seg_name = seg_name.data
-        if seg_name not in server.segments():
-            message = f"{seg_name} not found."
-            flash(message)
-            raise ValidationError(message)
-
-
-class ConfirmForm(FlaskForm):
-    confirm = SubmitField('Confirm - Create Test Data')
-
-
-class DeleteForm(FlaskForm):
-    delete = SubmitField('Delete - This Test Data (Permanently)')
-
-
-class RegisterForm(FlaskForm):
-    r0 = BooleanField('R0')
-    r1 = BooleanField('R1')
-    r2 = BooleanField('R2')
-    r3 = BooleanField('R3')
-    r4 = BooleanField('R4')
-    r5 = BooleanField('R5')
-    r6 = BooleanField('R6')
-    r7 = BooleanField('R7')
-    r8 = BooleanField('R8')
-    r9 = BooleanField('R9')
-    r10 = BooleanField('R10')
-    r11 = BooleanField('R11')
-    r12 = BooleanField('R12')
-    r13 = BooleanField('R13')
-    r14 = BooleanField('R14')
-    r15 = BooleanField('R15')
-    save = SubmitField('Save & Continue - Add Further Data')
-
-
-class FieldSearchForm(FlaskForm):
-    field = StringField('Field name', validators=[DataRequired()])
-    search = SubmitField('Search')
-
-    @staticmethod
-    def validate_field(_, field):
-        field.data = field.data.upper()
-
-
-class FieldLengthForm(FlaskForm):
-    length = IntegerField('Length', validators=[NumberRange(1, 4095, "Length can be from 1 to 4095")])
-    base_reg = StringField('Base Register - Keep it R0 for default macros like AAA, ECB, GLOBAL, IMG etc.',
-                           default='R0', validators=[DataRequired()])
-    save = SubmitField('Save & Continue - Add Further Data')
-
-    @staticmethod
-    def validate_base_reg(_, base_reg):
-        base_reg.data = base_reg.data.upper()
-        if base_reg.data and base_reg.data not in tpf2_app.config['REGISTERS']:
-            flash('Use a valid Base Register')
-            raise ValidationError('Invalid Base Register')
-
-
-class FieldDataForm(FlaskForm):
-    field_data = StringField("Enter Data - Default is hex for even number of hex character. Odd number of digit will"
-                             "be treated as integer of 4 bytes. Rest is string. Prefix with quote to enforce string",
-                             validators=[DataRequired()])
-    save = SubmitField('Save & Continue - Add Further Data')
-
-    @staticmethod
-    def validate_field_data(_, field_data):
-        field_data.data = field_data.data.strip().upper()
-        if field_data.data.startswith("'"):
-            if len(field_data.data) == 1:
-                flash("There needs to be some text after a single quote '")
-                raise ValidationError("Invalid field data")
-            field_data.data = field_data.data[1:].encode('cp037').hex().upper()
-            return
-        if field_data.data.startswith("-"):
-            if len(field_data.data) == 1 or not field_data.data[1:].isdigit():
-                flash("Invalid Negative Number")
-                raise ValidationError("Invalid field data")
-            neg_data = int(field_data.data)
-            if neg_data < -0x80000000:
-                flash(f"Negative Number cannot be less than {-0x80000000}")
-                raise ValidationError("Invalid field data")
-            field_data.data = f"{neg_data & tpf2_app.config['REG_MAX']:08X}"
-            return
-        if len(field_data.data) % 2 == 1 and field_data.data.isdigit():
-            number_data = int(field_data.data)
-            if number_data > 0x7FFFFFFF:
-                flash(f"Number cannot be greater than {0x7FFFFFFF}")
-                raise ValidationError("Invalid field data")
-            field_data.data = f"{number_data:08X}"
-            return
-        try:
-            int(field_data.data, 16)
-            if len(field_data.data) % 2:
-                field_data.data = f"0{field_data.data}"
-            return
-        except ValueError:
-            field_data.data = field_data.data.encode('cp037').hex().upper()
-        return
 
 
 def test_data_required(func):
@@ -179,6 +72,18 @@ def create_test_data():
     return redirect(url_for('confirm_test_data'))
 
 
+@tpf2_app.route('/test_data/<string:test_data_id>/copy')
+@login_required
+def copy_test_data(test_data_id):
+    test_data = server.get_test_data(test_data_id)
+    if not test_data:
+        flash('There was some error in retrieving the test data')
+        return redirect(url_for('get_all_test_data'))
+    test_data_form = TestDataForm().data
+    session['test_data'] = {**test_data_form, **test_data}
+    return redirect(url_for('create_test_data'))
+
+
 @tpf2_app.route('/test_data/cancel')
 @login_required
 def cancel_test_data():
@@ -223,11 +128,7 @@ def _search_field(redirect_route: str) -> Response:
     form = FieldSearchForm()
     if not form.validate_on_submit():
         return render_template('test_data_form.html', title='Search Fields', form=form)
-    field_name = form.field.data
-    label_ref = server.search_field(field_name)
-    if not label_ref:
-        flash('Field name not found')
-        return redirect(url_for('search_fields'))
+    label_ref = form.field.data
     field_name = quote(label_ref['label'])
     macro_name = label_ref['name']
     length = label_ref['length']
@@ -259,19 +160,15 @@ def add_output_field():
         test_data['outputs']['cores'] = list()
     cores = test_data['outputs']['cores']
     core = next((core for core in cores if core['macro_name'] == macro_name), None)
-    form = FieldLengthForm()
+    form = FieldLengthForm(macro_name)
     form_data = form.data
     form_data['length'] = request.args.get('length', 1, type=int)
     if core:
         form_data['base_reg'] = core['base_reg']
-    form = FieldLengthForm(formdata=MultiDict(form_data)) if request.method == 'GET' else FieldLengthForm()
+    form = FieldLengthForm(macro_name, formdata=MultiDict(form_data)) \
+        if request.method == 'GET' else FieldLengthForm(macro_name)
     if not form.validate_on_submit():
-        for error in form.length.errors:
-            flash(error)
-        return render_template('test_data_field_form.html', title='Add Field', field_name=field_name,
-                               macro_name=macro_name, form=form)
-    if form.base_reg.data == 'R0' and macro_name not in tpf2_app.config['DEFAULT_MACROS']:
-        flash(f'Base Register cannot be R0 for macro {macro_name}')
+        return render_template('test_data_form.html', title=f"{field_name} ({macro_name})", form=form)
     if not core:
         core = {'macro_name': macro_name, 'base_reg': form.base_reg.data, 'field_bytes': list()}
         cores.append(core)
@@ -283,6 +180,16 @@ def add_output_field():
     field_byte['length'] = form.length.data
     session['test_data'] = test_data
     return redirect(url_for('confirm_test_data'))
+
+
+def _encode_data(hex_data: str) -> List[str]:
+    number_data = 'NA'
+    if len(hex_data) <= 8:
+        number_data = int(hex_data, 16)
+        if number_data > 0x7FFFFFFF:
+            number_data -= tpf2_app.config['REG_MAX'] + 1
+    char_data = bytes.fromhex(hex_data).decode('cp037')
+    return [hex_data, number_data, char_data]
 
 
 @tpf2_app.route('/test_data/inputs/fields/add', methods=['GET', 'POST'])
@@ -306,13 +213,21 @@ def add_input_field():
     if not field_byte:
         field_byte = {'field': field_name}
         core['field_bytes'].append(field_byte)
-    hex_data = form.field_data.data
-    number_data = 'NA'
-    if len(hex_data) <= 8:
-        number_data = int(hex_data, 16)
-        if number_data > 0x7FFFFFFF:
-            number_data -= tpf2_app.config['REG_MAX'] + 1
-    char_data = bytes.fromhex(hex_data).decode('cp037')
-    field_byte['data'] = [hex_data, number_data, char_data]
+    field_byte['data'] = _encode_data(form.field_data.data)
+    session['test_data'] = test_data
+    return redirect(url_for('confirm_test_data'))
+
+
+@tpf2_app.route('/test_data/inputs/registers', methods=['GET', 'POST'])
+@login_required
+@test_data_required
+def add_input_registers():
+    test_data = session['test_data']
+    form = RegisterFieldDataForm()
+    if not form.validate_on_submit():
+        return render_template('test_data_field_form.html', title='Provide Register Values', form=form)
+    if 'regs' not in test_data:
+        test_data['regs'] = dict()
+    test_data['regs'][form.reg.data] = _encode_data(form.field_data.data)[:2]
     session['test_data'] = test_data
     return redirect(url_for('confirm_test_data'))

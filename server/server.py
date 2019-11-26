@@ -71,10 +71,19 @@ class Server:
         test_data: dict = response.json()
         test_data['outputs'] = test_data['outputs'][0]
         test_data['id'] = test_data_id
+        if 'regs' in test_data and test_data['regs']:
+            test_data['regs'] = self._decode_regs(test_data['regs'])
         for core in test_data['cores']:
             for field_byte in core['field_bytes']:
                 field_byte['data'] = self._decode_data(field_byte['data'])
         return test_data
+
+    def get_test_data_by_name(self, name: str) -> dict:
+        name = quote(name)
+        response = requests.get(f'{self.SERVER_URL}/test_data', params={'name': name}, headers=self.auth_header)
+        if response.status_code != 200:
+            return dict()
+        return response.json()
 
     @staticmethod
     def _decode_data(encoded_data) -> List[str]:
@@ -90,6 +99,10 @@ class Server:
         char_data = data.decode('cp037')
         return [hex_data, number_data, char_data]
 
+    @staticmethod
+    def _decode_regs(regs: Dict[str, int]) -> Dict[str, list]:
+        return {reg: [f"{value & tpf2_app.config['REG_MAX']:08X}", value] for reg, value in regs.items()}
+
     def run_test_data(self, test_data_id: str) -> dict:
         response = requests.get(f'{self.SERVER_URL}/test_data/{test_data_id}/run', headers=self.auth_header)
         if response.status_code != 200:
@@ -97,8 +110,7 @@ class Server:
         test_data = response.json()
         outputs = test_data['outputs']
         if 'regs' in outputs and outputs['regs']:
-            test_data['outputs']['regs'] = {reg: (value, f"{value & tpf2_app.config['REG_MAX']:08X}")
-                                            for reg, value in outputs['regs'].items()}
+            test_data['outputs']['regs'] = self._decode_regs(outputs['regs'])
         if 'cores' in outputs and outputs['cores']:
             for core in outputs['cores']:
                 for field_byte in core['field_bytes']:
@@ -113,9 +125,12 @@ class Server:
         return response.json()
 
     def create_test_data(self, test_data: dict) -> dict:
-        for core in test_data['cores']:
-            for field_byte in core['field_bytes']:
-                field_byte['data'] = b64encode(bytes.fromhex(field_byte['data'][0])).decode()
+        if 'cores' in test_data:
+            for core in test_data['cores']:
+                for field_byte in core['field_bytes']:
+                    field_byte['data'] = b64encode(bytes.fromhex(field_byte['data'][0])).decode()
+        if 'regs' in test_data:
+            test_data['regs'] = {reg: values[1] for reg, values in test_data['regs'].items()}
         response = requests.post(f'{self.SERVER_URL}/test_data', json=test_data, headers=self.auth_header)
         if response.status_code != 200:
             return dict()

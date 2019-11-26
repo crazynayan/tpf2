@@ -36,7 +36,10 @@
             <br>
             <div class="row">
                 <div class="col-md-2 text-center font-weight-bold">
-                    {{ core.macro_name }}{% if core.base_reg != 'R0' %} (core.base_reg){% endif %}
+                    {{ core.macro_name }}
+                    {% if core.base_reg != 'R0' %}
+                        &nbsp;({{ core.base_reg }})
+                    {% endif %}
                 </div>
                 {% for field_byte in core.field_bytes %}
                     <div class="col-md-2 text-center">
@@ -68,4 +71,19 @@
             </div>
         {% endfor %}
     {% endfor %}
+    <br>
+    <div class="list-group list-group-item list-group-item-secondary">Input - Registers</div>
+    {% if test_data.regs %}
+        <br>
+        {% for reg, values in test_data.regs.items() %}
+            <div class="row">
+                <div class="col-md-3 text-center">
+                    <pre>{{ reg }}</pre>
+                </div>
+                {% for value in values %}
+                    <div class="col-md-3 text-center"><kbd>{{ value }}</kbd></div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% endif %}
 {% endblock %}
