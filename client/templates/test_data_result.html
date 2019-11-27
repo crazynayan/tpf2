@@ -3,6 +3,19 @@
 
 {% block app_content %}
     <h1>Result - {{ test_data.name }}</h1>
+    {% if test_data.outputs.messages %}
+        <br>
+        <div class="list-group list-group-item list-group-item-secondary">Message</div>
+        <br>
+        {% for message in test_data.outputs.messages %}
+            <div class="row">
+                <div class="col-md-1"></div>
+                <div class="col-md-11">
+                    <kbd>{{ message }}</kbd>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
     {% if test_data.outputs.regs %}
         <br>
         <div class="list-group list-group-item list-group-item-secondary">Registers</div>
@@ -17,6 +30,8 @@
                 {% endfor %}
             </div>
         {% endfor %}
+    {% endif %}
+    {% if test_data.outputs.cores %}
         <br>
         <div class="list-group list-group-item list-group-item-secondary">Fields</div>
         <br>

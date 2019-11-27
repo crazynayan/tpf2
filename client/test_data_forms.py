@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, BooleanField, IntegerField
+from wtforms import StringField, SubmitField, BooleanField, IntegerField, SelectField
 from wtforms.validators import DataRequired, ValidationError, NumberRange
 
 from client import tpf2_app
@@ -137,3 +137,23 @@ class RegisterFieldDataForm(FieldDataForm):
         hex_data = hex_data[:8]
         hex_data = hex_data.zfill(8)
         field_data.data = hex_data
+
+
+class PnrForm(FlaskForm):
+    key = SelectField('Select type of PNR element', choices=tpf2_app.config['PNR_KEYS'], default='name')
+    locator = StringField('Enter PNR Locator - 6 character alpha numeric - Leave it blank for AAA PNR')
+    text_data = StringField('Enter text - Separate it with comma for multiple PNR elements')
+    save = SubmitField('Save & Continue - Add Further Data')
+
+    @staticmethod
+    def validate_locator(_, locator):
+        if not locator.data:
+            return
+        locator.data = locator.data.upper()
+        if len(locator.data) != 6 or not locator.data.isalnum():
+            raise ValidationError("PNR Locator needs to be 6 character alpha numeric")
+        return
+
+    @staticmethod
+    def validate_text_data(_, text_data):
+        text_data.data = text_data.data.upper()

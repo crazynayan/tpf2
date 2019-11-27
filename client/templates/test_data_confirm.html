@@ -20,85 +20,33 @@
     <br>
     <h2>Output</h2>
     <p>At least one output is required.</p>
-    <div class="list-group list-group-item list-group-item-secondary">Output - Registers</div>
-    {% if test_data.outputs and test_data.outputs.regs %}
-        <br>
-        <div class="row">
-            {% for reg in test_data.outputs.regs %}
-                <div class="col-md-1 text-center">{{ reg }}</div>
-            {% endfor %}
-        </div>
-    {% endif %}
+    {{ output_regs(test_data) }}
     <br>
     <a class="btn btn-block btn-success" href="{{ url_for('add_output_registers') }}">
         Add Output Registers
     </a>
-    <br>
-    <div class="list-group list-group-item list-group-item-secondary">Output - Fields</div>
-    {% if test_data.outputs and test_data.outputs.cores %}
-        {% for core in test_data.outputs.cores %}
-            <br>
-            <div class="row">
-                <div class="col-md-2 text-center font-weight-bold">
-                    {{ core.macro_name }}
-                    {% if core.base_reg != 'R0' %}
-                        &nbsp;({{ core.base_reg }})
-                    {% endif %}
-                </div>
-                {% for field_byte in core.field_bytes %}
-                    <div class="col-md-2 text-center">{{ field_byte.field }} ({{ field_byte.length }})</div>
-                {% endfor %}
-            </div>
-        {% endfor %}
-    {% endif %}
+    {{ output_fields(test_data) }}
     <br>
     <a class="btn btn-block btn-success" href="{{ url_for('search_output_fields') }}">
         Add Output Fields
     </a>
     <br>
     <h2>Input</h2>
-    <br>
-    <div class="list-group list-group-item list-group-item-secondary">Input - Fields</div>
-    {% for core in test_data.cores %}
-        <br>
-        <div class="row">
-            <div class="col-md-2 text-center font-weight-bold">
-                {{ core.macro_name }}
-            </div>
-        </div>
-        {% for field_byte in core.field_bytes %}
-            <div class="row">
-                <div class="col-md-3 text-center">
-                    <pre>{{ field_byte.field }}</pre>
-                </div>
-                {% for value in field_byte.data %}
-                    <div class="col-md-3 text-center"><kbd>{{ value }}</kbd></div>
-                {% endfor %}
-            </div>
-        {% endfor %}
-    {% endfor %}
+    {{ input_fields(test_data) }}
     <br>
     <a class="btn btn-block btn-success" href="{{ url_for('search_input_fields') }}">
         Add Input Fields
     </a>
-    <br>
-    <div class="list-group list-group-item list-group-item-secondary">Input - Registers</div>
-    {% if test_data.regs %}
-        <br>
-        {% for reg, values in test_data.regs.items() %}
-            <div class="row">
-                <div class="col-md-3 text-center">
-                    <pre>{{ reg }}</pre>
-                </div>
-                {% for value in values %}
-                    <div class="col-md-3 text-center"><kbd>{{ value }}</kbd></div>
-                {% endfor %}
-            </div>
-        {% endfor %}
-    {% endif %}
+    {{ input_regs(test_data) }}
     <br>
     <a class="btn btn-block btn-success" href="{{ url_for('add_input_registers') }}">
         Add Input Registers
     </a>
+    {{ input_pnr(test_data) }}
+    <br>
+    <a class="btn btn-block btn-success" href="{{ url_for('add_input_pnr') }}">
+        Add PNR Elements
+    </a>
+    <br>
     <br>
 {% endblock %}

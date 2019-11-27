@@ -1,7 +1,17 @@
 {% extends 'base.html' %}
 
 {% block app_content %}
-    <h1>TPF Analyzer</h1>
+    <div class="row">
+        <div class="col-md-8">
+            <h1>{{ title }}</h1>
+        </div>
+        <div class="col-md-4">
+            <a class="btn btn-success btn-block text-center"
+               href="{{ url_for('create_test_data') }}">
+                Create Test Data
+            </a>
+        </div>
+    </div>
     <br>
     <div class="list-group">
         <a class="list-group-item list-group-item-primary" href="{{ url_for('segments') }}">
@@ -14,10 +24,6 @@
         <br>
         <a class="list-group-item list-group-item-primary" href="{{ url_for('get_all_test_data') }}">
             View & Run Test Data
-        </a>
-        <br>
-        <a class="list-group-item list-group-item-success" href="{{ url_for('create_test_data') }}">
-            Create Test Data
         </a>
     </div>
 {% endblock %}

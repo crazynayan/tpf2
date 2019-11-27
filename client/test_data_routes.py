@@ -9,7 +9,7 @@ from wtforms import BooleanField
 
 from client import tpf2_app
 from client.test_data_forms import DeleteForm, TestDataForm, ConfirmForm, FieldSearchForm, FieldLengthForm, \
-    FieldDataForm, RegisterForm, RegisterFieldDataForm
+    FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm
 from server.server import server
 
 
@@ -229,5 +229,28 @@ def add_input_registers():
     if 'regs' not in test_data:
         test_data['regs'] = dict()
     test_data['regs'][form.reg.data] = _encode_data(form.field_data.data)[:2]
+    session['test_data'] = test_data
+    return redirect(url_for('confirm_test_data'))
+
+
+@tpf2_app.route('/test_data/inputs/pnr', methods=['GET', 'POST'])
+@login_required
+@test_data_required
+def add_input_pnr():
+    test_data = session['test_data']
+    form = PnrForm()
+    if not form.validate_on_submit():
+        return render_template('test_data_form.html', title='Add PNR element', form=form)
+    if 'pnr' not in test_data:
+        test_data['pnr'] = list()
+    pnr = dict()
+    pnr['key'] = form.key.data
+    pnr['locator'] = form.locator.data
+    if form.text_data.data:
+        for pnr_text in form.text_data.data.split(','):
+            pnr['data'] = pnr_text
+            test_data['pnr'].append(pnr)
+            pnr = pnr.copy()
+    test_data['pnr'].sort(key=lambda pnr_element: (pnr_element['locator'], pnr_element['key']))
     session['test_data'] = test_data
     return redirect(url_for('confirm_test_data'))
