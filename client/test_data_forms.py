@@ -27,7 +27,7 @@ class TestDataForm(FlaskForm):
 
 
 class ConfirmForm(FlaskForm):
-    confirm = SubmitField('Confirm - Create Test Data')
+    confirm = SubmitField('Confirm - Create Data')
 
 
 class DeleteForm(FlaskForm):
@@ -142,8 +142,9 @@ class RegisterFieldDataForm(FieldDataForm):
 class PnrForm(FlaskForm):
     key = SelectField('Select type of PNR element', choices=tpf2_app.config['PNR_KEYS'], default='name')
     locator = StringField('Enter PNR Locator - 6 character alpha numeric - Leave it blank for AAA PNR')
-    text_data = StringField('Enter text - Separate it with comma for multiple PNR elements')
-    save = SubmitField('Save & Continue - Add Further Data')
+    text_data = StringField('Enter text - Separate it with comma for multiple PNR elements.'
+                            'Leave it blank if you plan to add PNR fields.')
+    save = SubmitField('Save & Continue - Add PNR Data')
 
     @staticmethod
     def validate_locator(_, locator):

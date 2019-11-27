@@ -94,9 +94,9 @@
 {% endmacro %}
 
 {% macro output_regs(test_data) -%}
-    <br>
-    <div class="list-group list-group-item list-group-item-secondary">Output - Registers</div>
     {% if test_data.outputs and test_data.outputs.regs %}
+        <br>
+        <div class="list-group list-group-item list-group-item-secondary">Output - Registers</div>
         <br>
         <div class="row">
             {% for reg in test_data.outputs.regs %}
@@ -107,9 +107,9 @@
 {%- endmacro %}
 
 {% macro output_fields(test_data) -%}
-    <br>
-    <div class="list-group list-group-item list-group-item-secondary">Output - Fields</div>
     {% if test_data.outputs and test_data.outputs.cores %}
+        <br>
+        <div class="list-group list-group-item list-group-item-secondary">Output - Fields</div>
         {% for core in test_data.outputs.cores %}
             <br>
             <div class="row">
@@ -129,9 +129,9 @@
 
 
 {% macro input_fields(test_data) -%}
-    <br>
-    <div class="list-group list-group-item list-group-item-secondary">Input - Fields</div>
     {% if test_data.cores %}
+        <br>
+        <div class="list-group list-group-item list-group-item-secondary">Input - Fields</div>
         {% for core in test_data.cores %}
             <br>
             <div class="row">
@@ -145,7 +145,7 @@
                         <pre>{{ field_byte.field }}</pre>
                     </div>
                     {% for value in field_byte.data %}
-                        <div class="col-md-3 text-center"><kbd>{{ value }}</kbd></div>
+                        <div class="col-md-3"><kbd>{{ value }}</kbd></div>
                     {% endfor %}
                 </div>
             {% endfor %}
@@ -155,9 +155,9 @@
 
 
 {% macro input_regs(test_data) -%}
-    <br>
-    <div class="list-group list-group-item list-group-item-secondary">Input - Registers</div>
     {% if test_data.regs %}
+        <br>
+        <div class="list-group list-group-item list-group-item-secondary">Input - Registers</div>
         <br>
         {% for reg, values in test_data.regs.items() %}
             <div class="row">
@@ -165,7 +165,7 @@
                     <pre>{{ reg }}</pre>
                 </div>
                 {% for value in values %}
-                    <div class="col-md-3 text-center"><kbd>{{ value }}</kbd></div>
+                    <div class="col-md-3"><kbd>{{ value }}</kbd></div>
                 {% endfor %}
             </div>
         {% endfor %}
@@ -174,22 +174,35 @@
 
 
 {% macro input_pnr(test_data) -%}
-    <br>
-    <div class="list-group list-group-item list-group-item-secondary">Input - PNR</div>
     {% if test_data.pnr %}
+        <br>
+        <div class="list-group list-group-item list-group-item-secondary">Input - PNR</div>
+        <br>
         {% for pnr in test_data.pnr %}
-            <br>
             <div class="row">
-                <div class="col-md-4 text-center font-weight-bold">
+                <div class="col-md-2 text-center font-weight-bold">
                     {{ pnr.locator }}
                 </div>
-                <div class="col-md-4 text-center font-weight-bold">
+                <div class="col-md-2 font-weight-bold">
                     {{ pnr.key.upper() }}
                 </div>
-                <div class="col-md-4 text-center font-weight-bold">
-                    {{ pnr.data }}
-                </div>
+                {% if pnr.data %}
+                    <div class="col-md-8">
+                        <kbd>{{ pnr.data }}</kbd>
+                    </div>
+                {% endif %}
             </div>
+            <br>
+            {% for field_byte in pnr.field_bytes %}
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <pre>{{ field_byte.field }}</pre>
+                    </div>
+                    {% for value in field_byte.data %}
+                        <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
         {% endfor %}
     {% endif %}
 {%- endmacro %}

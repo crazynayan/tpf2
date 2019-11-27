@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <h1>{{ title }} {{ pnr.key.upper() }} {% if pnr.locator %}({{ pnr.locator }}){% endif %}</h1>
+    <p> Either PNR Text or PNR Field is required. Not Both. If you add PNR Fields with some PNR Text present then
+        the PNR Text will be removed.</p>
+    <br>
+    <div class="row">
+        <div class="col-md-6">
+            <form action="" method="post" novalidate>
+                {{ form.hidden_tag() }}
+                {{ form.confirm(class="btn btn-primary btn-block text-center") }}
+            </form>
+        </div>
+        <div class="col-md-6">
+            <a class="btn btn-danger btn-block"
+               href="{{ url_for('cancel_pnr') }}">
+                Cancel PNR Element Creation
+            </a>
+        </div>
+    </div>
+    <br>
+    <div class="list-group list-group-item list-group-item-secondary">PNR Text</div>
+    <br>
+    {% if pnr.text_data %}
+        {% for pnr_text in pnr.text_list %}
+            <div class="row">
+                <div class="col-md-1"></div>
+                <div class="col-md-11">
+                    <kbd>{{ pnr_text }}</kbd>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="row">
+            <div class="col-md-1"></div>
+            <div class="col-md-11">
+                No PNR Text
+            </div>
+        </div>
+    {% endif %}
+    <br>
+    <div class="list-group list-group-item list-group-item-secondary">PNR Fields</div>
+    <br>
+    {% for field_byte in pnr.field_bytes %}
+        <div class="row">
+            <div class="col-md-3 text-center">
+                <pre>{{ field_byte.field }}</pre>
+            </div>
+            {% for value in field_byte.data %}
+                <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+    <br>
+    <a class="btn btn-block btn-success" href="{{ url_for('search_pnr_fields') }}">
+        Add PNR Fields
+    </a>
+    <br>
+    <br>
+{% endblock %}

@@ -96,6 +96,7 @@ def cancel_test_data():
 @test_data_required
 def confirm_test_data():
     test_data = session['test_data']
+    session.pop('pnr', None)
     form = ConfirmForm()
     if not form.validate_on_submit():
         return render_template('test_data_confirm.html', title='Confirm Test Data', test_data=test_data, form=form)
@@ -192,6 +193,14 @@ def _encode_data(hex_data: str) -> List[str]:
     return [hex_data, number_data, char_data]
 
 
+def _add_field_byte(parent_list: list, field_name: str, hex_data: str) -> None:
+    field_byte = next((field_byte for field_byte in parent_list if field_byte['field'] == field_name), None)
+    if not field_byte:
+        field_byte = {'field': field_name}
+        parent_list.append(field_byte)
+    field_byte['data'] = _encode_data(hex_data)
+
+
 @tpf2_app.route('/test_data/inputs/fields/add', methods=['GET', 'POST'])
 @login_required
 @test_data_required
@@ -209,12 +218,7 @@ def add_input_field():
     if not core:
         core = {'macro_name': macro_name, 'field_bytes': list()}
         cores.append(core)
-    field_byte = next((field_byte for field_byte in core['field_bytes'] if field_byte['field'] == field_name), None)
-    if not field_byte:
-        field_byte = {'field': field_name}
-        core['field_bytes'].append(field_byte)
-    field_byte['data'] = _encode_data(form.field_data.data)
-    session['test_data'] = test_data
+    _add_field_byte(core['field_bytes'], field_name, form.field_data.data)
     return redirect(url_for('confirm_test_data'))
 
 
@@ -237,20 +241,84 @@ def add_input_registers():
 @login_required
 @test_data_required
 def add_input_pnr():
-    test_data = session['test_data']
-    form = PnrForm()
+    pnr_form: dict = session.get('pnr', None) if request.method == 'GET' else None
+    form = PnrForm(formdata=MultiDict(pnr_form)) if pnr_form else PnrForm()
     if not form.validate_on_submit():
         return render_template('test_data_form.html', title='Add PNR element', form=form)
+    pnr_form = {**pnr_form, **form.data} if pnr_form else form.data
+    pnr_form['text_list'] = form.text_data.data.split(',')
+    session['pnr'] = pnr_form
+    return redirect(url_for('confirm_pnr'))
+
+
+@tpf2_app.route('/test_data/inputs/pnr/confirm', methods=['GET', 'POST'])
+@login_required
+@test_data_required
+def confirm_pnr():
+    pnr_form = session.get('pnr', None)
+    if not pnr_form:
+        flash("Add PNR Elements")
+        return redirect(url_for('add_input_pnr'))
+    form = ConfirmForm()
+    if not form.validate_on_submit():
+        return render_template('test_data_pnr_form.html', title='Confirm PNR', pnr=pnr_form, form=form)
+    if pnr_form['field_bytes'] and pnr_form['text_data']:
+        pnr_form['text_data'] = str()
+        flash("Remove PNR Text to save")
+        return redirect(url_for('add_input_pnr'))
+    if ('field_bytes' not in pnr_form or not pnr_form['field_bytes']) and not pnr_form['text_data']:
+        flash('Either PNR Text or PNR Fields is required')
+        return redirect(url_for('add_input_pnr'))
+    test_data = session['test_data']
     if 'pnr' not in test_data:
         test_data['pnr'] = list()
     pnr = dict()
-    pnr['key'] = form.key.data
-    pnr['locator'] = form.locator.data
-    if form.text_data.data:
-        for pnr_text in form.text_data.data.split(','):
+    pnr['key'] = pnr_form['key']
+    pnr['locator'] = pnr_form['locator']
+    pnr['field_bytes'] = pnr_form['field_bytes']
+    if pnr_form['text_list']:
+        for pnr_text in pnr_form['text_list']:
             pnr['data'] = pnr_text
             test_data['pnr'].append(pnr)
             pnr = pnr.copy()
+    else:
+        test_data['pnr'].append(pnr)
     test_data['pnr'].sort(key=lambda pnr_element: (pnr_element['locator'], pnr_element['key']))
     session['test_data'] = test_data
+    return redirect(url_for('confirm_test_data'))
+
+
+@tpf2_app.route('/test_data/inputs/pnr/fields', methods=['GET', 'POST'])
+@login_required
+@test_data_required
+def search_pnr_fields():
+    return _search_field('add_pnr_field')
+
+
+@tpf2_app.route('/test_data/inputs/pnr/fields/add', methods=['GET', 'POST'])
+@login_required
+def add_pnr_field():
+    pnr = session.get('pnr', None)
+    if not pnr:
+        flash('Create PNR Element')
+        return redirect(url_for('add_input_pnr'))
+    field_name = unquote(request.args.get('field_name', str()))
+    macro_name = request.args.get('macro_name', str())
+    form = FieldDataForm()
+    if not form.validate_on_submit():
+        return render_template('test_data_form.html', title=f"{field_name} ({macro_name})", form=form)
+    if 'field_bytes' not in pnr:
+        pnr['field_bytes'] = list()
+    pnr['text_data'] = str()
+    pnr['text_list'] = list()
+    _add_field_byte(pnr['field_bytes'], field_name, form.field_data.data)
+    session['pnr'] = pnr
+    return redirect(url_for('confirm_pnr'))
+
+
+@tpf2_app.route('/test_data/inputs/pnr/cancel')
+@login_required
+@test_data_required
+def cancel_pnr():
+    session.pop('pnr', None)
     return redirect(url_for('confirm_test_data'))

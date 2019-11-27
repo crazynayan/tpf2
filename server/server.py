@@ -76,6 +76,9 @@ class Server:
         for core in test_data['cores']:
             for field_byte in core['field_bytes']:
                 field_byte['data'] = self._decode_data(field_byte['data'])
+        for pnr in test_data['pnr']:
+            for field_byte in pnr['field_bytes']:
+                field_byte['data'] = self._decode_data(field_byte['data'])
         return test_data
 
     def get_test_data_by_name(self, name: str) -> dict:
@@ -128,6 +131,10 @@ class Server:
         if 'cores' in test_data:
             for core in test_data['cores']:
                 for field_byte in core['field_bytes']:
+                    field_byte['data'] = b64encode(bytes.fromhex(field_byte['data'][0])).decode()
+        if 'pnr' in test_data:
+            for pnr in test_data['pnr']:
+                for field_byte in pnr['field_bytes']:
                     field_byte['data'] = b64encode(bytes.fromhex(field_byte['data'][0])).decode()
         if 'regs' in test_data:
             test_data['regs'] = {reg: values[1] for reg, values in test_data['regs'].items()}
