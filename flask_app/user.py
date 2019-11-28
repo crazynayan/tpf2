@@ -1,3 +1,5 @@
+from typing import Optional
+
 from flask import flash, redirect, url_for, render_template, request, session
 from flask_login import UserMixin, current_user, login_user, logout_user
 from flask_wtf import FlaskForm
@@ -6,26 +8,30 @@ from wtforms import PasswordField, SubmitField
 from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired
 
-from client import tpf2_app, login
-from server.server import Server
+from flask_app import tpf2_app, login
+from flask_app.firestore_ci import FirestoreDocument
+from flask_app.server import Server
 
 
-class User(UserMixin):
+class User(FirestoreDocument, UserMixin):
 
-    def __init__(self, email: str):
-        self.email: str = email
-        self.id: str = email
-        self.server: Server = Server(email)
+    def __init__(self, email: str = None):
+        super().__init__()
+        self.email: str = email if email else str()
+        self.token: str = str()
 
     def check_password(self, password: str) -> bool:
-        return self.server.authenticate(password)
+        self.token = Server().authenticate(self.email, password)
+        return True if self.token else False
+
+
+User.init('session_users')
 
 
 @login.user_loader
-def load_user(user_email: str) -> User:
-    user = User(user_email)
-    user.server.auth_header = session.get('tpf_user', dict())
-    return user
+def load_user(user_id: str) -> Optional[User]:
+    user = User.get_by_id(user_id)
+    return user if user and user.token else None
 
 
 class LoginForm(FlaskForm):
@@ -45,7 +51,8 @@ def login() -> str:
     if not user.check_password(form.password.data):
         flash(f"Invalid email or password.")
         return redirect(url_for('login'))
-    session['tpf_user'] = user.server.auth_header
+    User.objects.filter_by(email=user.email).delete()
+    user.set_id(user.create())
     login_user(user=user)
     next_page = request.args.get('next')
     if not next_page or url_parse(next_page).netloc != '':
@@ -57,6 +64,6 @@ def login() -> str:
 def logout():
     session.pop('test_data', None)
     session.pop('pnr', None)
-    session.pop('tpf_user', None)
+    User.objects.filter_by(email=current_user.email).delete()
     logout_user()
     return redirect(url_for('home'))

@@ -11,6 +11,6 @@ login = LoginManager(tpf2_app)
 login.login_view = 'login'
 
 # noinspection PyPep8
-from client import routes
-from client.user import login, logout
-from client import test_data_routes
+from flask_app import routes
+from flask_app.user import login, logout
+from flask_app import test_data_routes
