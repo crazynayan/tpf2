@@ -1,10 +1,9 @@
 from typing import List
 
 from flask import render_template, url_for, redirect, flash
-from flask_login import login_required
+from flask_login import login_required, current_user
 
 from client import tpf2_app
-from server.server import server
 
 
 @tpf2_app.route('/')
@@ -17,7 +16,7 @@ def home():
 @tpf2_app.route('/segments')
 @login_required
 def segments():
-    seg_list: List[str] = server.segments()
+    seg_list: List[str] = current_user.server.segments()
     if not seg_list:
         flash("Session expired")
         return redirect(url_for('login'))
@@ -27,7 +26,7 @@ def segments():
 @tpf2_app.route('/segments/<string:seg_name>/instructions')
 @login_required
 def instructions(seg_name: str):
-    ins_list: List[str] = server.instructions(seg_name)
+    ins_list: List[str] = current_user.server.instructions(seg_name)
     if not ins_list:
         flash("Session expired")
         return redirect(url_for('login'))
@@ -37,7 +36,7 @@ def instructions(seg_name: str):
 @tpf2_app.route('/macros')
 @login_required
 def macros():
-    macro_list: List[str] = server.macros()
+    macro_list: List[str] = current_user.server.macros()
     if not macro_list:
         flash("Session expired")
         return redirect(url_for('login'))
@@ -47,9 +46,8 @@ def macros():
 @tpf2_app.route('/macro/<string:macro_name>/instructions')
 @login_required
 def symbol_table_view(macro_name: str):
-    symbol_table: List[dict] = server.symbol_table(macro_name)
+    symbol_table: List[dict] = current_user.server.symbol_table(macro_name)
     if not symbol_table:
         flash("Session expired")
         return redirect(url_for('login'))
     return render_template('symbol_table.html', title='Symbol Table', symbol_table=symbol_table, macro_name=macro_name)
-

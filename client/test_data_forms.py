@@ -1,9 +1,9 @@
+from flask_login import current_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, BooleanField, IntegerField, SelectField
 from wtforms.validators import DataRequired, ValidationError, NumberRange
 
 from client import tpf2_app
-from server.server import server
 
 
 class TestDataForm(FlaskForm):
@@ -15,13 +15,13 @@ class TestDataForm(FlaskForm):
     def validate_seg_name(_, seg_name: StringField) -> None:
         seg_name.data = seg_name.data.upper()
         seg_name = seg_name.data
-        if seg_name not in server.segments():
+        if seg_name not in current_user.server.segments():
             raise ValidationError(f"{seg_name} not found")
         return
 
     @staticmethod
     def validate_name(_, name: StringField) -> None:
-        if server.get_test_data_by_name(name.data):
+        if current_user.server.get_test_data_by_name(name.data):
             raise ValidationError(f"The name '{name.data}' already exists - Please use an unique name")
         return
 
@@ -61,7 +61,7 @@ class FieldSearchForm(FlaskForm):
     @staticmethod
     def validate_field(_, field: StringField) -> None:
         field.data = field.data.upper()
-        label_ref = server.search_field(field.data)
+        label_ref = current_user.server.search_field(field.data)
         if not label_ref:
             raise ValidationError('Field name not found')
         field.data = label_ref

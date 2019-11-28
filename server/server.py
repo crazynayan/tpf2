@@ -11,11 +11,12 @@ from client import tpf2_app
 class Server:
     SERVER_URL = tpf2_app.config['SERVER_URL']
 
-    def __init__(self):
+    def __init__(self, email: str):
         self.auth_header: Dict[str, str] = dict()
+        self.email = email
 
-    def authenticate(self, email: str, password: str) -> bool:
-        response: Response = requests.post(f"{self.SERVER_URL}/tokens", auth=(email, password))
+    def authenticate(self, password: str) -> bool:
+        response: Response = requests.post(f"{self.SERVER_URL}/tokens", auth=(self.email, password))
         if response.status_code != 200:
             return False
         response_dict: dict = response.json()
@@ -148,6 +149,3 @@ class Server:
         if response.status_code != 200:
             return dict()
         return response.json()
-
-
-server = Server()

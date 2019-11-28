@@ -7,7 +7,7 @@ from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired
 
 from client import tpf2_app, login
-from server.server import server
+from server.server import Server
 
 
 class User(UserMixin):
@@ -15,14 +15,17 @@ class User(UserMixin):
     def __init__(self, email: str):
         self.email: str = email
         self.id: str = email
+        self.server: Server = Server(email)
 
     def check_password(self, password: str) -> bool:
-        return server.authenticate(self.email, password)
+        return self.server.authenticate(password)
 
 
 @login.user_loader
 def load_user(user_email: str) -> User:
-    return User(user_email)
+    user = User(user_email)
+    user.server.auth_header = session.get('tpf_user', dict())
+    return user
 
 
 class LoginForm(FlaskForm):
@@ -42,6 +45,7 @@ def login() -> str:
     if not user.check_password(form.password.data):
         flash(f"Invalid email or password.")
         return redirect(url_for('login'))
+    session['tpf_user'] = user.server.auth_header
     login_user(user=user)
     next_page = request.args.get('next')
     if not next_page or url_parse(next_page).netloc != '':
@@ -52,5 +56,7 @@ def login() -> str:
 @tpf2_app.route('/logout')
 def logout():
     session.pop('test_data', None)
+    session.pop('pnr', None)
+    session.pop('tpf_user', None)
     logout_user()
     return redirect(url_for('home'))

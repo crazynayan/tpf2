@@ -3,14 +3,13 @@ from typing import List
 from urllib.parse import quote, unquote
 
 from flask import render_template, url_for, redirect, flash, session, request, Response
-from flask_login import login_required
+from flask_login import login_required, current_user
 from werkzeug.datastructures import MultiDict
 from wtforms import BooleanField
 
 from client import tpf2_app
 from client.test_data_forms import DeleteForm, TestDataForm, ConfirmForm, FieldSearchForm, FieldLengthForm, \
     FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm
-from server.server import server
 
 
 def test_data_required(func):
@@ -27,21 +26,21 @@ def test_data_required(func):
 @tpf2_app.route('/test_data')
 @login_required
 def get_all_test_data():
-    test_data_list = server.get_all_test_data()
+    test_data_list = current_user.server.get_all_test_data()
     return render_template('test_data_list.html', title='Test Data', test_data_list=test_data_list)
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>', methods=['GET', 'POST'])
 @login_required
 def get_test_data(test_data_id):
-    test_data = server.get_test_data(test_data_id)
+    test_data = current_user.server.get_test_data(test_data_id)
     if not test_data:
         flash('There was some error in retrieving the test data')
         return redirect(url_for('get_all_test_data'))
     form = DeleteForm()
     if not form.validate_on_submit():
         return render_template('test_data_view.html', title='Test Data', test_data=test_data, form=form)
-    response = server.delete_test_data(test_data_id)
+    response = current_user.server.delete_test_data(test_data_id)
     if not response:
         flash('There was some error in deleting test data')
     return redirect(url_for('get_all_test_data'))
@@ -50,7 +49,7 @@ def get_test_data(test_data_id):
 @tpf2_app.route('/test_data/<string:test_data_id>/run')
 @login_required
 def test_data_run(test_data_id: str):
-    test_data = server.run_test_data(test_data_id)
+    test_data = current_user.server.run_test_data(test_data_id)
     return render_template('test_data_result.html', title='Results', test_data=test_data)
 
 
@@ -75,7 +74,7 @@ def create_test_data():
 @tpf2_app.route('/test_data/<string:test_data_id>/copy')
 @login_required
 def copy_test_data(test_data_id):
-    test_data = server.get_test_data(test_data_id)
+    test_data = current_user.server.get_test_data(test_data_id)
     if not test_data:
         flash('There was some error in retrieving the test data')
         return redirect(url_for('get_all_test_data'))
@@ -103,7 +102,7 @@ def confirm_test_data():
     if not test_data['outputs']:
         flash('You need to add at least one output')
         return redirect(url_for('confirm_test_data'))
-    response: dict = server.create_test_data(session['test_data'])
+    response: dict = current_user.server.create_test_data(session['test_data'])
     if not response:
         flash('There was some error in creating test data')
     session.pop('test_data')
