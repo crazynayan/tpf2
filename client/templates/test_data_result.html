@@ -2,7 +2,8 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <h1>Result - {{ test_data.name }}</h1>
+    <h1>{{ test_data.name }}</h1>
+    <h6>Ends at {{ test_data.outputs.last_line }}</h6>
     {% if test_data.outputs.messages %}
         <br>
         <div class="list-group list-group-item list-group-item-secondary">Message</div>
@@ -15,6 +16,18 @@
                 </div>
             </div>
         {% endfor %}
+    {% endif %}
+    {% if test_data.outputs.dumps %}
+        <br>
+        <div class="list-group list-group-item list-group-item-danger">Dumps</div>
+        <br>
+        <div class="row">
+            {% for dump in test_data.outputs.dumps %}
+                <div class="col-md-2 text-center">
+                    <kbd>{{ dump }}</kbd>
+                </div>
+            {% endfor %}
+        </div>
     {% endif %}
     {% if test_data.outputs.regs %}
         <br>

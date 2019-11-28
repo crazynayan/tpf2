@@ -246,6 +246,8 @@ def add_input_pnr():
         return render_template('test_data_form.html', title='Add PNR element', form=form)
     pnr_form = {**pnr_form, **form.data} if pnr_form else form.data
     pnr_form['text_list'] = form.text_data.data.split(',')
+    if 'field_bytes' not in pnr_form:
+        pnr_form['field_bytes'] = list()
     session['pnr'] = pnr_form
     return redirect(url_for('confirm_pnr'))
 
@@ -265,7 +267,7 @@ def confirm_pnr():
         pnr_form['text_data'] = str()
         flash("Remove PNR Text to save")
         return redirect(url_for('add_input_pnr'))
-    if ('field_bytes' not in pnr_form or not pnr_form['field_bytes']) and not pnr_form['text_data']:
+    if not pnr_form['field_bytes'] and not pnr_form['text_data']:
         flash('Either PNR Text or PNR Fields is required')
         return redirect(url_for('add_input_pnr'))
     test_data = session['test_data']
