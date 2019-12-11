@@ -1,23 +1,28 @@
 {% extends "base.html" %}
-{% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
     <h1>{{ test_data.name }} ({{ test_data.seg_name }})</h1>
     <br>
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <a class="btn btn-primary btn-block text-center"
                href="{{ url_for('test_data_run', test_data_id=test_data.id) }}">
                 Run {{ test_data.seg_name }}
             </a>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <a class="btn btn-success btn-block text-center"
                href="{{ url_for('copy_test_data', test_data_id=test_data.id) }}">
                 Copy Test Data
             </a>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+            <a class="btn btn-warning btn-block text-center"
+               href="{{ url_for('confirm_test_data', test_data_id=test_data.id) }}">
+                Edit Test Data
+            </a>
+        </div>
+        <div class="col-md-3">
             <form action="" method="post" novalidate>
                 {{ form.hidden_tag() }}
                 {{ form.delete(class="btn btn-danger btn-block text-center") }}
@@ -27,7 +32,7 @@
     <br>
     <h2>Output</h2>
     {{ output_regs(test_data) }}
-    {{ output_fields(test_data) }}
+    {{ output_fields(test_data, edit_mode=False) }}
     <br>
     <h2>Input</h2>
     {{ input_fields(test_data) }}

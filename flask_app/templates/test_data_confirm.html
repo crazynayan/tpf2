@@ -12,8 +12,8 @@
         </div>
         <div class="col-md-6">
             <a class="btn btn-danger btn-block"
-               href="{{ url_for('cancel_test_data') }}">
-                Cancel Test Data Creation
+               href="{{ url_for('get_all_test_data') }}">
+                Cancel
             </a>
         </div>
     </div>
@@ -22,12 +22,12 @@
     <p>At least one output is required.</p>
     {{ output_regs(test_data) }}
     <br>
-    <a class="btn btn-block btn-success" href="{{ url_for('add_output_registers') }}">
+    <a class="btn btn-block btn-success" href="{{ url_for('add_output_regs', test_data_id=test_data.id) }}">
         Add Output Registers
     </a>
-    {{ output_fields(test_data) }}
+    {{ output_fields(test_data, edit_mode=True) }}
     <br>
-    <a class="btn btn-block btn-success" href="{{ url_for('search_output_fields') }}">
+    <a class="btn btn-block btn-success" href="{{ url_for('search_output_fields', test_data_id=test_data.id) }}">
         Add Output Fields
     </a>
     <br>

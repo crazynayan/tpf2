@@ -146,3 +146,26 @@ class Server:
     @classmethod
     def delete_test_data(cls, test_data_id: str) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}", method='DELETE')
+
+    @classmethod
+    def add_output_core(cls, test_data_id: str, core: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/output/cores", method='POST', json=core)
+
+    @classmethod
+    def add_output_field(cls, test_data_id: str, macro_name: str, field_byte: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/output/cores/{macro_name}/fields",
+                                   method='POST', json=field_byte)
+
+    @classmethod
+    def delete_output_field(cls, test_data_id: str, macro_name: str, field_name: str) -> dict:
+        field_name = quote(field_name)
+        return cls._common_request(f"/test_data/{test_data_id}/output/cores/{macro_name}/fields/{field_name}",
+                                   method='DELETE')
+
+    @classmethod
+    def add_output_regs(cls, test_data_id: str, reg_dict: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/output/regs", method='POST', json=reg_dict)
+
+    @classmethod
+    def delete_output_regs(cls, test_data_id: str) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/output/regs", method='DELETE')

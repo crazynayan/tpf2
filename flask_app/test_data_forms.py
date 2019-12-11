@@ -27,11 +27,11 @@ class TestDataForm(FlaskForm):
 
 
 class ConfirmForm(FlaskForm):
-    confirm = SubmitField('Confirm - Create Data')
+    confirm = SubmitField('Save & Close')
 
 
 class DeleteForm(FlaskForm):
-    delete = SubmitField('Delete - This Test Data (Permanently)')
+    delete = SubmitField('Delete Test Data')
 
 
 class RegisterForm(FlaskForm):
@@ -69,8 +69,7 @@ class FieldSearchForm(FlaskForm):
 
 class FieldLengthForm(FlaskForm):
     length = IntegerField('Length', validators=[NumberRange(1, 4095, "Length can be from 1 to 4095")])
-    base_reg = StringField('Base Register - Keep it R0 for default macros like AAA, ECB, GLOBAL, IMG etc.',
-                           default='R0', validators=[DataRequired()])
+    base_reg = StringField('Base Register - Keep it blank for default macros like AAA, ECB, GLOBAL, IMG etc.')
     save = SubmitField('Save & Continue - Add Further Data')
 
     def __init__(self, macro_name: str, *args, **kwargs):
@@ -81,8 +80,8 @@ class FieldLengthForm(FlaskForm):
         base_reg.data = base_reg.data.upper()
         if base_reg.data and base_reg.data not in tpf2_app.config['REGISTERS']:
             raise ValidationError('Invalid Base Register - Register can be from R0 to R15')
-        if base_reg.data == 'R0' and self.macro_name not in tpf2_app.config['DEFAULT_MACROS']:
-            raise ValidationError(f"Base Register cannot be R0 for macro {self.macro_name}")
+        if (not base_reg.data or base_reg.data == 'R0') and self.macro_name not in tpf2_app.config['DEFAULT_MACROS']:
+            raise ValidationError(f"Base Register cannot be blank or R0 for macro {self.macro_name}")
         return
 
 
