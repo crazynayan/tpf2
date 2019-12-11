@@ -13,35 +13,22 @@ class Server:
 
     @staticmethod
     def _common_request(url: str, method: str = 'GET', **kwargs) -> dict:
-        token = str()
-        if 'token' in kwargs:
-            token: str = kwargs['token']
-            del kwargs['token']
-        elif current_user and current_user.is_authenticated and current_user.token:
-            token: str = current_user.token
-        elif 'auth' not in kwargs:
-            return dict()
-        auth_header = {'Authorization': f"Bearer {token}"}
         request_url = f"{tpf2_app.config['SERVER_URL']}{url}"
+        if 'auth' not in kwargs:
+            auth_header = {'Authorization': f"Bearer {current_user.token}"}
+            kwargs['headers'] = auth_header
         if method == 'GET':
-            response: Response = requests.get(request_url, headers=auth_header, **kwargs)
+            response: Response = requests.get(request_url, **kwargs)
         elif method == 'POST':
-            if 'auth' not in kwargs:
-                kwargs['headers'] = auth_header
             response: Response = requests.post(request_url, **kwargs)
         elif method == 'DELETE':
-            response: Response = requests.delete(request_url, headers=auth_header)
+            response: Response = requests.delete(request_url, **kwargs)
         else:
             raise TypeError
-        if response.status_code == 401 and current_user and current_user.is_authenticated and current_user.token:
+        if response.status_code == 401:
             current_user.token = str()
             current_user.save()
         return response.json() if response.status_code == 200 else dict()
-
-    @classmethod
-    def is_token_valid(cls, token: str) -> bool:
-        return True if token and cls._common_request(f"/users/{tpf2_app.config['SERVER_USER_ID']}", token=token) \
-            else False
 
     @classmethod
     def authenticate(cls, email: str, password: str) -> str:
@@ -50,12 +37,12 @@ class Server:
 
     @classmethod
     def segments(cls) -> List[str]:
-        response: dict = cls._common_request('/segments')
+        response: dict = cls._common_request(f"/segments")
         return response['segments'] if response else list()
 
     @classmethod
     def macros(cls) -> List[str]:
-        response: dict = cls._common_request('/macros')
+        response: dict = cls._common_request(f"/macros")
         return response['macros'] if response else list()
 
     @classmethod
