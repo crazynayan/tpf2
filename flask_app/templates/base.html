@@ -1,5 +1,10 @@
 {% extends 'bootstrap/base.html' %}
 
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+{% endblock %}
+
 {% block title %}
     {% if title %}
         {{ title }} - TPF Analyzer
@@ -114,13 +119,17 @@
                     {% if core.base_reg and core.base_reg != 'R0' %}
                         &nbsp;({{ core.base_reg }})
                     {% endif %}
+                    <i class="fas fa-trash"></i>
                 </div>
                 {% for field_byte in core.field_bytes %}
                     <div class="col-md-2 text-center">
                         {{ field_byte.field }} ({{ field_byte.length }})
                         {% if edit_mode %}
-                            <a class="btn btn-danger" href="{{ url_for('delete_output_field', test_data_id=test_data.id,
-                               macro_name=core.macro_name, field_name=field_byte.field) }}">X</a>
+                            <a class="badge badge-danger"
+                               href="{{ url_for('delete_output_field', test_data_id=test_data.id,
+                                                macro_name=core.macro_name, field_name=field_byte.field) }}">
+                                X
+                            </a>
                         {% endif %}
                     </div>
                 {% endfor %}
@@ -130,7 +139,7 @@
 {%- endmacro %}
 
 
-{% macro input_fields(test_data) -%}
+{% macro input_fields(test_data, edit_mode) -%}
     {% if test_data.cores %}
         <br>
         <div class="list-group list-group-item list-group-item-secondary">Input - Fields</div>
@@ -144,7 +153,14 @@
             {% for field_byte in core.field_bytes %}
                 <div class="row">
                     <div class="col-md-3 text-center">
-                        <pre>{{ field_byte.field }}</pre>
+                        {{ field_byte.field }}
+                        {% if edit_mode %}
+                            <a class="badge badge-danger"
+                               href="{{ url_for('delete_input_field', test_data_id=test_data.id,
+                                                macro_name=core.macro_name, field_name=field_byte.field) }}">
+                                X
+                            </a>
+                        {% endif %}
                     </div>
                     {% for value in field_byte.data %}
                         <div class="col-md-3"><kbd>{{ value }}</kbd></div>
@@ -156,7 +172,7 @@
 {%- endmacro %}
 
 
-{% macro input_regs(test_data) -%}
+{% macro input_regs(test_data, edit_mode) -%}
     {% if test_data.regs %}
         <br>
         <div class="list-group list-group-item list-group-item-secondary">Input - Registers</div>
@@ -164,7 +180,13 @@
         {% for reg, values in test_data.regs.items() %}
             <div class="row">
                 <div class="col-md-3 text-center">
-                    <pre>{{ reg }}</pre>
+                    {{ reg }}
+                    {% if edit_mode %}
+                        <a class="badge badge-danger"
+                           href="{{ url_for('delete_input_regs', test_data_id=test_data.id, reg=reg) }}">
+                            X
+                        </a>
+                    {% endif %}
                 </div>
                 {% for value in values %}
                     <div class="col-md-3"><kbd>{{ value }}</kbd></div>
@@ -175,7 +197,7 @@
 {%- endmacro %}
 
 
-{% macro input_pnr(test_data) -%}
+{% macro input_pnr(test_data, edit_mode) -%}
     {% if test_data.pnr %}
         <br>
         <div class="list-group list-group-item list-group-item-secondary">Input - PNR</div>
@@ -187,6 +209,18 @@
                 </div>
                 <div class="col-md-2 font-weight-bold">
                     {{ pnr.key.upper() }}
+                    {% if edit_mode %}
+                        {% if pnr.data %} {% else %}
+                            <a class="badge badge-warning edit-icon"
+                               href="{{ url_for('search_pnr_field', test_data_id=test_data.id, pnr_id=pnr.id) }}">
+                                &#9998;
+                            </a>
+                        {% endif %}
+                        <a class="badge badge-danger"
+                           href="{{ url_for('delete_pnr', test_data_id=test_data.id, pnr_id=pnr.id) }}">
+                            X
+                        </a>
+                    {% endif %}
                 </div>
                 {% if pnr.data %}
                     <div class="col-md-8">

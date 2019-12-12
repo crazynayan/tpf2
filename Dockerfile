@@ -6,7 +6,6 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir gunicorn
 
-COPY static static
 COPY flask_app flask_app
 COPY config.py google-cloud.json ./
 

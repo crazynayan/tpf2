@@ -32,19 +32,19 @@
     </a>
     <br>
     <h2>Input</h2>
-    {{ input_fields(test_data) }}
+    {{ input_fields(test_data, edit_mode=True) }}
     <br>
-    <a class="btn btn-block btn-success" href="{{ url_for('search_input_fields') }}">
+    <a class="btn btn-block btn-success" href="{{ url_for('search_input_fields', test_data_id=test_data.id) }}">
         Add Input Fields
     </a>
-    {{ input_regs(test_data) }}
+    {{ input_regs(test_data, edit_mode=True) }}
     <br>
-    <a class="btn btn-block btn-success" href="{{ url_for('add_input_registers') }}">
+    <a class="btn btn-block btn-success" href="{{ url_for('add_input_regs', test_data_id=test_data.id) }}">
         Add Input Registers
     </a>
-    {{ input_pnr(test_data) }}
+    {{ input_pnr(test_data, edit_mode=True) }}
     <br>
-    <a class="btn btn-block btn-success" href="{{ url_for('add_input_pnr') }}">
+    <a class="btn btn-block btn-success" href="{{ url_for('add_input_pnr', test_data_id=test_data.id) }}">
         Add PNR Elements
     </a>
     <br>

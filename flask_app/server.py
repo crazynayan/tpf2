@@ -76,7 +76,6 @@ class Server:
         if not test_data:
             return dict()
         test_data['outputs'] = test_data['outputs'][0]
-        test_data['id'] = test_data_id
         if 'regs' in test_data and test_data['regs']:
             test_data['regs'] = cls._decode_regs(test_data['regs'])
         for core in test_data['cores']:
@@ -148,13 +147,9 @@ class Server:
         return cls._common_request(f"/test_data/{test_data_id}", method='DELETE')
 
     @classmethod
-    def add_output_core(cls, test_data_id: str, core: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/output/cores", method='POST', json=core)
-
-    @classmethod
-    def add_output_field(cls, test_data_id: str, macro_name: str, field_byte: dict) -> dict:
+    def add_output_field(cls, test_data_id: str, macro_name: str, field_dict: dict) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/output/cores/{macro_name}/fields",
-                                   method='POST', json=field_byte)
+                                   method='POST', json=field_dict)
 
     @classmethod
     def delete_output_field(cls, test_data_id: str, macro_name: str, field_name: str) -> dict:
@@ -169,3 +164,40 @@ class Server:
     @classmethod
     def delete_output_regs(cls, test_data_id: str) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/output/regs", method='DELETE')
+
+    @classmethod
+    def add_input_field(cls, test_data_id: str, macro_name: str, field_byte: dict) -> dict:
+        field_byte['data'] = b64encode(bytes.fromhex(field_byte['data'])).decode()
+        return cls._common_request(f"/test_data/{test_data_id}/input/cores/{macro_name}/fields",
+                                   method='POST', json=field_byte)
+
+    @classmethod
+    def delete_input_field(cls, test_data_id: str, macro_name: str, field_name: str) -> dict:
+        field_name = quote(field_name)
+        return cls._common_request(f"/test_data/{test_data_id}/input/cores/{macro_name}/fields/{field_name}",
+                                   method='DELETE')
+
+    @classmethod
+    def add_input_regs(cls, test_data_id: str, reg_dict: dict) -> dict:
+        reg_dict['value'] = int(reg_dict['value'], 16)
+        if reg_dict['value'] > 0x7FFFFFFF:
+            reg_dict['value'] -= tpf2_app.config['REG_MAX'] + 1
+        return cls._common_request(f"/test_data/{test_data_id}/input/regs", method='POST', json=reg_dict)
+
+    @classmethod
+    def delete_input_regs(cls, test_data_id: str, reg: str) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/regs/{reg}", method='DELETE')
+
+    @classmethod
+    def create_pnr(cls, test_data_id: str, pnr_dict: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/pnr", method='POST', json=pnr_dict)
+
+    @classmethod
+    def add_pnr_field(cls, test_data_id: str, pnr_id: str, field_dict: dict) -> dict:
+        field_dict['data'] = b64encode(bytes.fromhex(field_dict['data'])).decode()
+        return cls._common_request(f"/test_data/{test_data_id}/input/pnr/{pnr_id}/fields",
+                                   method='POST', json=field_dict)
+
+    @classmethod
+    def delete_pnr(cls, test_data_id: str, pnr_id: str) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/pnr/{pnr_id}", method='DELETE')

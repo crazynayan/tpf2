@@ -1,8 +1,7 @@
 from functools import wraps
-from typing import List
-from urllib.parse import quote, unquote
+from urllib.parse import unquote
 
-from flask import render_template, url_for, redirect, flash, session, request, Response
+from flask import render_template, url_for, redirect, flash, request, Response
 from flask_login import login_required
 from werkzeug.datastructures import MultiDict
 from wtforms import BooleanField
@@ -18,11 +17,21 @@ def test_data_required(func):
     def test_data_wrapper(test_data_id, *args, **kwargs):
         test_data: dict = Server.get_test_data(test_data_id)
         if not test_data:
-            flash('There was some error in retrieving the test data')
+            flash('Error in retrieving the test data')
             return redirect(url_for('get_all_test_data'))
-        test_data['id'] = test_data_id
-        return func(test_data_id, test_data, *args, **kwargs)
+        kwargs[test_data_id] = test_data
+        return func(test_data_id, *args, **kwargs)
+
     return test_data_wrapper
+
+
+def _search_field(redirect_route: str, test_data_id: str) -> Response:
+    form = FieldSearchForm()
+    if not form.validate_on_submit():
+        return render_template('test_data_form.html', title='Search Fields', form=form)
+    label_ref = form.field.data
+    return redirect(url_for(redirect_route, test_data_id=test_data_id, field_name=label_ref['label'],
+                            macro_name=label_ref['name'], length=label_ref['length']))
 
 
 @tpf2_app.route('/test_data')
@@ -58,19 +67,10 @@ def test_data_run(test_data_id: str):
 @tpf2_app.route('/test_data/create', methods=['GET', 'POST'])
 @login_required
 def create_test_data():
-    test_data_form: dict = session.get('test_data', None) if request.method == 'GET' else None
-    form = TestDataForm(formdata=MultiDict(test_data_form)) if test_data_form else TestDataForm()
+    form = TestDataForm()
     if not form.validate_on_submit():
         return render_template('test_data_form.html', title='Create Test Data', form=form)
-    test_data = session.get('test_data', None)
-    if test_data:
-        test_data['name'] = form.name.data
-        test_data['seg_name'] = form.seg_name.data
-    else:
-        test_data = form.data
-        test_data['outputs'] = dict()
-    session['test_data'] = test_data
-    response: dict = Server.create_test_data(test_data)
+    response: dict = Server.create_test_data({'name': form.name.data, 'seg_name': form.seg_name.data})
     if not response:
         flash('There was some error in creating test data')
         return redirect(url_for('create_test_data'))
@@ -84,19 +84,18 @@ def copy_test_data(test_data_id):
     if not test_data:
         flash('Error in retrieving the test data')
         return redirect(url_for('get_all_test_data'))
-    test_data_form = TestDataForm().data
-    session['test_data'] = {**test_data_form, **test_data}
     return redirect(url_for('create_test_data'))
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/confirm', methods=['GET', 'POST'])
 @login_required
 @test_data_required
-def confirm_test_data(test_data_id: str, test_data: dict):
+def confirm_test_data(test_data_id: str, **kwargs):
+    test_data: dict = kwargs[test_data_id]
     form = ConfirmForm()
     if not form.validate_on_submit():
         return render_template('test_data_confirm.html', title='Confirm Test Data', test_data=test_data, form=form)
-    if not test_data['outputs'] or not test_data['outputs']['regs'] or not test_data['outputs']['cores']:
+    if not test_data['outputs'] or not (test_data['outputs']['regs'] or test_data['outputs']['cores']):
         flash('You need to add at least one output')
         return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
     return redirect(url_for('get_test_data', test_data_id=test_data_id))
@@ -116,68 +115,36 @@ def add_output_regs(test_data_id: str):
     return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
 
 
-def _search_field(redirect_route: str, test_data_id: str) -> Response:
-    form = FieldSearchForm()
-    if not form.validate_on_submit():
-        return render_template('test_data_form.html', title='Search Fields', form=form)
-    label_ref = form.field.data
-    field_name = quote(label_ref['label'])
-    macro_name = label_ref['name']
-    length = label_ref['length']
-    return redirect(url_for(redirect_route, test_data_id=test_data_id, field_name=field_name, macro_name=macro_name,
-                            length=length))
-
-
 @tpf2_app.route('/test_data/<string:test_data_id>/output/fields', methods=['GET', 'POST'])
 @login_required
 def search_output_fields(test_data_id: str) -> Response:
     return _search_field('add_output_field', test_data_id)
 
 
-@tpf2_app.route('/test_data/inputs/fields', methods=['GET', 'POST'])
-@login_required
-def search_input_fields():
-    return _search_field('add_input_field', str())
-
-
-@tpf2_app.route('/test_data/<string:test_data_id>/output/fields/add', methods=['GET', 'POST'])
+@tpf2_app.route('/test_data/<string:test_data_id>/output/cores/<string:macro_name>/fields/<string:field_name>',
+                methods=['GET', 'POST'])
 @login_required
 @test_data_required
-def add_output_field(test_data_id: str, test_data: dict):
-    field_name = unquote(request.args.get('field_name', str()))
-    macro_name = request.args.get('macro_name', str())
-    core = next((core for core in test_data['outputs']['cores'] if core['macro_name'] == macro_name), None)
+def add_output_field(test_data_id: str, macro_name: str, field_name: str, **kwargs) -> Response:
+    field_name = unquote(field_name)
     form = FieldLengthForm(macro_name)
     form_data = form.data
     form_data['length'] = request.args.get('length', 1, type=int)
+    core = next((core for core in kwargs[test_data_id]['outputs']['cores'] if core['macro_name'] == macro_name), None)
     if core:
         form_data['base_reg'] = core['base_reg']
     form = FieldLengthForm(macro_name, formdata=MultiDict(form_data)) if request.method == 'GET' \
         else FieldLengthForm(macro_name)
     if not form.validate_on_submit():
         return render_template('test_data_form.html', title=f"{field_name} ({macro_name})", form=form)
-    if not core:
-        core = {'macro_name': macro_name, 'base_reg': form.base_reg.data, 'field_bytes': list()}
-        response = Server.add_output_core(test_data_id, core)
-        if not response:
-            flash('Error in creating core')
-            return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
-        test_data: dict = Server.get_test_data(test_data_id)
-        if not test_data:
-            flash('Error in retrieving the test data')
-            return redirect(url_for('create_test_data'))
-        core = next(core for core in test_data['outputs']['cores'] if core['macro_name'] == macro_name)
-    field_byte = next((field_byte for field_byte in core['field_bytes'] if field_byte['field'] == field_name), None)
-    if not field_byte:
-        field_byte = {'field': field_name}
-    field_byte['length'] = form.length.data
-    response = Server.add_output_field(test_data_id, macro_name, field_byte)
+    field_dict = {'field': field_name, 'length': form.length.data, 'base_reg': form.base_reg.data}
+    response = Server.add_output_field(test_data_id, macro_name, field_dict)
     if not response:
         flash('Error in creating field_byte')
     return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
 
 
-@tpf2_app.route('/test_data/<string:test_data_id>/output/cores/<string:macro_name>/fields/<string:field_name>')
+@tpf2_app.route('/test_data/<string:test_data_id>/output/cores/<string:macro_name>/fields/<string:field_name>/delete')
 @login_required
 def delete_output_field(test_data_id: str, macro_name: str, field_name: str):
     response = Server.delete_output_field(test_data_id, macro_name, field_name)
@@ -186,139 +153,102 @@ def delete_output_field(test_data_id: str, macro_name: str, field_name: str):
     return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
 
 
-def _encode_data(hex_data: str) -> List[str]:
-    number_data = 'NA'
-    if len(hex_data) <= 8:
-        number_data = int(hex_data, 16)
-        if number_data > 0x7FFFFFFF:
-            number_data -= tpf2_app.config['REG_MAX'] + 1
-    char_data = bytes.fromhex(hex_data).decode('cp037')
-    return [hex_data, number_data, char_data]
-
-
-def _add_field_byte(parent_list: list, field_name: str, hex_data: str) -> None:
-    field_byte = next((field_byte for field_byte in parent_list if field_byte['field'] == field_name), None)
-    if not field_byte:
-        field_byte = {'field': field_name}
-        parent_list.append(field_byte)
-    field_byte['data'] = _encode_data(hex_data)
-
-
-@tpf2_app.route('/test_data/inputs/fields/add', methods=['GET', 'POST'])
+@tpf2_app.route('/test_data/<string:test_data_id>/input/fields', methods=['GET', 'POST'])
 @login_required
-def add_input_field():
-    test_data = session['test_data']
-    field_name = unquote(request.args.get('field_name', str()))
-    macro_name = request.args.get('macro_name', str())
+def search_input_fields(test_data_id: str) -> Response:
+    return _search_field('add_input_field', test_data_id)
+
+
+@tpf2_app.route('/test_data/<string:test_data_id>/input/cores/<string:macro_name>/fields/<string:field_name>',
+                methods=['GET', 'POST'])
+@login_required
+def add_input_field(test_data_id: str, macro_name: str, field_name: str):
+    field_name = unquote(field_name)
     form = FieldDataForm()
     if not form.validate_on_submit():
         return render_template('test_data_form.html', title=f"{field_name} ({macro_name})", form=form)
-    if 'cores' not in test_data:
-        test_data['cores'] = list()
-    cores = test_data['cores']
-    core = next((core for core in cores if core['macro_name'] == macro_name), None)
-    if not core:
-        core = {'macro_name': macro_name, 'field_bytes': list()}
-        cores.append(core)
-    _add_field_byte(core['field_bytes'], field_name, form.field_data.data)
-    session['test_data'] = test_data
-    return redirect(url_for('confirm_test_data'))
+    field_dict = {'field': field_name, 'data': form.field_data.data}
+    response = Server.add_input_field(test_data_id, macro_name, field_dict)
+    if not response:
+        flash('Error in creating fields')
+    return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
 
 
-@tpf2_app.route('/test_data/inputs/registers', methods=['GET', 'POST'])
+@tpf2_app.route('/test_data/<string:test_data_id>/input/cores/<string:macro_name>/fields/<string:field_name>/delete')
 @login_required
-def add_input_registers():
-    test_data = session['test_data']
+def delete_input_field(test_data_id: str, macro_name: str, field_name: str):
+    response = Server.delete_input_field(test_data_id, macro_name, field_name)
+    if not response:
+        flash('Error in deleting field')
+    return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
+
+
+@tpf2_app.route('/test_data/<string:test_data_id>/input/regs', methods=['GET', 'POST'])
+@login_required
+def add_input_regs(test_data_id: str):
     form = RegisterFieldDataForm()
     if not form.validate_on_submit():
         return render_template('test_data_field_form.html', title='Provide Register Values', form=form)
-    if 'regs' not in test_data:
-        test_data['regs'] = dict()
-    test_data['regs'][form.reg.data] = _encode_data(form.field_data.data)[:2]
-    session['test_data'] = test_data
-    return redirect(url_for('confirm_test_data'))
+    if not Server.add_input_regs(test_data_id, {'reg': form.reg.data, 'value': form.field_data.data}):
+        flash("Error in adding Registers")
+    return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
 
 
-@tpf2_app.route('/test_data/inputs/pnr', methods=['GET', 'POST'])
+@tpf2_app.route('/test_data/<string:test_data_id>/input/regs/<string:reg>')
 @login_required
-def add_input_pnr():
-    pnr_form: dict = session.get('pnr', None) if request.method == 'GET' else None
-    form = PnrForm(formdata=MultiDict(pnr_form)) if pnr_form else PnrForm()
+def delete_input_regs(test_data_id: str, reg: str):
+    if not Server.delete_input_regs(test_data_id, reg):
+        flash("Error in deleting Registers")
+    return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
+
+
+@tpf2_app.route('/test_data/<string:test_data_id>/input/pnr', methods=['GET', 'POST'])
+@login_required
+def add_input_pnr(test_data_id: str):
+    form = PnrForm()
     if not form.validate_on_submit():
         return render_template('test_data_form.html', title='Add PNR element', form=form)
-    pnr_form = {**pnr_form, **form.data} if pnr_form else form.data
-    pnr_form['text_list'] = form.text_data.data.split(',')
-    if 'field_bytes' not in pnr_form:
-        pnr_form['field_bytes'] = list()
-    session['pnr'] = pnr_form
-    return redirect(url_for('confirm_pnr'))
+    pnr_dict = {'key': form.key.data, 'locator': form.locator.data, 'data': form.text_data.data}
+    response = Server.create_pnr(test_data_id, pnr_dict)
+    if not response:
+        flash("Error in creating PNR")
+    return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
 
 
-@tpf2_app.route('/test_data/inputs/pnr/confirm', methods=['GET', 'POST'])
+@tpf2_app.route('/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>/fields', methods=['GET', 'POST'])
 @login_required
-def confirm_pnr():
-    pnr_form = session.get('pnr', None)
-    if not pnr_form:
-        flash("Add PNR Elements")
-        return redirect(url_for('add_input_pnr'))
-    form = ConfirmForm()
+def search_pnr_field(test_data_id: str, pnr_id: str) -> Response:
+    form = FieldSearchForm()
     if not form.validate_on_submit():
-        return render_template('test_data_pnr_form.html', title='Confirm PNR', pnr=pnr_form, form=form)
-    if pnr_form['field_bytes'] and pnr_form['text_data']:
-        pnr_form['text_data'] = str()
-        flash("Remove PNR Text to save")
-        return redirect(url_for('add_input_pnr'))
-    if not pnr_form['field_bytes'] and not pnr_form['text_data']:
-        flash('Either PNR Text or PNR Fields is required')
-        return redirect(url_for('add_input_pnr'))
-    test_data = session['test_data']
-    if 'pnr' not in test_data:
-        test_data['pnr'] = list()
-    pnr = dict()
-    pnr['key'] = pnr_form['key']
-    pnr['locator'] = pnr_form['locator']
-    pnr['field_bytes'] = pnr_form['field_bytes']
-    if pnr_form['text_list']:
-        for pnr_text in pnr_form['text_list']:
-            pnr['data'] = pnr_text
-            test_data['pnr'].append(pnr)
-            pnr = pnr.copy()
-    else:
-        test_data['pnr'].append(pnr)
-    test_data['pnr'].sort(key=lambda pnr_element: (pnr_element['locator'], pnr_element['key']))
-    session['test_data'] = test_data
-    return redirect(url_for('confirm_test_data'))
+        return render_template('test_data_form.html', title='Search Fields', form=form)
+    label_ref = form.field.data
+    return redirect(url_for('add_pnr_field', test_data_id=test_data_id, pnr_id=pnr_id, field_name=label_ref['label']))
 
 
-@tpf2_app.route('/test_data/inputs/pnr/fields', methods=['GET', 'POST'])
+@tpf2_app.route('/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>/fields/<string:field_name>',
+                methods=['GET', 'POST'])
 @login_required
-def search_pnr_fields():
-    return _search_field('add_pnr_field', str())
-
-
-@tpf2_app.route('/test_data/inputs/pnr/fields/add', methods=['GET', 'POST'])
-@login_required
-def add_pnr_field():
-    pnr = session.get('pnr', None)
-    if not pnr:
-        flash('Create PNR Element')
-        return redirect(url_for('add_input_pnr'))
-    field_name = unquote(request.args.get('field_name', str()))
-    macro_name = request.args.get('macro_name', str())
+@test_data_required
+def add_pnr_field(test_data_id: str, pnr_id: str, field_name: str, **kwargs) -> Response:
+    pnr = next((pnr for pnr in kwargs[test_data_id]['pnr'] if pnr['id'] == pnr_id), None)
+    if not pnr or pnr['data']:
+        flash("Error in retrieving PNR")
+        return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
+    field_name = unquote(field_name)
     form = FieldDataForm()
     if not form.validate_on_submit():
-        return render_template('test_data_form.html', title=f"{field_name} ({macro_name})", form=form)
-    if 'field_bytes' not in pnr:
-        pnr['field_bytes'] = list()
-    pnr['text_data'] = str()
-    pnr['text_list'] = list()
-    _add_field_byte(pnr['field_bytes'], field_name, form.field_data.data)
-    session['pnr'] = pnr
-    return redirect(url_for('confirm_pnr'))
+        return render_template('test_data_form.html', title=f"{field_name} (PNR)", form=form)
+    field_dict = {'field': field_name, 'data': form.field_data.data}
+    response = Server.add_pnr_field(test_data_id, pnr_id, field_dict)
+    if not response:
+        flash('Error in creating PNR fields')
+    return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
 
 
-@tpf2_app.route('/test_data/inputs/pnr/cancel')
+@tpf2_app.route('/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>')
 @login_required
-def cancel_pnr():
-    session.pop('pnr', None)
-    return redirect(url_for('confirm_test_data'))
+def delete_pnr(test_data_id: str, pnr_id: str):
+    response = Server.delete_pnr(test_data_id, pnr_id)
+    if not response:
+        flash('Error in deleting PNR element')
+    return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
