@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "test_data_show.html" %}
 
 {% block app_content %}
     <h1>{{ test_data.name }} ({{ test_data.seg_name }})</h1>
@@ -30,14 +30,6 @@
         </div>
     </div>
     <br>
-    <h2>Output</h2>
-    {{ output_regs(test_data) }}
-    {{ output_fields(test_data, edit_mode=False) }}
-    <br>
-    <h2>Input</h2>
-    {{ input_fields(test_data, edit_mode=False) }}
-    {{ input_regs(test_data, edit_mode=False) }}
-    {{ input_pnr(test_data, edit_mode=False) }}
-    <br>
+    {{ show_test_data(test_data, edit_mode=False) }}
     <br>
 {% endblock %}

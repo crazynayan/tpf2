@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "test_data_show.html" %}
 
 {% block app_content %}
     <h1>{{ test_data.name }} ({{ test_data.seg_name }})</h1>
@@ -17,36 +17,6 @@
             </a>
         </div>
     </div>
-    <br>
-    <h2>Output</h2>
-    <p>At least one output is required.</p>
-    {{ output_regs(test_data) }}
-    <br>
-    <a class="btn btn-block btn-success" href="{{ url_for('add_output_regs', test_data_id=test_data.id) }}">
-        Add Output Registers
-    </a>
-    {{ output_fields(test_data, edit_mode=True) }}
-    <br>
-    <a class="btn btn-block btn-success" href="{{ url_for('search_output_fields', test_data_id=test_data.id) }}">
-        Add Output Fields
-    </a>
-    <br>
-    <h2>Input</h2>
-    {{ input_fields(test_data, edit_mode=True) }}
-    <br>
-    <a class="btn btn-block btn-success" href="{{ url_for('search_input_fields', test_data_id=test_data.id) }}">
-        Add Input Fields
-    </a>
-    {{ input_regs(test_data, edit_mode=True) }}
-    <br>
-    <a class="btn btn-block btn-success" href="{{ url_for('add_input_regs', test_data_id=test_data.id) }}">
-        Add Input Registers
-    </a>
-    {{ input_pnr(test_data, edit_mode=True) }}
-    <br>
-    <a class="btn btn-block btn-success" href="{{ url_for('add_input_pnr', test_data_id=test_data.id) }}">
-        Add PNR Elements
-    </a>
-    <br>
+    {{ show_test_data(test_data, edit_mode=True) }}
     <br>
 {% endblock %}
