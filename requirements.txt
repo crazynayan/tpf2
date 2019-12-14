@@ -3,6 +3,7 @@ certifi==2019.9.11
 chardet==3.0.4
 Click==7.0
 dominate==2.4.0
+firestore-ci==1.0.0b2
 Flask==1.1.1
 Flask-Bootstrap4==4.0.2
 Flask-Login==0.4.1
