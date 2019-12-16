@@ -129,18 +129,16 @@ class Server:
         return cls._common_request(f"/fields/{field_name}")
 
     @classmethod
-    def create_test_data(cls, test_data: dict) -> dict:
-        if 'cores' in test_data:
-            for core in test_data['cores']:
-                for field_byte in core['field_bytes']:
-                    field_byte['data'] = b64encode(bytes.fromhex(field_byte['data'][0])).decode()
-        if 'pnr' in test_data:
-            for pnr in test_data['pnr']:
-                for field_byte in pnr['field_bytes']:
-                    field_byte['data'] = b64encode(bytes.fromhex(field_byte['data'][0])).decode()
-        if 'regs' in test_data:
-            test_data['regs'] = {reg: values[1] for reg, values in test_data['regs'].items()}
-        return cls._common_request(f"/test_data", method='POST', json=test_data)
+    def create_test_data(cls, header: dict) -> dict:
+        return cls._common_request(f"/test_data", method='POST', json=header)
+
+    @classmethod
+    def rename_test_data(cls, test_data_id: str, header: dict):
+        return cls._common_request(f"/test_data/{test_data_id}/rename", method='POST', json=header)
+
+    @classmethod
+    def copy_test_data(cls, test_data_id: str):
+        return cls._common_request(f"/test_data/{test_data_id}/copy", method='POST')
 
     @classmethod
     def delete_test_data(cls, test_data_id: str) -> dict:

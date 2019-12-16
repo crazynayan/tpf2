@@ -4,13 +4,19 @@
     <h1>{{ test_data.name }} ({{ test_data.seg_name }})</h1>
     <br>
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md">
             <form action="" method="post" novalidate>
                 {{ form.hidden_tag() }}
                 {{ form.confirm(class="btn btn-primary btn-block text-center") }}
             </form>
         </div>
-        <div class="col-md-6">
+        <div class="col-md">
+            <a class="btn btn-warning btn-block"
+               href="{{ url_for('rename_test_data', test_data_id=test_data.id) }}">
+                Edit Name
+            </a>
+        </div>
+        <div class="col-md">
             <a class="btn btn-danger btn-block"
                href="{{ url_for('get_all_test_data') }}">
                 Cancel

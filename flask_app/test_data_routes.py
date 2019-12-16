@@ -72,7 +72,7 @@ def create_test_data():
         return render_template('test_data_form.html', title='Create Test Data', form=form)
     response: dict = Server.create_test_data({'name': form.name.data, 'seg_name': form.seg_name.data})
     if not response:
-        flash('There was some error in creating test data')
+        flash('Error in creating test data')
         return redirect(url_for('create_test_data'))
     return redirect(url_for('confirm_test_data', test_data_id=response['test_data_id']))
 
@@ -80,11 +80,28 @@ def create_test_data():
 @tpf2_app.route('/test_data/<string:test_data_id>/copy')
 @login_required
 def copy_test_data(test_data_id):
-    test_data = Server.get_test_data(test_data_id)
-    if not test_data:
-        flash('Error in retrieving the test data')
-        return redirect(url_for('get_all_test_data'))
-    return redirect(url_for('create_test_data'))
+    response = Server.copy_test_data(test_data_id)
+    if not response:
+        flash('Error in copying the test data')
+        return redirect(url_for('get_test_data', test_data_id=test_data_id))
+    return redirect(url_for('rename_test_data', test_data_id=response['id']))
+
+
+@tpf2_app.route('/test_data/<string:test_data_id>/rename', methods=['GET', 'POST'])
+@login_required
+@test_data_required
+def rename_test_data(test_data_id, **kwargs):
+    form_data = TestDataForm().data
+    form_data['name'] = kwargs[test_data_id]['name']
+    form_data['seg_name'] = kwargs[test_data_id]['seg_name']
+    form = TestDataForm(formdata=MultiDict(form_data)) if request.method == 'GET' else TestDataForm()
+    if not form.validate_on_submit():
+        return render_template('test_data_form.html', title='Rename Test Data', form=form)
+    response: dict = Server.rename_test_data(test_data_id, {'name': form.name.data, 'seg_name': form.seg_name.data})
+    if not response:
+        flash('Error in renaming test data')
+        return redirect(url_for('rename_test_data', test_data_id=test_data_id))
+    return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/confirm', methods=['GET', 'POST'])
@@ -95,7 +112,7 @@ def confirm_test_data(test_data_id: str, **kwargs):
     form = ConfirmForm()
     if not form.validate_on_submit():
         return render_template('test_data_confirm.html', title='Confirm Test Data', test_data=test_data, form=form)
-    if not test_data['outputs'] or not (test_data['outputs']['regs'] or test_data['outputs']['cores']):
+    if not test_data['outputs']['regs'] and not test_data['outputs']['cores']:
         flash('You need to add at least one output')
         return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
     return redirect(url_for('get_test_data', test_data_id=test_data_id))
