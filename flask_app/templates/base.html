@@ -1,42 +1,41 @@
-{% extends 'bootstrap/base.html' %}
-
-{% block styles %}
-    {{ super() }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block title %}{{ title|default('TPF Analyzer') }}{% endblock title %}</title>
+    <!-- Bootstrap -->
+    <link rel="stylesheet"
+          href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+          crossorigin="anonymous">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-{% endblock %}
+</head>
 
-{% block title %}
-    {% if title %}
-        {{ title }} - TPF Analyzer
-    {% else %}
-        TPF Analyzer
-    {% endif %}
-{% endblock %}
-
-{% block navbar %}
-    <div class="container">
-        <nav class="navbar navbar-dark bg-dark navbar-expand-sm">
-            <a class="navbar-brand" href="{{ url_for('home') }}">TA</a>
-            <button class="navbar-toggler" data-toggle="collapse" data-target="#navbarMenu">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarMenu">
-                <div class="navbar-nav mr-auto">
-                    <a class="nav-item active nav-link" href="{{ url_for('segments') }}">Segments</a>
-                    <a class="nav-item active nav-link" href="{{ url_for('macros') }}">Macros</a>
-                    <a class="nav-item active nav-link" href="{{ url_for('get_all_test_data') }}">Test Data</a>
-                </div>
-                <div class="navbar-nav ml-auto">
-                    {% if current_user.is_anonymous %}
-                        <a class="nav-item active nav-link" href="{{ url_for('login') }}">Login</a>
-                    {% else %}
-                        <a class="nav-item active nav-link" href="{{ url_for('logout') }}">Logout</a>
-                    {% endif %}
-                </div>
+<body>
+<!-- NavBar -->
+<div class="container">
+    <nav class="navbar navbar-dark bg-dark navbar-expand-sm">
+        <a class="navbar-brand" href="{{ url_for('home') }}">TA</a>
+        <button class="navbar-toggler" data-toggle="collapse" data-target="#navbarMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarMenu">
+            <div class="navbar-nav mr-auto">
+                <a class="nav-item nav-link active" href="{{ url_for('segments') }}">Segments</a>
+                <a class="nav-item nav-link active" href="{{ url_for('macros') }}">Macros</a>
+                <a class="nav-item nav-link active" href="{{ url_for('get_all_test_data') }}">Test Data</a>
             </div>
-        </nav>
-    </div>
-{% endblock %}
+            <div class="navbar-nav ml-auto">
+                {% if current_user.is_anonymous %}
+                    <a class="nav-item nav-link active" href="{{ url_for('login') }}">Login</a>
+                {% else %}
+                    <a class="nav-item nav-link active" href="{{ url_for('logout') }}">Logout</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+</div>
 
 {% block content %}
     <br>
@@ -56,41 +55,18 @@
     </div>
 {% endblock %}
 
-{% macro form_group(field) -%}
-    <div class="form-group required">
-        <label for="{{ field.id }}" class="form-control-label">{{ field.label }}</label>
-        {% if field.errors %}
-            {{ field(class_="form-control is-invalid") }}
-        {% else %}
-            {{ field(class_="form-control") }}
-        {% endif %}
-        {% if field.errors %}
-            <div class="invalid-feedback">
-                {{ field.errors[0] }}
-            </div>
-        {% endif %}
-    </div>
-{% endmacro %}
+{% block scripts %}
+    <!-- Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+            integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+            integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+            crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+            integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+            crossorigin="anonymous"></script>
+{%- endblock scripts %}
 
-
-{% macro quick_form(form) -%}
-    <form class="form" method="POST">
-        {% for field in form %}
-            {% if field.type in ('HiddenField', 'CSRFTokenField') %}
-                {{ field() }}
-            {% elif field.type == 'SubmitField' %}
-                <br>
-                {{ field(class_="btn btn-primary") }}
-            {% elif field.type =='BooleanField' %}
-                <div class="form-check">
-                    <label class="form-check-label">
-                        {{ field(class_="form-check-input") }} {{ field.label.text }}
-                    </label>
-                </div>
-            {% else %}
-                {{ form_group(field) }}
-            {% endif %}
-        {% endfor %}
-    </form>
-{% endmacro %}
-
+</body>
+</html>
