@@ -9,7 +9,7 @@ from wtforms import BooleanField
 from flask_app import tpf2_app
 from flask_app.server import Server
 from flask_app.test_data_forms import DeleteForm, TestDataForm, ConfirmForm, FieldSearchForm, FieldLengthForm, \
-    FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm
+    FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm, MultipleFieldDataForm
 
 
 def test_data_required(func):
@@ -234,31 +234,13 @@ def add_input_pnr(test_data_id: str):
 
 @tpf2_app.route('/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>/fields', methods=['GET', 'POST'])
 @login_required
-def search_pnr_field(test_data_id: str, pnr_id: str) -> Response:
-    form = FieldSearchForm()
+def add_pnr_fields(test_data_id: str, pnr_id: str) -> Response:
+    form = MultipleFieldDataForm()
     if not form.validate_on_submit():
-        return render_template('test_data_form.html', title='Search Fields', form=form)
-    label_ref = form.field.data
-    return redirect(url_for('add_pnr_field', test_data_id=test_data_id, pnr_id=pnr_id, field_name=label_ref['label']))
-
-
-@tpf2_app.route('/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>/fields/<string:field_name>',
-                methods=['GET', 'POST'])
-@login_required
-@test_data_required
-def add_pnr_field(test_data_id: str, pnr_id: str, field_name: str, **kwargs) -> Response:
-    pnr = next((pnr for pnr in kwargs[test_data_id]['pnr'] if pnr['id'] == pnr_id), None)
-    if not pnr or pnr['data']:
-        flash("Error in retrieving PNR")
-        return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
-    field_name = unquote(field_name)
-    form = FieldDataForm()
-    if not form.validate_on_submit():
-        return render_template('test_data_form.html', title=f"{field_name} (PNR)", form=form)
-    field_dict = {'field': field_name, 'data': form.field_data.data}
-    response = Server.add_pnr_field(test_data_id, pnr_id, field_dict)
-    if not response:
-        flash('Error in creating PNR fields')
+        return render_template('test_data_form.html', title='Add Multiple Fields', form=form)
+    core_dict = form.field_data.data
+    if not Server.add_pnr_fields(test_data_id, pnr_id, core_dict):
+        flash('Error in adding PNR fields')
     return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
 
 

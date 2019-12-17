@@ -191,10 +191,9 @@ class Server:
         return cls._common_request(f"/test_data/{test_data_id}/input/pnr", method='POST', json=pnr_dict)
 
     @classmethod
-    def add_pnr_field(cls, test_data_id: str, pnr_id: str, field_dict: dict) -> dict:
-        field_dict['data'] = b64encode(bytes.fromhex(field_dict['data'])).decode()
+    def add_pnr_fields(cls, test_data_id: str, pnr_id: str, core_dict: dict) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/input/pnr/{pnr_id}/fields",
-                                   method='POST', json=field_dict)
+                                   method='POST', json=core_dict)
 
     @classmethod
     def delete_pnr(cls, test_data_id: str, pnr_id: str) -> dict:

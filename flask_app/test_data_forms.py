@@ -1,5 +1,7 @@
+from base64 import b64encode
+
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, BooleanField, IntegerField, SelectField
+from wtforms import StringField, SubmitField, BooleanField, IntegerField, SelectField, TextAreaField
 from wtforms.validators import DataRequired, ValidationError, NumberRange
 
 from flask_app import tpf2_app
@@ -85,39 +87,42 @@ class FieldLengthForm(FlaskForm):
         return
 
 
+def form_validate_field_data(data) -> str:
+    data = data.strip().upper()
+    if data.startswith("'"):
+        if len(data) == 1:
+            raise ValidationError("There needs to be some text after a single quote")
+        data = data[1:].encode('cp037').hex().upper()
+    elif data.startswith("-"):
+        if len(data) == 1 or not data[1:].isdigit():
+            raise ValidationError("Invalid Negative Number")
+        neg_data = int(data)
+        if neg_data < -0x80000000:
+            raise ValidationError(f"Negative Number cannot be less than {-0x80000000}")
+        data = f"{neg_data & tpf2_app.config['REG_MAX']:08X}"
+    elif len(data) % 2 == 1 and data.isdigit():
+        number_data = int(data)
+        if number_data > 0x7FFFFFFF:
+            raise ValidationError(f"Number cannot be greater than {0x7FFFFFFF}")
+        data = f"{number_data:08X}"
+    else:
+        try:
+            int(data, 16)
+            if len(data) % 2:
+                data = f"0{data}"
+        except ValueError:
+            data = data.encode('cp037').hex().upper()
+    return data
+
+
 class FieldDataForm(FlaskForm):
     field_data = StringField("Enter Data - Input hex characters. Odd number of digit will be considered a number. "
-                             "Prefix with 0 to make the number of digit. Non hex characters are considered as text. "
+                             "Prefix with 0 to make the number a digit. Non hex characters are considered as text. "
                              "Prefix with quote to enforce text.", validators=[DataRequired()])
     save = SubmitField('Save & Continue - Add Further Data')
 
     def validate_field_data(self, field_data: StringField) -> None:
-        hex_data = field_data.data.strip().upper()
-        if hex_data.startswith("'"):
-            if len(hex_data) == 1:
-                raise ValidationError("There needs to be some text after a single quote")
-            hex_data = hex_data[1:].encode('cp037').hex().upper()
-        elif hex_data.startswith("-"):
-            if len(hex_data) == 1 or not hex_data[1:].isdigit():
-                raise ValidationError("Invalid Negative Number")
-            neg_data = int(hex_data)
-            if neg_data < -0x80000000:
-                raise ValidationError(f"Negative Number cannot be less than {-0x80000000}")
-            hex_data = f"{neg_data & tpf2_app.config['REG_MAX']:08X}"
-        elif len(hex_data) % 2 == 1 and hex_data.isdigit():
-            number_data = int(hex_data)
-            if number_data > 0x7FFFFFFF:
-                raise ValidationError(f"Number cannot be greater than {0x7FFFFFFF}")
-            hex_data = f"{number_data:08X}"
-        else:
-            try:
-                int(hex_data, 16)
-                if len(hex_data) % 2:
-                    hex_data = f"0{hex_data}"
-            except ValueError:
-                hex_data = hex_data.encode('cp037').hex().upper()
-        field_data.data = hex_data
-        return
+        field_data.data = form_validate_field_data(field_data.data)
 
 
 class RegisterFieldDataForm(FieldDataForm):
@@ -157,3 +162,32 @@ class PnrForm(FlaskForm):
     @staticmethod
     def validate_text_data(_, text_data):
         text_data.data = text_data.data.upper()
+
+
+class MultipleFieldDataForm(FlaskForm):
+    field_data = TextAreaField('Enter multiple field and data separated by comma. The field and data should be '
+                               'separated by colon. All fields should be from a single macro. Data by default is in'
+                               'hex characters. Odd number of digit will be considered a number. '
+                               'Prefix with 0 to make the number a digit. Non hex characters are considered as text. '
+                               'Prefix with quote to enforce text.', render_kw={'rows': '5'},
+                               validators=[DataRequired()])
+    save = SubmitField('Save & Continue - Add Further Data')
+
+    @staticmethod
+    def validate_field_data(_, field_data: TextAreaField):
+        data_stream: str = field_data.data
+        data_dict = {'macro_name': str(), 'field_bytes': dict()}
+        for key_value in data_stream.split(','):
+            if key_value.count(':') != 1:
+                raise ValidationError(f"Include a single colon : to separate field and data - {key_value}")
+            key = key_value.split(':')[0].strip().upper()
+            label_ref = Server.search_field(key)
+            if not label_ref:
+                raise ValidationError(f'Field name not found - {key}')
+            data_dict['macro_name'] = data_dict['macro_name'] or label_ref['name']
+            if data_dict['macro_name'] != label_ref['name']:
+                raise ValidationError(f"Field not in the same macro - {key} not in {data_dict['macro_name']}")
+            data = form_validate_field_data(key_value.split(':')[1])
+            data = b64encode(bytes.fromhex(data)).decode()
+            data_dict['field_bytes'][key] = data
+        field_data.data = data_dict

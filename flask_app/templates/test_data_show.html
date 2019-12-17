@@ -223,7 +223,7 @@
                     {% if edit_mode %}
                         {% if pnr.data %} {% else %}
                             <a class="badge badge-warning edit-icon"
-                               href="{{ url_for('search_pnr_field', test_data_id=test_data.id, pnr_id=pnr.id) }}">
+                               href="{{ url_for('add_pnr_fields', test_data_id=test_data.id, pnr_id=pnr.id) }}">
                                 &#9998;
                             </a>
                         {% endif %}
