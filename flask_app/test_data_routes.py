@@ -205,7 +205,7 @@ def delete_input_field(test_data_id: str, macro_name: str, field_name: str):
 def add_input_regs(test_data_id: str):
     form = RegisterFieldDataForm()
     if not form.validate_on_submit():
-        return render_template('test_data_field_form.html', title='Provide Register Values', form=form)
+        return render_template('test_data_form.html', title='Provide Register Values', form=form)
     if not Server.add_input_regs(test_data_id, {'reg': form.reg.data, 'value': form.field_data.data}):
         flash("Error in adding Registers")
     return redirect(url_for('confirm_test_data', test_data_id=test_data_id))

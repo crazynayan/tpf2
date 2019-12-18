@@ -1,17 +1,26 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-    <h1>{{ test_data.name }}</h1>
-    <h6>Ends at {{ test_data.outputs.last_line }}</h6>
+    <h1>Execution Result</h1>
+    <br>
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-primary" href="{{ url_for('get_test_data', test_data_id=test_data.id) }}">
+                {{ test_data.name }}
+            </a>
+        </div>
+        <div class="col-md">
+            Ends at {{ test_data.outputs.last_line }}
+        </div>
+    </div>
     {% if test_data.outputs.messages %}
         <br>
         <div class="list-group list-group-item list-group-item-secondary">Message</div>
         <br>
         {% for message in test_data.outputs.messages %}
             <div class="row">
-                <div class="col-md-1"></div>
-                <div class="col-md-11">
-                    <kbd>{{ message }}</kbd>
+                <div class="col-md">
+                    <div class="col-md"><kbd>{{ message }}</kbd></div>
                 </div>
             </div>
         {% endfor %}

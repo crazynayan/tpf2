@@ -7,3 +7,4 @@ LICENSE
 docker-compose.yml
 .gitignore
 venv/
+.git/

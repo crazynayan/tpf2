@@ -121,12 +121,17 @@ class FieldDataForm(FlaskForm):
                              "Prefix with quote to enforce text.", validators=[DataRequired()])
     save = SubmitField('Save & Continue - Add Further Data')
 
-    def validate_field_data(self, field_data: StringField) -> None:
+    @staticmethod
+    def validate_field_data(_, field_data: StringField) -> None:
         field_data.data = form_validate_field_data(field_data.data)
 
 
-class RegisterFieldDataForm(FieldDataForm):
+class RegisterFieldDataForm(FlaskForm):
     reg = StringField('Enter Register - Valid values are from R0 to R15')
+    field_data = StringField("Enter Data - Input hex characters. Odd number of digit will be considered a number. "
+                             "Prefix with 0 to make the number a digit. Non hex characters are considered as text. "
+                             "Prefix with quote to enforce text.", validators=[DataRequired()])
+    save = SubmitField('Save & Continue - Add Further Data')
 
     @staticmethod
     def validate_reg(_, reg: StringField) -> None:
@@ -135,9 +140,9 @@ class RegisterFieldDataForm(FieldDataForm):
             raise ValidationError("Invalid Register - Register can be from R0 to R15")
         return
 
-    def validate_field_data(self, field_data: StringField) -> None:
-        super().validate_field_data(field_data)
-        hex_data = field_data.data
+    @staticmethod
+    def validate_field_data(_, field_data: StringField) -> None:
+        hex_data = form_validate_field_data(field_data.data)
         hex_data = hex_data[:8]
         hex_data = hex_data.zfill(8)
         field_data.data = hex_data
@@ -161,7 +166,7 @@ class PnrForm(FlaskForm):
 
     @staticmethod
     def validate_text_data(_, text_data):
-        text_data.data = text_data.data.upper()
+        text_data.data = text_data.data.strip().upper()
 
 
 class MultipleFieldDataForm(FlaskForm):
