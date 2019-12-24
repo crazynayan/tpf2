@@ -21,6 +21,8 @@ class Server:
             response: Response = requests.get(request_url, **kwargs)
         elif method == 'POST':
             response: Response = requests.post(request_url, **kwargs)
+        elif method == 'PATCH':
+            response: Response = requests.patch(request_url, **kwargs)
         elif method == 'DELETE':
             response: Response = requests.delete(request_url, **kwargs)
         else:
@@ -134,7 +136,7 @@ class Server:
 
     @classmethod
     def rename_test_data(cls, test_data_id: str, header: dict):
-        return cls._common_request(f"/test_data/{test_data_id}/rename", method='POST', json=header)
+        return cls._common_request(f"/test_data/{test_data_id}/rename", method='PATCH', json=header)
 
     @classmethod
     def copy_test_data(cls, test_data_id: str):

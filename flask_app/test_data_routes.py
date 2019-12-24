@@ -74,7 +74,7 @@ def create_test_data():
     if not response:
         flash('Error in creating test data')
         return redirect(url_for('create_test_data'))
-    return redirect(url_for('confirm_test_data', test_data_id=response['test_data_id']))
+    return redirect(url_for('confirm_test_data', test_data_id=response['id']))
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/copy')
