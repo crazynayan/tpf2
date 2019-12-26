@@ -159,7 +159,7 @@ class Server:
 
     @classmethod
     def add_output_regs(cls, test_data_id: str, reg_dict: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/output/regs", method='POST', json=reg_dict)
+        return cls._common_request(f"/test_data/{test_data_id}/output/regs", method='PATCH', json=reg_dict)
 
     @classmethod
     def delete_output_regs(cls, test_data_id: str) -> dict:
