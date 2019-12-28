@@ -165,7 +165,7 @@ class Server:
     def add_input_field(cls, test_data_id: str, macro_name: str, field_byte: dict) -> dict:
         field_byte['data'] = b64encode(bytes.fromhex(field_byte['data'])).decode()
         return cls._common_request(f"/test_data/{test_data_id}/input/cores/{macro_name}/fields",
-                                   method='POST', json=field_byte)
+                                   method='PATCH', json=field_byte)
 
     @classmethod
     def delete_input_field(cls, test_data_id: str, macro_name: str, field_name: str) -> dict:
