@@ -178,7 +178,7 @@ class Server:
         reg_dict['value'] = int(reg_dict['value'], 16)
         if reg_dict['value'] > 0x7FFFFFFF:
             reg_dict['value'] -= tpf2_app.config['REG_MAX'] + 1
-        return cls._common_request(f"/test_data/{test_data_id}/input/regs", method='POST', json=reg_dict)
+        return cls._common_request(f"/test_data/{test_data_id}/input/regs", method='PATCH', json=reg_dict)
 
     @classmethod
     def delete_input_regs(cls, test_data_id: str, reg: str) -> dict:
