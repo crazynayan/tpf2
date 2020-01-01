@@ -186,12 +186,12 @@ class Server:
 
     @classmethod
     def create_pnr(cls, test_data_id: str, pnr_dict: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/input/pnr", method='POST', json=pnr_dict)
+        return cls._common_request(f"/test_data/{test_data_id}/input/pnr", method='PATCH', json=pnr_dict)
 
     @classmethod
     def add_pnr_fields(cls, test_data_id: str, pnr_id: str, core_dict: dict) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/input/pnr/{pnr_id}/fields",
-                                   method='POST', json=core_dict)
+                                   method='PATCH', json=core_dict)
 
     @classmethod
     def delete_pnr(cls, test_data_id: str, pnr_id: str) -> dict:
