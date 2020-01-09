@@ -27,7 +27,7 @@ class Server:
             response: Response = requests.delete(request_url, **kwargs)
         else:
             raise TypeError
-        if response.status_code == 401:
+        if response.status_code == 401 and current_user.is_authenticated:
             current_user.token = str()
             current_user.save()
         return response.json() if response.status_code == 200 else dict()
@@ -84,7 +84,7 @@ class Server:
             for field_byte in core['field_bytes']:
                 field_byte['data'] = cls._decode_data(field_byte['data'])
         for pnr in test_data['pnr']:
-            for field_byte in pnr['field_bytes']:
+            for field_byte in pnr['field_data']:
                 field_byte['data'] = cls._decode_data(field_byte['data'])
         return test_data
 

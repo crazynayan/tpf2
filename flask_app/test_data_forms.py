@@ -181,7 +181,7 @@ class MultipleFieldDataForm(FlaskForm):
     @staticmethod
     def validate_field_data(_, field_data: TextAreaField):
         data_stream: str = field_data.data
-        data_dict = {'macro_name': str(), 'field_bytes': dict()}
+        data_dict = {'macro_name': str(), 'field_data': dict()}
         for key_value in data_stream.split(','):
             if key_value.count(':') != 1:
                 raise ValidationError(f"Include a single colon : to separate field and data - {key_value}")
@@ -194,5 +194,5 @@ class MultipleFieldDataForm(FlaskForm):
                 raise ValidationError(f"Field not in the same macro - {key} not in {data_dict['macro_name']}")
             data = form_validate_field_data(key_value.split(':')[1])
             data = b64encode(bytes.fromhex(data)).decode()
-            data_dict['field_bytes'][key] = data
+            data_dict['field_data'][key] = data
         field_data.data = data_dict
