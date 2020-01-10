@@ -1,3 +1,4 @@
+from base64 import b64encode
 from functools import wraps
 from urllib.parse import unquote
 
@@ -9,7 +10,7 @@ from wtforms import BooleanField
 from flask_app import tpf2_app
 from flask_app.server import Server
 from flask_app.test_data_forms import DeleteForm, TestDataForm, ConfirmForm, FieldSearchForm, FieldLengthForm, \
-    FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm, MultipleFieldDataForm
+    FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm, MultipleFieldDataForm, TpfdfForm
 
 
 def test_data_required(func):
@@ -250,4 +251,27 @@ def delete_pnr(test_data_id: str, pnr_id: str):
     response = Server.delete_pnr(test_data_id, pnr_id)
     if not response:
         flash('Error in deleting PNR element')
+    return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
+
+
+@tpf2_app.route('/test_data/<string:test_data_id>/input/tpfdf/', methods=['GET', 'POST'])
+@login_required
+def add_tpfdf_lrec(test_data_id: str) -> Response:
+    form = TpfdfForm()
+    if not form.validate_on_submit():
+        return render_template('test_data_form.html', title='Add Tpfdf lrec', form=form)
+    field_data = {field_data.split(':')[0]: b64encode(bytes.fromhex(field_data.split(':')[1])).decode()
+                  for field_data in form.field_data.data.split(',')}
+    tpfdf = {'field_data': field_data, 'key': form.key.data, 'variation': 0, 'macro_name': form.macro_name.data}
+    if not Server.add_tpfdf_lrec(test_data_id, tpfdf):
+        flash('Error in adding Tpfdf lrec')
+    return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
+
+
+@tpf2_app.route('/test_data/<string:test_data_id>/input/tpfdf/<string:df_id>')
+@login_required
+def delete_tpfdf_lrec(test_data_id: str, df_id: str):
+    response = Server.delete_tpfdf_lrec(test_data_id, df_id)
+    if not response:
+        flash('Error in deleting Tpfdf lrec')
     return redirect(url_for('confirm_test_data', test_data_id=test_data_id))

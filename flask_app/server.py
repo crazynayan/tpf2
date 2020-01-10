@@ -86,6 +86,9 @@ class Server:
         for pnr in test_data['pnr']:
             for field_byte in pnr['field_data']:
                 field_byte['data'] = cls._decode_data(field_byte['data'])
+        for tpfdf in test_data['tpfdf']:
+            for field_byte in tpfdf['field_data']:
+                field_byte['data'] = cls._decode_data(field_byte['data'])
         return test_data
 
     @classmethod
@@ -196,3 +199,11 @@ class Server:
     @classmethod
     def delete_pnr(cls, test_data_id: str, pnr_id: str) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/input/pnr/{pnr_id}", method='DELETE')
+
+    @classmethod
+    def add_tpfdf_lrec(cls, test_data_id: str, tpfdf: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/tpfdf", method='PATCH', json=tpfdf)
+
+    @classmethod
+    def delete_tpfdf_lrec(cls, test_data_id: str, df_id: str) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/tpfdf/{df_id}", method='DELETE')

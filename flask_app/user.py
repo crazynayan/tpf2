@@ -41,7 +41,7 @@ class LoginForm(FlaskForm):
 
 
 @tpf2_app.route('/login', methods=['GET', 'POST'])
-def login() -> str:
+def login():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
     form = LoginForm()

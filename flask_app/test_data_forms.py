@@ -2,7 +2,7 @@ from base64 import b64encode
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, BooleanField, IntegerField, SelectField, TextAreaField
-from wtforms.validators import DataRequired, ValidationError, NumberRange
+from wtforms.validators import DataRequired, ValidationError, NumberRange, Length
 
 from flask_app import tpf2_app
 from flask_app.server import Server
@@ -171,7 +171,7 @@ class PnrForm(FlaskForm):
 
 class MultipleFieldDataForm(FlaskForm):
     field_data = TextAreaField('Enter multiple field and data separated by comma. The field and data should be '
-                               'separated by colon. All fields should be from a single macro. Data by default is in'
+                               'separated by colon. All fields should be from a single macro. Data by default is in '
                                'hex characters. Odd number of digit will be considered a number. '
                                'Prefix with 0 to make the number a digit. Non hex characters are considered as text. '
                                'Prefix with quote to enforce text.', render_kw={'rows': '5'},
@@ -196,3 +196,47 @@ class MultipleFieldDataForm(FlaskForm):
             data = b64encode(bytes.fromhex(data)).decode()
             data_dict['field_data'][key] = data
         field_data.data = data_dict
+
+
+class TpfdfForm(FlaskForm):
+    macro_name = StringField('Enter the name of TPFDF macro', validators=[DataRequired()])
+    key = StringField('Enter key as 2 hex characters',
+                      validators=[DataRequired(), Length(min=2, max=2, message='Please enter 2 characters only')])
+    field_data = TextAreaField('Enter multiple field and data separated by comma. The field and data should be '
+                               'separated by colon. All fields should be from a single macro mentioned above. '
+                               'Data by default is in hex characters. Odd number of digit will be considered a number. '
+                               'Prefix with 0 to make the number a digit. Non hex characters are considered as text. '
+                               'Prefix with quote to enforce text.', render_kw={'rows': '5'},
+                               validators=[DataRequired()])
+    save = SubmitField('Save & Continue - Add Further Data')
+
+    @staticmethod
+    def validate_macro_name(_, macro_name: StringField):
+        macro_name.data = macro_name.data.upper()
+        label_ref = Server.search_field(macro_name.data)
+        if not label_ref or label_ref['name'] != macro_name.data:
+            raise ValidationError('This is not a valid macro name')
+
+    @staticmethod
+    def validate_key(_, key: StringField):
+        key.data = key.data.upper()
+        try:
+            int(key.data, 16)
+        except ValueError:
+            raise ValidationError('Please enter hex characters only')
+        return
+
+    def validate_field_data(self, field_data: TextAreaField):
+        updated_field_data = list()
+        for key_value in field_data.data.split(','):
+            if key_value.count(':') != 1:
+                raise ValidationError(f"Include a single colon : to separate field and data - {key_value}")
+            field = key_value.split(':')[0].strip().upper()
+            label_ref = Server.search_field(field)
+            if not label_ref:
+                raise ValidationError(f'Field name not found - {field}')
+            if self.macro_name.data != label_ref['name']:
+                raise ValidationError(f"Field not in the same macro - {field} not in {self.macro_name.data}")
+            data = form_validate_field_data(key_value.split(':')[1])
+            updated_field_data.append(f"{field}:{data}")
+        field_data.data = ','.join(updated_field_data)
