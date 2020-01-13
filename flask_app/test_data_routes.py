@@ -10,7 +10,7 @@ from wtforms import BooleanField
 from flask_app import tpf2_app
 from flask_app.server import Server
 from flask_app.test_data_forms import DeleteForm, TestDataForm, ConfirmForm, FieldSearchForm, FieldLengthForm, \
-    FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm, MultipleFieldDataForm, TpfdfForm
+    FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm, MultipleFieldDataForm, TpfdfForm, DebugForm
 
 
 def test_data_required(func):
@@ -274,4 +274,23 @@ def delete_tpfdf_lrec(test_data_id: str, df_id: str):
     response = Server.delete_tpfdf_lrec(test_data_id, df_id)
     if not response:
         flash('Error in deleting Tpfdf lrec')
+    return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
+
+
+@tpf2_app.route('/test_data/<string:test_data_id>/output/debug/', methods=['GET', 'POST'])
+@login_required
+def add_debug(test_data_id: str) -> Response:
+    form = DebugForm()
+    if not form.validate_on_submit():
+        return render_template('test_data_form.html', title='Add Segments to Debug', form=form)
+    if not Server.add_debug(test_data_id, {'traces': form.seg_list.data.split(',')}):
+        flash('Error in adding debug segments')
+    return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
+
+
+@tpf2_app.route('/test_data/<string:test_data_id>/output/debug/<string:seg_name>/delete')
+@login_required
+def delete_debug(test_data_id: str, seg_name: str) -> Response:
+    if not Server.delete_debug(test_data_id, seg_name):
+        flash('Error in delete debug segment')
     return redirect(url_for('confirm_test_data', test_data_id=test_data_id))

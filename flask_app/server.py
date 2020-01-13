@@ -207,3 +207,11 @@ class Server:
     @classmethod
     def delete_tpfdf_lrec(cls, test_data_id: str, df_id: str) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/input/tpfdf/{df_id}", method='DELETE')
+
+    @classmethod
+    def add_debug(cls, test_data_id: str, debug: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/output/debug", method='PATCH', json=debug)
+
+    @classmethod
+    def delete_debug(cls, test_data_id: str, seg_name: str) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/output/debug/{seg_name}", method='DELETE')

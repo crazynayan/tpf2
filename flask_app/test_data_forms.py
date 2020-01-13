@@ -240,3 +240,19 @@ class TpfdfForm(FlaskForm):
             data = form_validate_field_data(key_value.split(':')[1])
             updated_field_data.append(f"{field}:{data}")
         field_data.data = ','.join(updated_field_data)
+
+
+class DebugForm(FlaskForm):
+    seg_list = StringField('Enter segment names separated by comma')
+    save = SubmitField('Save & Continue - Add Further Data')
+
+    @staticmethod
+    def validate_seg_list(_, seg_list: StringField):
+        updated_seg_list = list()
+        segments = Server.segments()
+        for seg_name in seg_list.data.split(','):
+            seg_name = seg_name.upper()
+            if seg_name not in segments:
+                raise ValidationError(f"Segment {seg_name} not present in the database")
+            updated_seg_list.append(seg_name)
+        seg_list.data = ','.join(updated_seg_list)

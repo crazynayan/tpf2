@@ -1,15 +1,41 @@
 {% extends "base.html" %}
 
 {% macro show_test_data(test_data, edit_mode) -%}
-    {# Output Registers #}
-    {% if edit_mode %}
+    {#  Debug #}
+    {% if edit_mode or test_data.outputs.debug %}
         <br>
         <div class="row">
             <div class="col-md">
-                <div class="col-md">At least one output is required</div>
+                <div class="list-group list-group-item list-group-item-secondary">
+                    Debug Segments
+                </div>
+            </div>
+            {% if edit_mode %}
+                <div class="col-md">
+                    <a class="btn btn-block btn-success "
+                       href="{{ url_for('add_debug', test_data_id=test_data.id) }}">
+                        Add Debug Segments
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+    {% if test_data.outputs.debug %}
+        <br>
+        <div class="row">
+            {% for seg_name in test_data.outputs.debug %}
+                <div class="col-md-1 text-center">{{ seg_name }}</div>
+            {% endfor %}
+        </div>
+    {% elif edit_mode %}
+        <br>
+        <div class="row">
+            <div class="col-md">
+                <div class="col-md">There are no debug segments</div>
             </div>
         </div>
     {% endif %}
+    {# Output Registers #}
     {% if edit_mode or test_data.outputs.regs %}
         <br>
         <div class="row">
