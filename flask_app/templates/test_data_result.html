@@ -75,20 +75,20 @@
         <br>
         {% for trace in test_data.outputs.debug %}
             <div class="row">
-                <div class="col-md-3">
-                    <div class="row">
-                        {% for label, hits in trace.next_hits.items() %}
+                <div class="col-md-2 align-middle">
+                    <kbd>{{ trace.hits }}</kbd>-{{ trace.label }}
+                </div>
+                <div class="col-md-2">
+                    {% for label, hits in trace.next_hits.items() %}
+                        <div class="row">
                             <div class="col-md">
-                                {{ label }}<kbd>{{ hits }}</kbd>
+                                <kbd>{{ hits }}</kbd>-{{ label }}
                             </div>
-                        {% endfor %}
-                    </div>
+                        </div>
+                    {% endfor %}
                 </div>
-                <div class="col-md-8">
-                    <kbd>{{ trace.line[5:] }}</kbd>
-                </div>
-                <div class="col-md-1">
-                    <kbd>{{ trace.hits }}</kbd>
+                <div class="col-md-8 align-middle">
+                    {{ trace.command }} {{ trace.operands }}
                 </div>
             </div>
         {% endfor %}
