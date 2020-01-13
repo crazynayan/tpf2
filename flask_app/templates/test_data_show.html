@@ -72,13 +72,13 @@
                         &nbsp;({{ core.base_reg }})
                     {% endif %}
                 </div>
-                {% for field_byte in core.field_bytes %}
+                {% for field_data in core.field_data %}
                     <div class="col-md-2 text-center">
-                        {{ field_byte.field }} ({{ field_byte.length }})
+                        {{ field_data.field }} ({{ field_data.length }})
                         {% if edit_mode %}
                             <a class="badge badge-danger"
                                href="{{ url_for('delete_output_field', test_data_id=test_data.id,
-                                                macro_name=core.macro_name, field_name=field_byte.field) }}">
+                                                macro_name=core.macro_name, field_name=field_data.field) }}">
                                 X
                             </a>
                         {% endif %}
@@ -121,19 +121,19 @@
                     {{ core.macro_name }}
                 </div>
             </div>
-            {% for field_byte in core.field_bytes %}
+            {% for field_data in core.field_data %}
                 <div class="row">
                     <div class="col-md-3 text-center">
-                        {{ field_byte.field }}
+                        {{ field_data.field }}
                         {% if edit_mode %}
                             <a class="badge badge-danger"
                                href="{{ url_for('delete_input_field', test_data_id=test_data.id,
-                                                macro_name=core.macro_name, field_name=field_byte.field) }}">
+                                                macro_name=core.macro_name, field_name=field_data.field) }}">
                                 X
                             </a>
                         {% endif %}
                     </div>
-                    {% for value in field_byte.data %}
+                    {% for value in field_data.data %}
                         <div class="col-md-3"><kbd>{{ value }}</kbd></div>
                     {% endfor %}
                 </div>
@@ -240,12 +240,12 @@
                 {% endif %}
             </div>
             <br>
-            {% for field_byte in pnr.field_data %}
+            {% for field_data in pnr.field_data %}
                 <div class="row">
                     <div class="col-md-3 text-center">
-                        <pre>{{ field_byte.field }}</pre>
+                        <pre>{{ field_data.field }}</pre>
                     </div>
-                    {% for value in field_byte.data %}
+                    {% for value in field_data.data %}
                         <div class="col-md-3"><kbd>{{ value }}</kbd></div>
                     {% endfor %}
                 </div>

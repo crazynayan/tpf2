@@ -81,14 +81,14 @@ class Server:
         if 'regs' in test_data and test_data['regs']:
             test_data['regs'] = cls._decode_regs(test_data['regs'])
         for core in test_data['cores']:
-            for field_byte in core['field_bytes']:
-                field_byte['data'] = cls._decode_data(field_byte['data'])
+            for field_data in core['field_data']:
+                field_data['data'] = cls._decode_data(field_data['data'])
         for pnr in test_data['pnr']:
-            for field_byte in pnr['field_data']:
-                field_byte['data'] = cls._decode_data(field_byte['data'])
+            for field_data in pnr['field_data']:
+                field_data['data'] = cls._decode_data(field_data['data'])
         for tpfdf in test_data['tpfdf']:
-            for field_byte in tpfdf['field_data']:
-                field_byte['data'] = cls._decode_data(field_byte['data'])
+            for field_data in tpfdf['field_data']:
+                field_data['data'] = cls._decode_data(field_data['data'])
         return test_data
 
     @classmethod
@@ -124,8 +124,8 @@ class Server:
             test_data['outputs']['regs'] = cls._decode_regs(outputs['regs'])
         if 'cores' in outputs and outputs['cores']:
             for core in outputs['cores']:
-                for field_byte in core['field_bytes']:
-                    field_byte['data'] = cls._decode_data(field_byte['data'])
+                for field_data in core['field_data']:
+                    field_data['data'] = cls._decode_data(field_data['data'])
         return test_data
 
     @classmethod
@@ -165,10 +165,10 @@ class Server:
         return cls._common_request(f"/test_data/{test_data_id}/output/regs", method='PATCH', json=reg_dict)
 
     @classmethod
-    def add_input_field(cls, test_data_id: str, macro_name: str, field_byte: dict) -> dict:
-        field_byte['data'] = b64encode(bytes.fromhex(field_byte['data'])).decode()
+    def add_input_field(cls, test_data_id: str, macro_name: str, field_data: dict) -> dict:
+        field_data['data'] = b64encode(bytes.fromhex(field_data['data'])).decode()
         return cls._common_request(f"/test_data/{test_data_id}/input/cores/{macro_name}/fields",
-                                   method='PATCH', json=field_byte)
+                                   method='PATCH', json=field_data)
 
     @classmethod
     def delete_input_field(cls, test_data_id: str, macro_name: str, field_name: str) -> dict:

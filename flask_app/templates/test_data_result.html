@@ -57,12 +57,12 @@
         <div class="list-group list-group-item list-group-item-secondary">Fields</div>
         <br>
         {% for core in test_data.outputs.cores %}
-            {% for field_byte in core.field_bytes %}
+            {% for field_data in core.field_data %}
                 <div class="row">
                     <div class="col-md-3 text-center">
-                        <pre>{{ field_byte.field }}</pre>
+                        <pre>{{ field_data.field }}</pre>
                     </div>
-                    {% for value in field_byte.data %}
+                    {% for value in field_data.data %}
                         <div class="col-md-3 text-center"><kbd>{{ value }}</kbd></div>
                     {% endfor %}
                 </div>
