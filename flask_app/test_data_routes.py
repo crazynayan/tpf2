@@ -226,7 +226,7 @@ def add_input_pnr(test_data_id: str):
     form = PnrForm()
     if not form.validate_on_submit():
         return render_template('test_data_form.html', title='Add PNR element', form=form)
-    pnr_dict = {'key': form.key.data, 'locator': form.locator.data, 'data': form.text_data.data}
+    pnr_dict = {'key': form.key.data, 'locator': form.locator.data, 'data': form.text_data.data, 'variation': 0}
     response = Server.create_pnr(test_data_id, pnr_dict)
     if not response:
         flash("Error in creating PNR")
