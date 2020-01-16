@@ -60,9 +60,10 @@ def get_test_data(test_data_id):
 
 @tpf2_app.route('/test_data/<string:test_data_id>/run')
 @login_required
-def test_data_run(test_data_id: str):
+def run_test_data(test_data_id: str):
     test_data = Server.run_test_data(test_data_id)
-    return render_template('test_data_result.html', title='Results', test_data=test_data)
+    return render_template('test_data_result.html', title='Results', test_data=test_data,
+                           output=test_data['outputs'][0])
 
 
 @tpf2_app.route('/test_data/create', methods=['GET', 'POST'])

@@ -10,14 +10,14 @@
             </a>
         </div>
         <div class="col-md">
-            Ends at {{ test_data.outputs.last_line }}
+            Ends at {{ output.last_line }}
         </div>
     </div>
-    {% if test_data.outputs.messages %}
+    {% if output.messages %}
         <br>
         <div class="list-group list-group-item list-group-item-secondary">Message</div>
         <br>
-        {% for message in test_data.outputs.messages %}
+        {% for message in output.messages %}
             <div class="row">
                 <div class="col-md">
                     <div class="col-md"><kbd>{{ message }}</kbd></div>
@@ -25,23 +25,23 @@
             </div>
         {% endfor %}
     {% endif %}
-    {% if test_data.outputs.dumps %}
+    {% if output.dumps %}
         <br>
         <div class="list-group list-group-item list-group-item-danger">Dumps</div>
         <br>
         <div class="row">
-            {% for dump in test_data.outputs.dumps %}
+            {% for dump in output.dumps %}
                 <div class="col-md-2 text-center">
                     <kbd>{{ dump }}</kbd>
                 </div>
             {% endfor %}
         </div>
     {% endif %}
-    {% if test_data.outputs.regs %}
+    {% if output.regs %}
         <br>
         <div class="list-group list-group-item list-group-item-secondary">Registers</div>
         <br>
-        {% for reg, values in test_data.outputs.regs.items() %}
+        {% for reg, values in output.regs.items() %}
             <div class="row">
                 <div class="col-md-3 text-center">
                     <pre>{{ reg }}</pre>
@@ -52,11 +52,11 @@
             </div>
         {% endfor %}
     {% endif %}
-    {% if test_data.outputs.cores %}
+    {% if output.cores %}
         <br>
         <div class="list-group list-group-item list-group-item-secondary">Fields</div>
         <br>
-        {% for core in test_data.outputs.cores %}
+        {% for core in output.cores %}
             {% for field_data in core.field_data %}
                 <div class="row">
                     <div class="col-md-3 text-center">
@@ -69,11 +69,11 @@
             {% endfor %}
         {% endfor %}
     {% endif %}
-    {% if test_data.outputs.debug %}
+    {% if output.debug %}
         <br>
         <div class="list-group list-group-item list-group-item-secondary">Debug</div>
         <br>
-        {% for trace in test_data.outputs.debug %}
+        {% for trace in output.debug %}
             <div class="row">
                 <div class="col-md-2 align-middle">
                     <kbd>{{ trace.hits }}</kbd>-{{ trace.label }}

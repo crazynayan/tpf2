@@ -119,13 +119,13 @@ class Server:
         test_data: dict = cls._common_request(f"/test_data/{test_data_id}/run")
         if not test_data:
             return dict()
-        outputs = test_data['outputs']
-        if 'regs' in outputs and outputs['regs']:
-            test_data['outputs']['regs'] = cls._decode_regs(outputs['regs'])
-        if 'cores' in outputs and outputs['cores']:
-            for core in outputs['cores']:
-                for field_data in core['field_data']:
-                    field_data['data'] = cls._decode_data(field_data['data'])
+        for output in test_data['outputs']:
+            if 'regs' in output and output['regs']:
+                output['regs'] = cls._decode_regs(output['regs'])
+            if 'cores' in output and output['cores']:
+                for core in output['cores']:
+                    for field_data in core['field_data']:
+                        field_data['data'] = cls._decode_data(field_data['data'])
         return test_data
 
     @classmethod
