@@ -1,0 +1,111 @@
+{% extends "test_data_show.html" %}
+
+{% block app_content %}
+    <h1>Execution Result</h1>
+    <br>
+    <div class="row">
+        <div class="col-md">
+            <a class="btn btn-primary" href="{{ url_for('get_test_data', test_data_id=test_data.id) }}">
+                {{ test_data.name }}
+            </a>
+        </div>
+    </div>
+
+    <br>
+    <div class="row">
+        <div class="col-md">
+            <div class="list-group list-group-item list-group-item-secondary">
+                General Summary
+            </div>
+        </div>
+    </div>
+    <br>
+    <table class="table table-bordered table-sm table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col" class="text-center">No</th>
+            <th scope="col" class="text-center">Core</th>
+            <th scope="col" class="text-center">Pnr</th>
+            <th scope="col" class="text-center">DF</th>
+            <th scope="col" class="text-center">End</th>
+            <th scope="col" class="text-center">Dumps</th>
+            <th scope="col" class="text-center">Message</th>
+
+        </tr>
+        </thead>
+        <tbody>
+        {% for output in test_data.outputs %}
+            <tr>
+                <th scope="row" class="text-center">{{ loop.index }}</th>
+                <th scope="row" class="text-center">{{ output.variation.core }}</th>
+                <th scope="row" class="text-center">{{ output.variation.pnr }}</th>
+                <th scope="row" class="text-center">{{ output.variation.tpfdf }}</th>
+                <td class="text-center"><kbd>{{ output.last_line }}</kbd></td>
+                <td class="text-center">
+                    {% if output.dumps %}
+                        {% for dump in output.dumps %}
+                            <kbd>{{ dump }}</kbd>
+                        {% endfor %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    {% if output.messages %}
+                        {% for message in output.messages %}
+                            <kbd>{{ message }}</kbd>
+                        {% endfor %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <br>
+    <div class="row">
+        <div class="col-md">
+            <div class="list-group list-group-item list-group-item-secondary">
+                Field Summary
+            </div>
+        </div>
+    </div>
+    <br>
+    <table class="table table-bordered table-sm table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col" class="text-center">No</th>
+            <th scope="col" class="text-center">Core</th>
+            <th scope="col" class="text-center">Pnr</th>
+            <th scope="col" class="text-center">DF</th>
+            {% for field in test_data.fields %}
+                <th scope="col" class="text-center">{{ field }}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for output in test_data.outputs %}
+            <tr>
+                <th scope="row" class="text-center">{{ loop.index }}</th>
+                <th scope="row" class="text-center">{{ output.variation.core }}</th>
+                <th scope="row" class="text-center">{{ output.variation.pnr }}</th>
+                <th scope="row" class="text-center">{{ output.variation.tpfdf }}</th>
+                {% for core in output.cores %}
+                    {% for field_data in core.field_data %}
+                        <td class="text-center">
+                            <kbd>{{ field_data.data[0] }}</kbd>
+                            {% if 9 < field_data.data[1] < 256 %}
+                                <kbd> ({{ field_data.data[1] }})</kbd>
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {{ show_test_data(test_data, edit_mode=False, output=False) }}
+
+{% endblock %}

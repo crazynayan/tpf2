@@ -3,6 +3,7 @@ from base64 import b64encode
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, BooleanField, IntegerField, SelectField, TextAreaField
 from wtforms.validators import DataRequired, ValidationError, NumberRange, Length
+from wtforms.widgets import Input
 
 from flask_app import tpf2_app
 from flask_app.server import Server
@@ -149,6 +150,8 @@ class RegisterFieldDataForm(FlaskForm):
 
 
 class PnrForm(FlaskForm):
+    variation = IntegerField('Enter variation number', validators=[NumberRange(0, 100)], default=0,
+                             widget=Input(input_type='number'))
     key = SelectField('Select type of PNR element', choices=tpf2_app.config['PNR_KEYS'], default='name')
     locator = StringField('Enter PNR Locator - 6 character alpha numeric - Leave it blank for AAA PNR')
     text_data = StringField('Enter text - Separate it with comma for multiple PNR elements. '

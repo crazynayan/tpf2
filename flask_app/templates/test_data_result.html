@@ -80,11 +80,13 @@
                 </div>
                 <div class="col-md-2">
                     {% for label, hits in trace.next_hits.items() %}
-                        <div class="row">
-                            <div class="col-md">
-                                <kbd>{{ hits }}</kbd>-{{ label }}
+                        {% if hits %}
+                            <div class="row">
+                                <div class="col-md">
+                                    <kbd>{{ hits }}</kbd>-{{ label }}
+                                </div>
                             </div>
-                        </div>
+                        {% endif %}
                     {% endfor %}
                 </div>
                 <div class="col-md-8 align-middle">

@@ -1,130 +1,132 @@
 {% extends "base.html" %}
 
-{% macro show_test_data(test_data, edit_mode) -%}
-    {#  Debug #}
-    {% if edit_mode or test_data.outputs.debug %}
-        <br>
-        <div class="row">
-            <div class="col-md">
-                <div class="list-group list-group-item list-group-item-secondary">
-                    Debug Segments
-                </div>
-            </div>
-            {% if edit_mode %}
-                <div class="col-md">
-                    <a class="btn btn-block btn-success "
-                       href="{{ url_for('add_debug', test_data_id=test_data.id) }}">
-                        Add Debug Segments
-                    </a>
-                </div>
-            {% endif %}
-        </div>
-    {% endif %}
-    {% if test_data.outputs.debug %}
-        <br>
-        <div class="row">
-            {% for seg_name in test_data.outputs.debug %}
-                <div class="col-md-1 text-center">{{ seg_name }}</div>
-                {% if edit_mode %}
-                    <a class="badge badge-danger"
-                       href="{{ url_for('delete_debug', test_data_id=test_data.id, seg_name=seg_name) }}">
-                        X
-                    </a>
-                {% endif %}
-            {% endfor %}
-        </div>
-    {% elif edit_mode %}
-        <br>
-        <div class="row">
-            <div class="col-md">
-                <div class="col-md">There are no debug segments</div>
-            </div>
-        </div>
-    {% endif %}
-    {# Output Registers #}
-    {% if edit_mode or test_data.outputs.regs %}
-        <br>
-        <div class="row">
-            <div class="col-md">
-                <div class="list-group list-group-item list-group-item-secondary">
-                    Output - Registers
-                </div>
-            </div>
-            {% if edit_mode %}
-                <div class="col-md">
-                    <a class="btn btn-block btn-success "
-                       href="{{ url_for('add_output_regs', test_data_id=test_data.id) }}">
-                        Add Registers
-                    </a>
-                </div>
-            {% endif %}
-        </div>
-    {% endif %}
-    {% if test_data.outputs.regs %}
-        <br>
-        <div class="row">
-            {% for reg in test_data.outputs.regs %}
-                <div class="col-md-1 text-center">{{ reg }}</div>
-            {% endfor %}
-        </div>
-    {% elif edit_mode %}
-        <br>
-        <div class="row">
-            <div class="col-md">
-                <div class="col-md">There are no output registers</div>
-            </div>
-        </div>
-    {% endif %}
-    {# Output Fields #}
-    {% if edit_mode or test_data.outputs.cores %}
-        <br>
-        <div class="row">
-            <div class="col-md">
-                <div class="list-group list-group-item list-group-item-secondary">
-                    Output - Fields
-                </div>
-            </div>
-            {% if edit_mode %}
-                <div class="col-md">
-                    <a class="btn btn-block btn-success "
-                       href="{{ url_for('search_output_fields', test_data_id=test_data.id) }}">
-                        Add Fields
-                    </a>
-                </div>
-            {% endif %}
-        </div>
-    {% endif %}
-    {% if test_data.outputs.cores %}
-        {% for core in test_data.outputs.cores %}
+{% macro show_test_data(test_data, edit_mode, output=True) -%}
+    {% if output %}
+        {#  Debug #}
+        {% if edit_mode or test_data.outputs.debug %}
             <br>
             <div class="row">
-                <div class="col-md-2 text-center font-weight-bold">
-                    {{ core.macro_name }}
-                    {% if core.base_reg and core.base_reg != 'R0' %}
-                        &nbsp;({{ core.base_reg }})
-                    {% endif %}
-                </div>
-                {% for field_data in core.field_data %}
-                    <div class="col-md-2 text-center">
-                        {{ field_data.field }} ({{ field_data.length }})
-                        {% if edit_mode %}
-                            <a class="badge badge-danger"
-                               href="{{ url_for('delete_output_field', test_data_id=test_data.id,
-                                                macro_name=core.macro_name, field_name=field_data.field) }}">
-                                X
-                            </a>
-                        {% endif %}
+                <div class="col-md">
+                    <div class="list-group list-group-item list-group-item-secondary">
+                        Debug Segments
                     </div>
+                </div>
+                {% if edit_mode %}
+                    <div class="col-md">
+                        <a class="btn btn-block btn-success "
+                           href="{{ url_for('add_debug', test_data_id=test_data.id) }}">
+                            Add Debug Segments
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+        {% if test_data.outputs.debug %}
+            <br>
+            <div class="row">
+                {% for seg_name in test_data.outputs.debug %}
+                    <div class="col-md-1 text-center">{{ seg_name }}</div>
+                    {% if edit_mode %}
+                        <a class="badge badge-danger"
+                           href="{{ url_for('delete_debug', test_data_id=test_data.id, seg_name=seg_name) }}">
+                            X
+                        </a>
+                    {% endif %}
                 {% endfor %}
             </div>
-        {% endfor %}
-    {% elif edit_mode %}
-        <br>
-        <div class="row">
-            <div class="col-md">
-                <div class="col-md">There are no output fields</div>
+        {% elif edit_mode %}
+            <br>
+            <div class="row">
+                <div class="col-md">
+                    <div class="col-md">There are no debug segments</div>
+                </div>
             </div>
-        </div>
+        {% endif %}
+        {# Output Registers #}
+        {% if edit_mode or test_data.outputs.regs %}
+            <br>
+            <div class="row">
+                <div class="col-md">
+                    <div class="list-group list-group-item list-group-item-secondary">
+                        Output - Registers
+                    </div>
+                </div>
+                {% if edit_mode %}
+                    <div class="col-md">
+                        <a class="btn btn-block btn-success "
+                           href="{{ url_for('add_output_regs', test_data_id=test_data.id) }}">
+                            Add Registers
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+        {% if test_data.outputs.regs %}
+            <br>
+            <div class="row">
+                {% for reg in test_data.outputs.regs %}
+                    <div class="col-md-1 text-center">{{ reg }}</div>
+                {% endfor %}
+            </div>
+        {% elif edit_mode %}
+            <br>
+            <div class="row">
+                <div class="col-md">
+                    <div class="col-md">There are no output registers</div>
+                </div>
+            </div>
+        {% endif %}
+        {# Output Fields #}
+        {% if edit_mode or test_data.outputs.cores %}
+            <br>
+            <div class="row">
+                <div class="col-md">
+                    <div class="list-group list-group-item list-group-item-secondary">
+                        Output - Fields
+                    </div>
+                </div>
+                {% if edit_mode %}
+                    <div class="col-md">
+                        <a class="btn btn-block btn-success "
+                           href="{{ url_for('search_output_fields', test_data_id=test_data.id) }}">
+                            Add Fields
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+        {% if test_data.outputs.cores %}
+            {% for core in test_data.outputs.cores %}
+                <br>
+                <div class="row">
+                    <div class="col-md-2 text-center font-weight-bold">
+                        {{ core.macro_name }}
+                        {% if core.base_reg and core.base_reg != 'R0' %}
+                            &nbsp;({{ core.base_reg }})
+                        {% endif %}
+                    </div>
+                    {% for field_data in core.field_data %}
+                        <div class="col-md-2 text-center">
+                            {{ field_data.field }} ({{ field_data.length }})
+                            {% if edit_mode %}
+                                <a class="badge badge-danger"
+                                   href="{{ url_for('delete_output_field', test_data_id=test_data.id,
+                                                macro_name=core.macro_name, field_name=field_data.field) }}">
+                                    X
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% elif edit_mode %}
+            <br>
+            <div class="row">
+                <div class="col-md">
+                    <div class="col-md">There are no output fields</div>
+                </div>
+            </div>
+        {% endif %}
     {% endif %}
     {# Input Fields #}
     {% if edit_mode or test_data.cores %}
@@ -245,42 +247,50 @@
     {% endif %}
     {% if test_data.pnr %}
         <br>
-        {% for pnr in test_data.pnr %}
+        {% for variation in test_data.pnr|groupby('variation') %}
             <div class="row">
-                <div class="col-md-2 text-center font-weight-bold">
-                    {{ pnr.locator }}
+                <div class="col-md">
+                    <div class="list-group list-group-item list-group-item-light">
+                        Variation {{ variation.grouper }}
+                    </div>
                 </div>
-                <div class="col-md-2 font-weight-bold">
-                    {{ pnr.key.upper() }}
-                    {% if edit_mode %}
-                        {% if pnr.data %} {% else %}
-                            <a class="badge badge-warning edit-icon"
-                               href="{{ url_for('add_pnr_fields', test_data_id=test_data.id, pnr_id=pnr.id) }}">
-                                &#9998;
+            </div>
+            {% for pnr in variation.list %}
+                <div class="row">
+                    <div class="col-md-2 text-center font-weight-bold">
+                        {{ pnr.locator }}
+                    </div>
+                    <div class="col-md-2 font-weight-bold">
+                        {{ pnr.key.upper() }}
+                        {% if edit_mode %}
+                            {% if pnr.data %} {% else %}
+                                <a class="badge badge-warning edit-icon"
+                                   href="{{ url_for('add_pnr_fields', test_data_id=test_data.id, pnr_id=pnr.id) }}">
+                                    &#9998;
+                                </a>
+                            {% endif %}
+                            <a class="badge badge-danger"
+                               href="{{ url_for('delete_pnr', test_data_id=test_data.id, pnr_id=pnr.id) }}">
+                                X
                             </a>
                         {% endif %}
-                        <a class="badge badge-danger"
-                           href="{{ url_for('delete_pnr', test_data_id=test_data.id, pnr_id=pnr.id) }}">
-                            X
-                        </a>
+                    </div>
+                    {% if pnr.data %}
+                        <div class="col-md-8">
+                            <kbd>{{ pnr.data }}</kbd>
+                        </div>
                     {% endif %}
                 </div>
-                {% if pnr.data %}
-                    <div class="col-md-8">
-                        <kbd>{{ pnr.data }}</kbd>
+                {% for field_data in pnr.field_data %}
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            {{ field_data.field }}
+                        </div>
+                        {% for value in field_data.data %}
+                            <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                        {% endfor %}
                     </div>
-                {% endif %}
-            </div>
-            <br>
-            {% for field_data in pnr.field_data %}
-                <div class="row">
-                    <div class="col-md-3 text-center">
-                        <pre>{{ field_data.field }}</pre>
-                    </div>
-                    {% for value in field_data.data %}
-                        <div class="col-md-3"><kbd>{{ value }}</kbd></div>
-                    {% endfor %}
-                </div>
+                {% endfor %}
             {% endfor %}
         {% endfor %}
     {% elif edit_mode %}
@@ -327,11 +337,10 @@
                     {% endif %}
                 </div>
             </div>
-            <br>
             {% for field_data in lrec.field_data %}
                 <div class="row">
                     <div class="col-md-3 text-center">
-                        <pre>{{ field_data.field }}</pre>
+                        {{ field_data.field }}
                     </div>
                     {% for value in field_data.data %}
                         <div class="col-md-3"><kbd>{{ value }}</kbd></div>

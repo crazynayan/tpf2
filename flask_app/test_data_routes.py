@@ -62,6 +62,8 @@ def get_test_data(test_data_id):
 @login_required
 def run_test_data(test_data_id: str):
     test_data = Server.run_test_data(test_data_id)
+    if len(test_data['outputs']) > 1:
+        return render_template('test_data_variation.html', title='Results', test_data=test_data)
     return render_template('test_data_result.html', title='Results', test_data=test_data,
                            output=test_data['outputs'][0])
 
@@ -227,7 +229,8 @@ def add_input_pnr(test_data_id: str):
     form = PnrForm()
     if not form.validate_on_submit():
         return render_template('test_data_form.html', title='Add PNR element', form=form)
-    pnr_dict = {'key': form.key.data, 'locator': form.locator.data, 'data': form.text_data.data, 'variation': 0}
+    pnr_dict = {'key': form.key.data, 'locator': form.locator.data, 'data': form.text_data.data,
+                'variation': form.variation.data}
     response = Server.create_pnr(test_data_id, pnr_dict)
     if not response:
         flash("Error in creating PNR")

@@ -89,6 +89,8 @@ class Server:
         for tpfdf in test_data['tpfdf']:
             for field_data in tpfdf['field_data']:
                 field_data['data'] = cls._decode_data(field_data['data'])
+        test_data['pnr'].sort(key=lambda pnr_item: (pnr_item['variation'], pnr_item['locator'], pnr_item['key']))
+        test_data['cores'].sort(key=lambda core_item: (core_item['variation'], core_item['macro_name']))
         return test_data
 
     @classmethod
@@ -122,10 +124,12 @@ class Server:
         for output in test_data['outputs']:
             if 'regs' in output and output['regs']:
                 output['regs'] = cls._decode_regs(output['regs'])
-            if 'cores' in output and output['cores']:
+            if 'cores' in output:
                 for core in output['cores']:
                     for field_data in core['field_data']:
                         field_data['data'] = cls._decode_data(field_data['data'])
+        fields = [field_data['field'] for core in test_data['outputs'][0]['cores'] for field_data in core['field_data']]
+        test_data['fields'] = fields
         return test_data
 
     @classmethod
