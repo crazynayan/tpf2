@@ -33,6 +33,23 @@ class Server:
         return response.json() if response.status_code == 200 else dict()
 
     @classmethod
+    def _decode_test_data(cls, test_data: dict) -> dict:
+        if 'regs' in test_data and test_data['regs']:
+            test_data['regs'] = cls._decode_regs(test_data['regs'])
+        for core in test_data['cores']:
+            for field_data in core['field_data']:
+                field_data['data'] = cls._decode_data(field_data['data'])
+        for pnr in test_data['pnr']:
+            for field_data in pnr['field_data']:
+                field_data['data'] = cls._decode_data(field_data['data'])
+        for tpfdf in test_data['tpfdf']:
+            for field_data in tpfdf['field_data']:
+                field_data['data'] = cls._decode_data(field_data['data'])
+        test_data['pnr'].sort(key=lambda pnr_item: (pnr_item['variation'], pnr_item['locator'], pnr_item['key']))
+        test_data['cores'].sort(key=lambda core_item: (core_item['variation'], core_item['macro_name']))
+        return test_data
+
+    @classmethod
     def authenticate(cls, email: str, password: str) -> str:
         response: dict = cls._common_request(f"/tokens", method='POST', auth=(email, password))
         return response['token'] if 'token' in response else str()
@@ -78,20 +95,7 @@ class Server:
         if not test_data:
             return dict()
         test_data['outputs'] = test_data['outputs'][0]
-        if 'regs' in test_data and test_data['regs']:
-            test_data['regs'] = cls._decode_regs(test_data['regs'])
-        for core in test_data['cores']:
-            for field_data in core['field_data']:
-                field_data['data'] = cls._decode_data(field_data['data'])
-        for pnr in test_data['pnr']:
-            for field_data in pnr['field_data']:
-                field_data['data'] = cls._decode_data(field_data['data'])
-        for tpfdf in test_data['tpfdf']:
-            for field_data in tpfdf['field_data']:
-                field_data['data'] = cls._decode_data(field_data['data'])
-        test_data['pnr'].sort(key=lambda pnr_item: (pnr_item['variation'], pnr_item['locator'], pnr_item['key']))
-        test_data['cores'].sort(key=lambda core_item: (core_item['variation'], core_item['macro_name']))
-        return test_data
+        return cls._decode_test_data(test_data)
 
     @classmethod
     def get_test_data_by_name(cls, name: str) -> dict:
@@ -121,6 +125,7 @@ class Server:
         test_data: dict = cls._common_request(f"/test_data/{test_data_id}/run")
         if not test_data:
             return dict()
+        test_data = cls._decode_test_data(test_data)
         for output in test_data['outputs']:
             if 'regs' in output and output['regs']:
                 output['regs'] = cls._decode_regs(output['regs'])

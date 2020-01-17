@@ -188,7 +188,7 @@ def add_input_field(test_data_id: str, macro_name: str, field_name: str):
     form = FieldDataForm()
     if not form.validate_on_submit():
         return render_template('test_data_form.html', title=f"{field_name} ({macro_name})", form=form)
-    field_dict = {'field': field_name, 'data': form.field_data.data}
+    field_dict = {'field': field_name, 'data': form.field_data.data, 'variation': form.variation.data}
     response = Server.add_input_field(test_data_id, macro_name, field_dict)
     if not response:
         flash('Error in creating fields')

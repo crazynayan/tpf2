@@ -148,29 +148,40 @@
         </div>
     {% endif %}
     {% if test_data.cores %}
-        {% for core in test_data.cores %}
-            <br>
-            <div class="row">
-                <div class="col-md-2 text-center font-weight-bold">
-                    {{ core.macro_name }}
-                </div>
-            </div>
-            {% for field_data in core.field_data %}
+        <br>
+        {% for variation in test_data.cores|groupby('variation') %}
+            {% if loop.length > 1 %}
                 <div class="row">
-                    <div class="col-md-3 text-center">
-                        {{ field_data.field }}
-                        {% if edit_mode %}
-                            <a class="badge badge-danger"
-                               href="{{ url_for('delete_input_field', test_data_id=test_data.id,
-                                                macro_name=core.macro_name, field_name=field_data.field) }}">
-                                X
-                            </a>
-                        {% endif %}
+                    <div class="col-md">
+                        <div class="list-group list-group-item list-group-item-light">
+                            Variation {{ variation.grouper }}
+                        </div>
                     </div>
-                    {% for value in field_data.data %}
-                        <div class="col-md-3"><kbd>{{ value }}</kbd></div>
-                    {% endfor %}
                 </div>
+            {% endif %}
+            {% for core in variation.list %}
+                <div class="row">
+                    <div class="col-md-2 text-center font-weight-bold">
+                        {{ core.macro_name }}
+                    </div>
+                </div>
+                {% for field_data in core.field_data %}
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            {{ field_data.field }}
+                            {% if edit_mode %}
+                                <a class="badge badge-danger"
+                                   href="{{ url_for('delete_input_field', test_data_id=test_data.id,
+                                                macro_name=core.macro_name, field_name=field_data.field) }}">
+                                    X
+                                </a>
+                            {% endif %}
+                        </div>
+                        {% for value in field_data.data %}
+                            <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
             {% endfor %}
         {% endfor %}
     {% elif edit_mode %}
@@ -248,13 +259,15 @@
     {% if test_data.pnr %}
         <br>
         {% for variation in test_data.pnr|groupby('variation') %}
-            <div class="row">
-                <div class="col-md">
-                    <div class="list-group list-group-item list-group-item-light">
-                        Variation {{ variation.grouper }}
+            {% if loop.length > 1 %}
+                <div class="row">
+                    <div class="col-md">
+                        <div class="list-group list-group-item list-group-item-light">
+                            Variation {{ variation.grouper }}
+                        </div>
                     </div>
                 </div>
-            </div>
+            {% endif %}
             {% for pnr in variation.list %}
                 <div class="row">
                     <div class="col-md-2 text-center font-weight-bold">

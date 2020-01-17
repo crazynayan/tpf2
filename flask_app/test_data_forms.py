@@ -117,6 +117,8 @@ def form_validate_field_data(data) -> str:
 
 
 class FieldDataForm(FlaskForm):
+    variation = IntegerField('Enter variation number', validators=[NumberRange(0, 100)], default=0,
+                             widget=Input(input_type='number'))
     field_data = StringField("Enter Data - Input hex characters. Odd number of digit will be considered a number. "
                              "Prefix with 0 to make the number a digit. Non hex characters are considered as text. "
                              "Prefix with quote to enforce text.", validators=[DataRequired()])
