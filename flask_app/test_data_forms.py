@@ -204,6 +204,8 @@ class MultipleFieldDataForm(FlaskForm):
 
 
 class TpfdfForm(FlaskForm):
+    variation = IntegerField('Enter variation number', validators=[NumberRange(0, 100)], default=0,
+                             widget=Input(input_type='number'))
     macro_name = StringField('Enter the name of TPFDF macro', validators=[DataRequired()])
     key = StringField('Enter key as 2 hex characters',
                       validators=[DataRequired(), Length(min=2, max=2, message='Please enter 2 characters only')])

@@ -266,7 +266,8 @@ def add_tpfdf_lrec(test_data_id: str) -> Response:
         return render_template('test_data_form.html', title='Add Tpfdf lrec', form=form)
     field_data = {field_data.split(':')[0]: b64encode(bytes.fromhex(field_data.split(':')[1])).decode()
                   for field_data in form.field_data.data.split(',')}
-    tpfdf = {'field_data': field_data, 'key': form.key.data, 'variation': 0, 'macro_name': form.macro_name.data}
+    tpfdf = {'field_data': field_data, 'key': form.key.data, 'variation': form.variation.data,
+             'macro_name': form.macro_name.data}
     if not Server.add_tpfdf_lrec(test_data_id, tpfdf):
         flash('Error in adding Tpfdf lrec')
     return redirect(url_for('confirm_test_data', test_data_id=test_data_id))

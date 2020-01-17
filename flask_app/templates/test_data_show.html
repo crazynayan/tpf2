@@ -335,30 +335,41 @@
     {% endif %}
     {% if test_data.tpfdf %}
         <br>
-        {% for lrec in test_data.tpfdf %}
-            <div class="row">
-                <div class="col-md-2 text-center font-weight-bold">
-                    {{ lrec.macro_name }}
-                </div>
-                <div class="col-md-2 font-weight-bold">
-                    {{ lrec.key.upper() }}
-                    {% if edit_mode %}
-                        <a class="badge badge-danger"
-                           href="{{ url_for('delete_tpfdf_lrec', test_data_id=test_data.id, df_id=lrec.id) }}">
-                            X
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
-            {% for field_data in lrec.field_data %}
+        {% for variation in test_data.tpfdf|groupby('variation') %}
+            {% if loop.length > 1 %}
                 <div class="row">
-                    <div class="col-md-3 text-center">
-                        {{ field_data.field }}
+                    <div class="col-md">
+                        <div class="list-group list-group-item list-group-item-light">
+                            Variation {{ variation.grouper }}
+                        </div>
                     </div>
-                    {% for value in field_data.data %}
-                        <div class="col-md-3"><kbd>{{ value }}</kbd></div>
-                    {% endfor %}
                 </div>
+            {% endif %}
+            {% for lrec in variation.list %}
+                <div class="row">
+                    <div class="col-md-2 text-center font-weight-bold">
+                        {{ lrec.macro_name }}
+                    </div>
+                    <div class="col-md-2 font-weight-bold">
+                        {{ lrec.key.upper() }}
+                        {% if edit_mode %}
+                            <a class="badge badge-danger"
+                               href="{{ url_for('delete_tpfdf_lrec', test_data_id=test_data.id, df_id=lrec.id) }}">
+                                X
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% for field_data in lrec.field_data %}
+                    <div class="row">
+                        <div class="col-md-3">
+                            {{ field_data.field }}
+                        </div>
+                        {% for value in field_data.data %}
+                            <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
             {% endfor %}
         {% endfor %}
     {% elif edit_mode %}
