@@ -25,13 +25,14 @@
             <br>
             <div class="row">
                 {% for seg_name in test_data.outputs.debug %}
-                    <div class="col-md-1 text-center">{{ seg_name }}</div>
-                    {% if edit_mode %}
-                        <a class="badge badge-danger"
-                           href="{{ url_for('delete_debug', test_data_id=test_data.id, seg_name=seg_name) }}">
-                            X
-                        </a>
-                    {% endif %}
+                    <div class="col-md-2 text-center font-weight-bold">{{ seg_name }}
+                        {% if edit_mode %}
+                            <a class="badge badge-danger"
+                               href="{{ url_for('delete_debug', test_data_id=test_data.id, seg_name=seg_name) }}">
+                                X
+                            </a>
+                        {% endif %}
+                    </div>
                 {% endfor %}
             </div>
         {% elif edit_mode %}

@@ -19,3 +19,4 @@ class Config:
         ('subs_card_seg', 'SUBS_CARD_SEG'),
         ('group_plan', 'GROUP_PLAN'),
     ]
+    # SERVER_URL = 'http://localhost:8010'

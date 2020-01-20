@@ -107,5 +107,42 @@
         </tbody>
     </table>
     {{ show_test_data(test_data, edit_mode=False, output=False) }}
+    {% if test_data.outputs[0].debug %}
+        <br>
+        <div class="list-group list-group-item list-group-item-secondary">Debug</div>
+        <br>
+        {% for output in test_data.outputs %}
+            <div class="row">
+                <div class="col-md">
+                    <div class="list-group list-group-item list-group-item-light">
+                        Variation - Core={{ output.variation.core }} PNR={{ output.variation.pnr }}
+                        TPFDF={{ output.variation.tpfdf }}
+                    </div>
+                </div>
+            </div>
+
+            {% for trace in output.debug %}
+                <div class="row">
+                    <div class="col-md-2 align-middle">
+                        <kbd>{{ trace.hits }}</kbd>-{{ trace.label }}
+                    </div>
+                    <div class="col-md-2">
+                        {% for label, hits in trace.next_hits.items() %}
+                            {% if hits %}
+                                <div class="row">
+                                    <div class="col-md">
+                                        <kbd>{{ hits }}</kbd>-{{ label }}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-8 align-middle">
+                        {{ trace.command }} {{ trace.operands }}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
 
 {% endblock %}
