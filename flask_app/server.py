@@ -32,6 +32,24 @@ class Server:
             current_user.save()
         return response.json() if response.status_code == 200 else dict()
 
+    @staticmethod
+    def _decode_data(encoded_data) -> List[str]:
+        data = b64decode(encoded_data)
+        hex_data = data.hex().upper()
+        number_data = 'NA'
+        if len(hex_data) <= 8:
+            number_data = int(hex_data, 16)
+        if len(hex_data) == 4 and number_data > 0x7FFF:
+            number_data -= 0x10000
+        if len(hex_data) == 8 and number_data > 0x7FFFFFFF:
+            number_data -= tpf2_app.config['REG_MAX'] + 1
+        char_data = data.decode('cp037')
+        return [hex_data, number_data, char_data]
+
+    @staticmethod
+    def _decode_regs(regs: Dict[str, int]) -> Dict[str, list]:
+        return {reg: [f"{value & tpf2_app.config['REG_MAX']:08X}", value] for reg, value in regs.items()}
+
     @classmethod
     def _decode_test_data(cls, test_data: dict) -> dict:
         if 'regs' in test_data and test_data['regs']:
@@ -45,6 +63,20 @@ class Server:
         for tpfdf in test_data['tpfdf']:
             for field_data in tpfdf['field_data']:
                 field_data['data'] = cls._decode_data(field_data['data'])
+        for fixed_file in test_data['fixed_files']:
+            fixed_file['rec_id'] = hex(fixed_file['rec_id'])[2:].upper()
+            for field_data in fixed_file['field_data']:
+                field_data['data'] = cls._decode_data(field_data['data'])
+            for file_item in fixed_file['file_items']:
+                for field_data in file_item['field_data']:
+                    field_data['data'] = cls._decode_data(field_data['data'])
+            for pool_file in fixed_file['pool_files']:
+                pool_file['rec_id'] = hex(pool_file['rec_id'])[2:].upper()
+                for field_data in pool_file['field_data']:
+                    field_data['data'] = cls._decode_data(field_data['data'])
+                for file_item in pool_file['file_items']:
+                    for field_data in file_item['field_data']:
+                        field_data['data'] = cls._decode_data(field_data['data'])
         test_data['pnr'].sort(key=lambda pnr_item: (pnr_item['variation'], pnr_item['locator'], pnr_item['key']))
         test_data['cores'].sort(key=lambda core_item: (core_item['variation'], core_item['macro_name']))
         return test_data
@@ -101,24 +133,6 @@ class Server:
     def get_test_data_by_name(cls, name: str) -> dict:
         name = quote(name)
         return cls._common_request(f"/test_data", params={'name': name})
-
-    @staticmethod
-    def _decode_data(encoded_data) -> List[str]:
-        data = b64decode(encoded_data)
-        hex_data = data.hex().upper()
-        number_data = 'NA'
-        if len(hex_data) <= 8:
-            number_data = int(hex_data, 16)
-        if len(hex_data) == 4 and number_data > 0x7FFF:
-            number_data -= 0x10000
-        if len(hex_data) == 8 and number_data > 0x7FFFFFFF:
-            number_data -= tpf2_app.config['REG_MAX'] + 1
-        char_data = data.decode('cp037')
-        return [hex_data, number_data, char_data]
-
-    @staticmethod
-    def _decode_regs(regs: Dict[str, int]) -> Dict[str, list]:
-        return {reg: [f"{value & tpf2_app.config['REG_MAX']:08X}", value] for reg, value in regs.items()}
 
     @classmethod
     def run_test_data(cls, test_data_id: str) -> dict:
@@ -216,6 +230,14 @@ class Server:
     @classmethod
     def delete_tpfdf_lrec(cls, test_data_id: str, df_id: str) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/input/tpfdf/{df_id}", method='DELETE')
+
+    @classmethod
+    def add_fixed_file(cls, test_data_id: str, fixed_file: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/fixed_files", method='PATCH', json=fixed_file)
+
+    @classmethod
+    def delete_fixed_file(cls, test_data_id: str, file_id: str) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/fixed_files/{file_id}", method='DELETE')
 
     @classmethod
     def add_debug(cls, test_data_id: str, debug: dict) -> dict:

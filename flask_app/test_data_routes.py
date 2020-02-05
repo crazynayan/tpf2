@@ -10,7 +10,8 @@ from wtforms import BooleanField
 from flask_app import tpf2_app
 from flask_app.server import Server
 from flask_app.test_data_forms import DeleteForm, TestDataForm, ConfirmForm, FieldSearchForm, FieldLengthForm, \
-    FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm, MultipleFieldDataForm, TpfdfForm, DebugForm
+    FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm, MultipleFieldDataForm, TpfdfForm, DebugForm, \
+    FixedFileForm
 
 
 def test_data_required(func):
@@ -33,6 +34,11 @@ def _search_field(redirect_route: str, test_data_id: str) -> Response:
     label_ref = form.field.data
     return redirect(url_for(redirect_route, test_data_id=test_data_id, field_name=label_ref['label'],
                             macro_name=label_ref['name'], length=label_ref['length']))
+
+
+def _convert_field_data(form_data: str) -> list:
+    return [{'data': b64encode(bytes.fromhex(data.split(':')[1])).decode(), 'field': data.split(':')[0]}
+            for data in form_data.split(',') if data]
 
 
 @tpf2_app.route('/test_data')
@@ -279,6 +285,61 @@ def delete_tpfdf_lrec(test_data_id: str, df_id: str):
     response = Server.delete_tpfdf_lrec(test_data_id, df_id)
     if not response:
         flash('Error in deleting Tpfdf lrec')
+    return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
+
+
+@tpf2_app.route('/test_data/<string:test_data_id>/input/fixed_files/', methods=['GET', 'POST'])
+@login_required
+def add_fixed_file(test_data_id: str) -> Response:
+    form = FixedFileForm()
+    if not form.validate_on_submit():
+        return render_template('test_data_form.html', title='Add Fixed File', form=form, test_data_id=test_data_id)
+    fixed_file = dict()
+    fixed_file['variation'] = form.variation.data
+    fixed_file['macro_name'] = form.macro_name.data
+    fixed_file['rec_id'] = int.from_bytes(bytes.fromhex(form.rec_id.data), byteorder='big')
+    fixed_file['fixed_type'] = int(form.fixed_type.data)
+    fixed_file['fixed_ordinal'] = int.from_bytes(bytes.fromhex(form.fixed_ordinal.data), byteorder='big')
+    fixed_file['forward_chain_count'] = form.fixed_fch_count.data
+    fixed_file['forward_chain_label'] = form.fixed_fch_label.data
+    fixed_file['field_data'] = _convert_field_data(form.fixed_field_data.data)
+    fixed_file['file_items'] = list()
+    if form.fixed_item_field.data:
+        fixed_file['file_items'].append(dict())
+        fixed_file['file_items'][0]['field'] = form.fixed_item_field.data
+        fixed_file['file_items'][0]['macro_name'] = form.macro_name.data
+        fixed_file['file_items'][0]['field_data'] = _convert_field_data(form.fixed_item_field_data.data)
+        fixed_file['file_items'][0]['count_field'] = form.fixed_item_count.data
+    fixed_file['pool_files'] = list()
+    if form.pool_macro_name.data:
+        fixed_file['pool_files'].append(dict())
+        fixed_file['pool_files'][0]['macro_name'] = form.pool_macro_name.data
+        fixed_file['pool_files'][0]['rec_id'] = int.from_bytes(bytes.fromhex(form.pool_rec_id.data), byteorder='big')
+        fixed_file['pool_files'][0]['index_field'] = form.pool_index_field.data
+        fixed_file['pool_files'][0]['index_macro_name'] = form.macro_name.data
+        fixed_file['pool_files'][0]['forward_chain_count'] = form.pool_fch_count.data
+        fixed_file['pool_files'][0]['forward_chain_label'] = form.pool_fch_label.data
+        fixed_file['pool_files'][0]['field_data'] = _convert_field_data(form.pool_field_data.data)
+        fixed_file['pool_files'][0]['pool_files'] = list()
+        fixed_file['pool_files'][0]['file_items'] = list()
+        if form.pool_item_field.data:
+            fixed_file['pool_files'][0]['file_items'].append(dict())
+            fixed_file['pool_files'][0]['file_items'][0]['field'] = form.pool_item_field.data
+            fixed_file['pool_files'][0]['file_items'][0]['macro_name'] = form.pool_macro_name.data
+            fixed_file['pool_files'][0]['file_items'][0]['field_data'] = _convert_field_data(
+                form.pool_item_field_data.data)
+            fixed_file['pool_files'][0]['file_items'][0]['count_field'] = form.pool_item_count.data
+    if not Server.add_fixed_file(test_data_id, fixed_file):
+        flash('Error in adding Fixed File')
+    return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
+
+
+@tpf2_app.route('/test_data/<string:test_data_id>/input/fixed_files/<string:file_id>')
+@login_required
+def delete_fixed_file(test_data_id: str, file_id: str):
+    response = Server.delete_fixed_file(test_data_id, file_id)
+    if not response:
+        flash('Error in deleting Fixed File')
     return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
 
 

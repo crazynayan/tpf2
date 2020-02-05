@@ -24,9 +24,10 @@
         <thead class="thead-dark">
         <tr>
             <th scope="col" class="text-center">No</th>
-            <th scope="col" class="text-center">Core</th>
+            <th scope="col" class="text-center">Field</th>
             <th scope="col" class="text-center">Pnr</th>
             <th scope="col" class="text-center">DF</th>
+            <th scope="col" class="text-center">File</th>
             <th scope="col" class="text-center">End</th>
             <th scope="col" class="text-center">Dumps</th>
             <th scope="col" class="text-center">Message</th>
@@ -40,6 +41,7 @@
                 <th scope="row" class="text-center">{{ output.variation.core }}</th>
                 <th scope="row" class="text-center">{{ output.variation.pnr }}</th>
                 <th scope="row" class="text-center">{{ output.variation.tpfdf }}</th>
+                <th scope="row" class="text-center">{{ output.variation.file }}</th>
                 <td class="text-center"><kbd>{{ output.last_line }}</kbd></td>
                 <td class="text-center">
                     {% if output.dumps %}
@@ -63,49 +65,52 @@
         {% endfor %}
         </tbody>
     </table>
-
-    <br>
-    <div class="row">
-        <div class="col-md">
-            <div class="list-group list-group-item list-group-item-secondary">
-                Field Summary
+    {% if test_data.fields %}
+        <br>
+        <div class="row">
+            <div class="col-md">
+                <div class="list-group list-group-item list-group-item-secondary">
+                    Field Summary
+                </div>
             </div>
         </div>
-    </div>
-    <br>
-    <table class="table table-bordered table-sm table-hover">
-        <thead class="thead-dark">
-        <tr>
-            <th scope="col" class="text-center">No</th>
-            <th scope="col" class="text-center">Core</th>
-            <th scope="col" class="text-center">Pnr</th>
-            <th scope="col" class="text-center">DF</th>
-            {% for field in test_data.fields %}
-                <th scope="col" class="text-center">{{ field }}</th>
-            {% endfor %}
-        </tr>
-        </thead>
-        <tbody>
-        {% for output in test_data.outputs %}
+        <br>
+        <table class="table table-bordered table-sm table-hover">
+            <thead class="thead-dark">
             <tr>
-                <th scope="row" class="text-center">{{ loop.index }}</th>
-                <th scope="row" class="text-center">{{ output.variation.core }}</th>
-                <th scope="row" class="text-center">{{ output.variation.pnr }}</th>
-                <th scope="row" class="text-center">{{ output.variation.tpfdf }}</th>
-                {% for core in output.cores %}
-                    {% for field_data in core.field_data %}
-                        <td class="text-center">
-                            <kbd>{{ field_data.data[0] }}</kbd>
-                            {% if 9 < field_data.data[1] < 256 %}
-                                <kbd> ({{ field_data.data[1] }})</kbd>
-                            {% endif %}
-                        </td>
-                    {% endfor %}
+                <th scope="col" class="text-center">No</th>
+                <th scope="col" class="text-center">Field</th>
+                <th scope="col" class="text-center">Pnr</th>
+                <th scope="col" class="text-center">DF</th>
+                <th scope="col" class="text-center">File</th>
+                {% for field in test_data.fields %}
+                    <th scope="col" class="text-center">{{ field }}</th>
                 {% endfor %}
             </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+            {% for output in test_data.outputs %}
+                <tr>
+                    <th scope="row" class="text-center">{{ loop.index }}</th>
+                    <th scope="row" class="text-center">{{ output.variation.core }}</th>
+                    <th scope="row" class="text-center">{{ output.variation.pnr }}</th>
+                    <th scope="row" class="text-center">{{ output.variation.tpfdf }}</th>
+                    <th scope="row" class="text-center">{{ output.variation.file }}</th>
+                    {% for core in output.cores %}
+                        {% for field_data in core.field_data %}
+                            <td class="text-center">
+                                <kbd>{{ field_data.data[0] }}</kbd>
+                                {% if 9 < field_data.data[1] < 256 %}
+                                    <kbd> ({{ field_data.data[1] }})</kbd>
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
     {{ show_test_data(test_data, edit_mode=False, output=False) }}
     {% if test_data.outputs[0].debug %}
         <br>
@@ -115,8 +120,8 @@
             <div class="row">
                 <div class="col-md">
                     <div class="list-group list-group-item list-group-item-light">
-                        Variation - Core={{ output.variation.core }} PNR={{ output.variation.pnr }}
-                        TPFDF={{ output.variation.tpfdf }}
+                        Variation - Field={{ output.variation.core }} PNR={{ output.variation.pnr }}
+                        TPFDF={{ output.variation.tpfdf }} File={{ output.variation.file }}
                     </div>
                 </div>
             </div>

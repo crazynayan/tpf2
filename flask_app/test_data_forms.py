@@ -8,6 +8,75 @@ from wtforms.widgets import Input
 from flask_app import tpf2_app
 from flask_app.server import Server
 
+FIELD_DATA_TEXT: str = '''
+Enter multiple field and data separated by comma. The field and data should be separated by colon. All fields should be 
+ from a single macro mentioned above. Data by default is in hex characters. Odd number of digit will be considered a 
+ number. Prefix with 0 to make it odd for enforcing a number. Non hex characters are considered as text. Prefix with 
+ quote to enforce text.
+'''
+
+
+def form_validate_field_data(data: str) -> str:
+    data = data.strip().upper()
+    if data.startswith("'"):
+        if len(data) == 1:
+            raise ValidationError("There needs to be some text after a single quote")
+        data = data[1:].encode('cp037').hex().upper()
+    elif data.startswith("-"):
+        if len(data) == 1 or not data[1:].isdigit():
+            raise ValidationError("Invalid Negative Number")
+        neg_data = int(data)
+        if neg_data < -0x80000000:
+            raise ValidationError(f"Negative Number cannot be less than {-0x80000000}")
+        data = f"{neg_data & tpf2_app.config['REG_MAX']:08X}"
+    elif len(data) % 2 == 1 and data.isdigit():
+        number_data = int(data)
+        if number_data > 0x7FFFFFFF:
+            raise ValidationError(f"Number cannot be greater than {0x7FFFFFFF}")
+        data = f"{number_data:08X}"
+    else:
+        try:
+            int(data, 16)
+            if len(data) % 2:
+                data = f"0{data}"
+        except ValueError:
+            data = data.encode('cp037').hex().upper()
+    return data
+
+
+def form_validate_multiple_field_data(data: str, macro_name: str) -> str:
+    updated_field_data = list()
+    for key_value in data.split(','):
+        if key_value.count(':') != 1:
+            raise ValidationError(f"Include a single colon : to separate field and data - {key_value}")
+        field = key_value.split(':')[0].strip().upper()
+        label_ref = Server.search_field(field)
+        if not label_ref:
+            raise ValidationError(f'Field name not found - {field}')
+        if macro_name != label_ref['name']:
+            raise ValidationError(f"Field not in the same macro - {field} not in {macro_name}")
+        data = form_validate_field_data(key_value.split(':')[1])
+        updated_field_data.append(f"{field}:{data}")
+    return ','.join(updated_field_data)
+
+
+def form_field_lookup(data: str, macro_name: str) -> str:
+    data = data.upper()
+    label_ref = Server.search_field(data)
+    if not label_ref:
+        raise ValidationError(f'Field name not found - {data}')
+    if macro_name != label_ref['name']:
+        raise ValidationError(f"Field not in the same macro - {data} not in {macro_name}")
+    return data
+
+
+def form_validate_macro_name(macro_name: str) -> str:
+    macro_name = macro_name.upper()
+    label_ref = Server.search_field(macro_name)
+    if not label_ref or label_ref['name'] != macro_name:
+        raise ValidationError('This is not a valid macro name')
+    return macro_name
+
 
 class TestDataForm(FlaskForm):
     name = StringField('Name of Test Data (Must be unique in the system)', validators=[DataRequired()])
@@ -88,34 +157,6 @@ class FieldLengthForm(FlaskForm):
         return
 
 
-def form_validate_field_data(data) -> str:
-    data = data.strip().upper()
-    if data.startswith("'"):
-        if len(data) == 1:
-            raise ValidationError("There needs to be some text after a single quote")
-        data = data[1:].encode('cp037').hex().upper()
-    elif data.startswith("-"):
-        if len(data) == 1 or not data[1:].isdigit():
-            raise ValidationError("Invalid Negative Number")
-        neg_data = int(data)
-        if neg_data < -0x80000000:
-            raise ValidationError(f"Negative Number cannot be less than {-0x80000000}")
-        data = f"{neg_data & tpf2_app.config['REG_MAX']:08X}"
-    elif len(data) % 2 == 1 and data.isdigit():
-        number_data = int(data)
-        if number_data > 0x7FFFFFFF:
-            raise ValidationError(f"Number cannot be greater than {0x7FFFFFFF}")
-        data = f"{number_data:08X}"
-    else:
-        try:
-            int(data, 16)
-            if len(data) % 2:
-                data = f"0{data}"
-        except ValueError:
-            data = data.encode('cp037').hex().upper()
-    return data
-
-
 class FieldDataForm(FlaskForm):
     variation = IntegerField('Enter variation number', validators=[NumberRange(0, 100)], default=0,
                              widget=Input(input_type='number'))
@@ -175,12 +216,7 @@ class PnrForm(FlaskForm):
 
 
 class MultipleFieldDataForm(FlaskForm):
-    field_data = TextAreaField('Enter multiple field and data separated by comma. The field and data should be '
-                               'separated by colon. All fields should be from a single macro. Data by default is in '
-                               'hex characters. Odd number of digit will be considered a number. '
-                               'Prefix with 0 to make the number a digit. Non hex characters are considered as text. '
-                               'Prefix with quote to enforce text.', render_kw={'rows': '5'},
-                               validators=[DataRequired()])
+    field_data = TextAreaField(FIELD_DATA_TEXT, render_kw={'rows': '5'}, validators=[DataRequired()])
     save = SubmitField('Save & Continue - Add Further Data')
 
     @staticmethod
@@ -209,20 +245,12 @@ class TpfdfForm(FlaskForm):
     macro_name = StringField('Enter the name of TPFDF macro', validators=[DataRequired()])
     key = StringField('Enter key as 2 hex characters',
                       validators=[DataRequired(), Length(min=2, max=2, message='Please enter 2 characters only')])
-    field_data = TextAreaField('Enter multiple field and data separated by comma. The field and data should be '
-                               'separated by colon. All fields should be from a single macro mentioned above. '
-                               'Data by default is in hex characters. Odd number of digit will be considered a number. '
-                               'Prefix with 0 to make the number a digit. Non hex characters are considered as text. '
-                               'Prefix with quote to enforce text.', render_kw={'rows': '5'},
-                               validators=[DataRequired()])
+    field_data = TextAreaField(FIELD_DATA_TEXT, render_kw={'rows': '5'}, validators=[DataRequired()])
     save = SubmitField('Save & Continue - Add Further Data')
 
     @staticmethod
     def validate_macro_name(_, macro_name: StringField):
-        macro_name.data = macro_name.data.upper()
-        label_ref = Server.search_field(macro_name.data)
-        if not label_ref or label_ref['name'] != macro_name.data:
-            raise ValidationError('This is not a valid macro name')
+        macro_name.data = form_validate_macro_name(macro_name.data)
 
     @staticmethod
     def validate_key(_, key: StringField):
@@ -230,23 +258,11 @@ class TpfdfForm(FlaskForm):
         try:
             int(key.data, 16)
         except ValueError:
-            raise ValidationError('Please enter hex characters only')
+            raise ValidationError('Invalid hex characters')
         return
 
     def validate_field_data(self, field_data: TextAreaField):
-        updated_field_data = list()
-        for key_value in field_data.data.split(','):
-            if key_value.count(':') != 1:
-                raise ValidationError(f"Include a single colon : to separate field and data - {key_value}")
-            field = key_value.split(':')[0].strip().upper()
-            label_ref = Server.search_field(field)
-            if not label_ref:
-                raise ValidationError(f'Field name not found - {field}')
-            if self.macro_name.data != label_ref['name']:
-                raise ValidationError(f"Field not in the same macro - {field} not in {self.macro_name.data}")
-            data = form_validate_field_data(key_value.split(':')[1])
-            updated_field_data.append(f"{field}:{data}")
-        field_data.data = ','.join(updated_field_data)
+        field_data.data = form_validate_multiple_field_data(field_data.data, self.macro_name.data)
 
 
 class DebugForm(FlaskForm):
@@ -263,3 +279,175 @@ class DebugForm(FlaskForm):
                 raise ValidationError(f"Segment {seg_name} not present in the database")
             updated_seg_list.append(seg_name)
         seg_list.data = ','.join(updated_seg_list)
+
+
+class FixedFileForm(FlaskForm):
+    variation = IntegerField('Variation Number', validators=[NumberRange(0, 100)], default=0,
+                             widget=Input(input_type='number'))
+    macro_name = StringField('Fixed File - Macro Name', validators=[DataRequired()])
+    rec_id = StringField('Fixed File - Record ID (4 hex characters or 2 alphabets)', validators=[DataRequired()])
+    fixed_type = StringField('Fixed File - File Type (Equate name or number)', validators=[DataRequired()])
+    fixed_ordinal = StringField('Fixed File - Ordinal Number (Even digit is hex or Odd digit is number)',
+                                validators=[DataRequired()])
+    fixed_fch_count = IntegerField('Fixed File - Number of Forward Chains', validators=[NumberRange(0, 100)], default=0,
+                                   widget=Input(input_type='number'))
+    fixed_fch_label = StringField('Fixed File - Forward Chain Label (Required only if number of forward chain is > 0')
+    fixed_field_data = TextAreaField(f'Fixed File - Field Data ({FIELD_DATA_TEXT})', render_kw={'rows': '3'})
+    fixed_item_field = StringField('Fixed File Item - Item Label')
+    fixed_item_count = StringField('Fixed File Item - Item Count Label')
+    fixed_item_field_data = TextAreaField(f'Fixed File - Item Field Data ({FIELD_DATA_TEXT})', render_kw={'rows': '3'})
+    pool_macro_name = StringField('Pool File - Macro Name')
+    pool_rec_id = StringField('Pool File - Record Id (4 hex characters or 2 alphabets)')
+    pool_index_field = StringField('Pool File - Field in Fixed File where reference of this pool file will be stored')
+    pool_fch_count = IntegerField('Pool File - Number of Forward Chains', validators=[NumberRange(0, 100)], default=0,
+                                  widget=Input(input_type='number'))
+    pool_fch_label = StringField('Pool File - Forward Chain Label (Required only if number of forward chain is > 0')
+    pool_field_data = TextAreaField(f'Pool File - Field Data ({FIELD_DATA_TEXT})', render_kw={'rows': '3'})
+    pool_item_field = StringField('Pool File Item - Item Label')
+    pool_item_count = StringField('Pool File Item - Item Count Label')
+    pool_item_field_data = TextAreaField(f'Pool File - Item Field Data ({FIELD_DATA_TEXT})', render_kw={'rows': '3'})
+    save = SubmitField('Save & Continue - Add Further Data')
+
+    @staticmethod
+    def _validate_record_id(data: str) -> str:
+        if len(data) != 2 and len(data) != 4:
+            raise ValidationError('Record ID must be 2 or 4 digits')
+        data = data.upper()
+        if len(data) == 2:
+            if data == '00':
+                raise ValidationError('Record ID cannot be zeroes')
+            data = data.encode('cp037').hex().upper()
+        else:
+            if data == '0000':
+                raise ValidationError('Record ID cannot be zeroes')
+            try:
+                int(data, 16)
+            except ValueError:
+                raise ValidationError('Invalid hex characters')
+        return data
+
+    @staticmethod
+    def validate_macro_name(_, macro_name: StringField):
+        macro_name.data = form_validate_macro_name(macro_name.data)
+
+    def validate_rec_id(self, rec_id: StringField):
+        rec_id.data = self._validate_record_id(rec_id.data)
+
+    @staticmethod
+    def validate_fixed_type(_, fixed_type: StringField):
+        fixed_type.data = fixed_type.data.upper()
+        if not fixed_type.data.isdigit():
+            label_ref = Server.search_field(fixed_type.data)
+            if not label_ref:
+                raise ValidationError(f'Equate {fixed_type.data} not found')
+            fixed_type.data = str(label_ref['dsp'])
+        return
+
+    @staticmethod
+    def validate_fixed_ordinal(_, fixed_ordinal: StringField):
+        fixed_ordinal.data = fixed_ordinal.data.upper()
+        if len(fixed_ordinal.data) % 2 == 0:
+            try:
+                int(fixed_ordinal.data, 16)
+            except ValueError:
+                raise ValidationError('Invalid hex characters')
+        else:
+            if not fixed_ordinal.data.isdigit():
+                raise ValidationError('Invalid number')
+            fixed_ordinal.data = hex(int(fixed_ordinal.data))[2:].upper()
+            fixed_ordinal.data = fixed_ordinal.data if len(fixed_ordinal.data) % 2 == 0 else '0' + fixed_ordinal.data
+        return
+
+    def validate_fixed_fch_label(self, fixed_fch_label: StringField):
+        if self.fixed_fch_count.data > 0 and not fixed_fch_label.data:
+            raise ValidationError('Forward chain label required if forward chain count > 0')
+        if fixed_fch_label.data:
+            fixed_fch_label.data = form_field_lookup(fixed_fch_label.data, self.macro_name.data)
+        return
+
+    def validate_fixed_field_data(self, fixed_field_data: TextAreaField):
+        if not fixed_field_data.data:
+            return
+        fixed_field_data.data = form_validate_multiple_field_data(fixed_field_data.data, self.macro_name.data)
+
+    def validate_fixed_item_field(self, fixed_item_field: StringField):
+        if not fixed_item_field.data:
+            return
+        fixed_item_field.data = form_field_lookup(fixed_item_field.data, self.macro_name.data)
+
+    def validate_fixed_item_count(self, fixed_item_count: StringField):
+        if not fixed_item_count.data:
+            return
+        fixed_item_count.data = form_field_lookup(fixed_item_count.data, self.macro_name.data)
+
+    def validate_fixed_item_field_data(self, fixed_item_field_data: StringField):
+        if not fixed_item_field_data.data and self.fixed_item_field.data:
+            raise ValidationError('Item field data required when item field specified')
+        if not fixed_item_field_data.data:
+            return
+        fixed_item_field_data.data = form_validate_multiple_field_data(fixed_item_field_data.data, self.macro_name.data)
+
+    @staticmethod
+    def validate_pool_macro_name(_, pool_macro_name: StringField):
+        if not pool_macro_name.data:
+            return
+        pool_macro_name.data = form_validate_macro_name(pool_macro_name.data)
+
+    def validate_pool_rec_id(self, pool_rec_id: StringField):
+        if not pool_rec_id.data and self.pool_macro_name.data:
+            raise ValidationError('Pool Record ID required if Pool Macro Name is specified')
+        if not pool_rec_id.data:
+            return
+        if not self.pool_macro_name.data:
+            raise ValidationError('Specify Pool Macro Name before specifying Record ID')
+        pool_rec_id.data = self._validate_record_id(pool_rec_id.data)
+
+    def validate_pool_index_field(self, pool_index_field: StringField):
+        if not pool_index_field.data and self.pool_macro_name.data:
+            raise ValidationError('Index Field required if Pool Macro Name is specified')
+        if not pool_index_field.data:
+            return
+        if not self.pool_macro_name.data:
+            raise ValidationError('Specify Pool Macro Name before specifying this field')
+        pool_index_field.data = form_field_lookup(pool_index_field.data, self.macro_name.data)
+
+    def validate_pool_fch_label(self, pool_fch_label: StringField):
+        if self.pool_fch_count.data > 0 and not pool_fch_label.data:
+            raise ValidationError('Forward chain label required if forward chain count > 0')
+        if not pool_fch_label.data:
+            return
+        if not self.pool_macro_name.data:
+            raise ValidationError('Specify Pool Macro Name before specifying this field')
+        pool_fch_label.data = form_field_lookup(pool_fch_label.data, self.pool_macro_name.data)
+        return
+
+    def validate_pool_field_data(self, pool_field_data: TextAreaField):
+        if not pool_field_data.data:
+            return
+        if not self.pool_macro_name.data:
+            raise ValidationError('Specify Pool Macro Name before specifying this field')
+        pool_field_data.data = form_validate_multiple_field_data(pool_field_data.data, self.pool_macro_name.data)
+
+    def validate_pool_item_field(self, pool_item_field: StringField):
+        if not pool_item_field.data:
+            return
+        if not self.pool_macro_name.data:
+            raise ValidationError('Specify Pool Macro Name before specifying this field')
+        pool_item_field.data = form_field_lookup(pool_item_field.data, self.pool_macro_name.data)
+
+    def validate_pool_item_count(self, pool_item_count: StringField):
+        if not pool_item_count.data:
+            return
+        if not self.pool_macro_name.data:
+            raise ValidationError('Specify Pool Macro Name before specifying this field')
+        pool_item_count.data = form_field_lookup(pool_item_count.data, self.pool_macro_name.data)
+
+    def validate_pool_item_field_data(self, pool_item_field_data: StringField):
+        if not pool_item_field_data.data and self.pool_item_field.data:
+            raise ValidationError('Item field data required when item field specified')
+        if not pool_item_field_data.data:
+            return
+        if not self.pool_macro_name.data:
+            raise ValidationError('Specify Pool Macro Name before specifying this field')
+        pool_item_field_data.data = form_validate_multiple_field_data(pool_item_field_data.data,
+                                                                      self.pool_macro_name.data)

@@ -336,7 +336,7 @@
     {% endif %}
     {% if test_data.tpfdf %}
         <br>
-        {% for variation in test_data.tpfdf|groupby('variation') %}
+        {% for variation in test_data.fixed_files|groupby('variation') %}
             {% if loop.length > 1 %}
                 <div class="row">
                     <div class="col-md">
@@ -378,6 +378,134 @@
         <div class="row">
             <div class="col-md">
                 <div class="col-md">There are no TPFDF lrecs</div>
+            </div>
+        </div>
+    {% endif %}
+    {# Input Fixed Files #}
+    {% if edit_mode or test_data.fixed_files %}
+        <br>
+        <div class="row">
+            <div class="col-md">
+                <div class="list-group list-group-item list-group-item-secondary">
+                    Input - Fixed Files
+                </div>
+            </div>
+            {% if edit_mode %}
+                <div class="col-md">
+                    <a class="btn btn-block btn-success"
+                       href="{{ url_for('add_fixed_file', test_data_id=test_data.id) }}">
+                        Add Fixed File
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+    {% if test_data.fixed_files %}
+        <br>
+        {% for variation in test_data.fixed_files|groupby('variation') %}
+            {% if loop.length > 1 %}
+                <div class="row">
+                    <div class="col-md">
+                        <div class="list-group list-group-item list-group-item-light">
+                            Variation {{ variation.grouper }}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            {% for fixed_file in variation.list %}
+                <div class="row">
+                    <div class="col-md-2 text-center font-weight-bold">
+                        {{ fixed_file.macro_name }}
+                        {% if edit_mode %}
+                            <a class="badge badge-danger"
+                               href="{{ url_for('delete_fixed_file', test_data_id=test_data.id, file_id=fixed_file.id) }}">
+                                X
+                            </a>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-2">
+                        ID-{{ fixed_file.rec_id }}
+                    </div>
+                    <div class="col-md-2">
+                        TYP-{{ fixed_file.fixed_type }}
+                    </div>
+                    <div class="col-md-2">
+                        ORD-{{ fixed_file.fixed_ordinal }}
+                    </div>
+                    {% if fixed_file.fixed_forward_chain_label %}
+                        <div class="col-md-2">
+                            FCH-{{ fixed_file.fixed_forward_chain_label }} ({{ fixed_file.fixed_forward_chain_count }})
+                        </div>
+                    {% endif %}
+                </div>
+                {% for field_data in fixed_file.field_data %}
+                    <div class="row">
+                        <div class="col-md-3">
+                            {{ field_data.field }}
+                        </div>
+                        {% for value in field_data.data %}
+                            <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                {% for pool_file in fixed_file.pool_files %}
+                    <div class="row">
+                        <div class="col-md-3 text-center font-weight-bold">
+                            POOL-{{ pool_file.macro_name }}
+                        </div>
+                        <div class="col-md-2">
+                            ID-{{ pool_file.rec_id }}
+                        </div>
+                        <div class="col-md-2">
+                            IDX-{{ pool_file.index_field }}
+                        </div>
+                        {% if pool_file.fixed_forward_chain_label %}
+                            <div class="col-md-2">
+                                FCH-{{ pool_file.fixed_forward_chain_label }} ({{ pool_file.fixed_forward_chain_count }})
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% for field_data in pool_file.field_data %}
+                        <div class="row">
+                            <div class="col-md-3">
+                                {{ field_data.field }}
+                            </div>
+                            {% for value in field_data.data %}
+                                <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    {% for file_item in pool_file.file_items %}
+                        <div class="row">
+                            <div class="col-md-4 text-center font-weight-bold">
+                                ITM-{{ file_item.field }}
+                            </div>
+                            {% if file_item.count_field %}
+                                <div class="col-md-4">
+                                    CNT-{{ file_item.count_field }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% for field_data in file_item.field_data %}
+                            <div class="row">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-2">
+                                    {{ field_data.field }}
+                                </div>
+                                {% for value in field_data.data %}
+                                    <div class="col-md-2"><kbd>{{ value }}</kbd></div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    {% endfor %}
+                {% endfor %}
+            {% endfor %}
+        {% endfor %}
+    {% elif edit_mode %}
+        <br>
+        <div class="row">
+            <div class="col-md">
+                <div class="col-md">There are no Fixed files</div>
             </div>
         </div>
     {% endif %}
