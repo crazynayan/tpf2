@@ -68,6 +68,9 @@ def get_test_data(test_data_id):
 @login_required
 def run_test_data(test_data_id: str):
     test_data = Server.run_test_data(test_data_id)
+    if not test_data:
+        flash('Error in running test data')
+        return redirect(url_for('get_test_data', test_data_id=test_data_id))
     if len(test_data['outputs']) > 1:
         return render_template('test_data_variation.html', title='Results', test_data=test_data)
     return render_template('test_data_result.html', title='Results', test_data=test_data,
