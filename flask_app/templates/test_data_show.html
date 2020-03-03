@@ -336,7 +336,7 @@
     {% endif %}
     {% if test_data.tpfdf %}
         <br>
-        {% for variation in test_data.fixed_files|groupby('variation') %}
+        {% for variation in test_data.tpfdf|groupby('variation') %}
             {% if loop.length > 1 %}
                 <div class="row">
                     <div class="col-md">
