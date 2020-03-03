@@ -24,10 +24,18 @@
         <thead class="thead-dark">
         <tr>
             <th scope="col" class="text-center">No</th>
-            <th scope="col" class="text-center">Field</th>
-            <th scope="col" class="text-center">Pnr</th>
-            <th scope="col" class="text-center">DF</th>
-            <th scope="col" class="text-center">File</th>
+            {% if test_data_variation.core %}
+                <th scope="col" class="text-center">Field</th>
+            {% endif %}
+            {% if test_data_variation.pnr %}
+                <th scope="col" class="text-center">Pnr</th>
+            {% endif %}
+            {% if test_data_variation.tpfdf %}
+                <th scope="col" class="text-center">DF</th>
+            {% endif %}
+            {% if test_data_variation.file %}
+                <th scope="col" class="text-center">File</th>
+            {% endif %}
             <th scope="col" class="text-center">End</th>
             <th scope="col" class="text-center">Dumps</th>
             <th scope="col" class="text-center">Message</th>
@@ -38,10 +46,42 @@
         {% for output in test_data.outputs %}
             <tr>
                 <th scope="row" class="text-center">{{ loop.index }}</th>
-                <th scope="row" class="text-center">{{ output.variation.core }}</th>
-                <th scope="row" class="text-center">{{ output.variation.pnr }}</th>
-                <th scope="row" class="text-center">{{ output.variation.tpfdf }}</th>
-                <th scope="row" class="text-center">{{ output.variation.file }}</th>
+                {% if test_data_variation.core %}
+                    <th scope="row" class="text-center">
+                        {% if output.variation_name.core %}
+                            {{ output.variation_name.core }}
+                        {% else %}
+                            {{ output.variation.core }}
+                        {% endif %}
+                    </th>
+                {% endif %}
+                {% if test_data_variation.pnr %}
+                    <th scope="row" class="text-center">
+                        {% if output.variation_name.pnr %}
+                            {{ output.variation_name.pnr }}
+                        {% else %}
+                            {{ output.variation.pnr }}
+                        {% endif %}
+                    </th>
+                {% endif %}
+                {% if test_data_variation.tpfdf %}
+                    <th scope="row" class="text-center">
+                        {% if output.variation_name.tpfdf %}
+                            {{ output.variation_name.tpfdf }}
+                        {% else %}
+                            {{ output.variation.tpfdf }}
+                        {% endif %}
+                    </th>
+                {% endif %}
+                {% if test_data_variation.file %}
+                    <th scope="row" class="text-center">
+                        {% if output.variation_name.file %}
+                            {{ output.variation_name.file }}
+                        {% else %}
+                            {{ output.variation.file }}
+                        {% endif %}
+                    </th>
+                {% endif %}
                 <td class="text-center"><kbd>{{ output.last_line }}</kbd></td>
                 <td class="text-center">
                     {% if output.dumps %}
@@ -79,10 +119,18 @@
             <thead class="thead-dark">
             <tr>
                 <th scope="col" class="text-center">No</th>
-                <th scope="col" class="text-center">Field</th>
-                <th scope="col" class="text-center">Pnr</th>
-                <th scope="col" class="text-center">DF</th>
-                <th scope="col" class="text-center">File</th>
+                {% if test_data_variation.core %}
+                    <th scope="col" class="text-center">Field</th>
+                {% endif %}
+                {% if test_data_variation.pnr %}
+                    <th scope="col" class="text-center">Pnr</th>
+                {% endif %}
+                {% if test_data_variation.tpfdf %}
+                    <th scope="col" class="text-center">DF</th>
+                {% endif %}
+                {% if test_data_variation.file %}
+                    <th scope="col" class="text-center">File</th>
+                {% endif %}
                 {% for field in test_data.fields %}
                     <th scope="col" class="text-center">{{ field }}</th>
                 {% endfor %}
@@ -92,10 +140,42 @@
             {% for output in test_data.outputs %}
                 <tr>
                     <th scope="row" class="text-center">{{ loop.index }}</th>
-                    <th scope="row" class="text-center">{{ output.variation.core }}</th>
-                    <th scope="row" class="text-center">{{ output.variation.pnr }}</th>
-                    <th scope="row" class="text-center">{{ output.variation.tpfdf }}</th>
-                    <th scope="row" class="text-center">{{ output.variation.file }}</th>
+                    {% if test_data_variation.core %}
+                        <th scope="row" class="text-center">
+                            {% if output.variation_name.core %}
+                                {{ output.variation_name.core }}
+                            {% else %}
+                                {{ output.variation.core }}
+                            {% endif %}
+                        </th>
+                    {% endif %}
+                    {% if test_data_variation.pnr %}
+                        <th scope="row" class="text-center">
+                            {% if output.variation_name.pnr %}
+                                {{ output.variation_name.pnr }}
+                            {% else %}
+                                {{ output.variation.pnr }}
+                            {% endif %}
+                        </th>
+                    {% endif %}
+                    {% if test_data_variation.tpfdf %}
+                        <th scope="row" class="text-center">
+                            {% if output.variation_name.tpfdf %}
+                                {{ output.variation_name.tpfdf }}
+                            {% else %}
+                                {{ output.variation.tpfdf }}
+                            {% endif %}
+                        </th>
+                    {% endif %}
+                    {% if test_data_variation.file %}
+                        <th scope="row" class="text-center">
+                            {% if output.variation_name.file %}
+                                {{ output.variation_name.file }}
+                            {% else %}
+                                {{ output.variation.file }}
+                            {% endif %}
+                        </th>
+                    {% endif %}
                     {% for core in output.cores %}
                         {% for field_data in core.field_data %}
                             <td class="text-center">
