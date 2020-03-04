@@ -201,9 +201,19 @@ def search_input_fields(test_data_id: str) -> Response:
 def add_input_field(test_data_id: str, macro_name: str, field_name: str):
     field_name = unquote(field_name)
     form = FieldDataForm()
+    variations = Server.get_variations(test_data_id, 'core')
+    form.variation.choices = [(item['variation'], f"{item['variation_name']} ({item['variation']})")
+                              for item in variations]
+    form.variation.choices.append((-1, 'New Variation'))
     if not form.validate_on_submit():
         return render_template('test_data_form.html', title=f"{field_name} ({macro_name})", form=form)
-    field_dict = {'field': field_name, 'data': form.field_data.data, 'variation': form.variation.data}
+    field_dict = {'field': field_name, 'data': form.field_data.data}
+    if form.variation.data == -1:
+        field_dict['variation'] = variations[-1]['variation'] + 1 if variations else 0
+        field_dict['variation_name'] = form.variation_name.data
+    else:
+        field_dict['variation'] = form.variation.data
+        field_dict['variation_name'] = str()
     response = Server.add_input_field(test_data_id, macro_name, field_dict)
     if not response:
         flash('Error in creating fields')
@@ -242,10 +252,19 @@ def delete_input_regs(test_data_id: str, reg: str):
 @login_required
 def add_input_pnr(test_data_id: str):
     form = PnrForm()
+    variations = Server.get_variations(test_data_id, 'pnr')
+    form.variation.choices = [(item['variation'], f"{item['variation_name']} ({item['variation']})")
+                              for item in variations]
+    form.variation.choices.append((-1, 'New Variation'))
     if not form.validate_on_submit():
         return render_template('test_data_form.html', title='Add PNR element', form=form)
-    pnr_dict = {'key': form.key.data, 'locator': form.locator.data, 'data': form.text_data.data,
-                'variation': form.variation.data}
+    pnr_dict = {'key': form.key.data, 'locator': form.locator.data, 'data': form.text_data.data}
+    if form.variation.data == -1:
+        pnr_dict['variation'] = variations[-1]['variation'] + 1 if variations else 0
+        pnr_dict['variation_name'] = form.variation_name.data
+    else:
+        pnr_dict['variation'] = form.variation.data
+        pnr_dict['variation_name'] = str()
     response = Server.create_pnr(test_data_id, pnr_dict)
     if not response:
         flash("Error in creating PNR")
@@ -277,12 +296,21 @@ def delete_pnr(test_data_id: str, pnr_id: str):
 @login_required
 def add_tpfdf_lrec(test_data_id: str) -> Response:
     form = TpfdfForm()
+    variations = Server.get_variations(test_data_id, 'tpfdf')
+    form.variation.choices = [(item['variation'], f"{item['variation_name']} ({item['variation']})")
+                              for item in variations]
+    form.variation.choices.append((-1, 'New Variation'))
     if not form.validate_on_submit():
         return render_template('test_data_form.html', title='Add Tpfdf lrec', form=form)
     field_data = {field_data.split(':')[0]: b64encode(bytes.fromhex(field_data.split(':')[1])).decode()
                   for field_data in form.field_data.data.split(',')}
-    tpfdf = {'field_data': field_data, 'key': form.key.data, 'variation': form.variation.data,
-             'macro_name': form.macro_name.data}
+    tpfdf = {'field_data': field_data, 'key': form.key.data, 'macro_name': form.macro_name.data}
+    if form.variation.data == -1:
+        tpfdf['variation'] = variations[-1]['variation'] + 1 if variations else 0
+        tpfdf['variation_name'] = form.variation_name.data
+    else:
+        tpfdf['variation'] = form.variation.data
+        tpfdf['variation_name'] = str()
     if not Server.add_tpfdf_lrec(test_data_id, tpfdf):
         flash('Error in adding Tpfdf lrec')
     return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
@@ -301,10 +329,19 @@ def delete_tpfdf_lrec(test_data_id: str, df_id: str):
 @login_required
 def add_fixed_file(test_data_id: str) -> Response:
     form = FixedFileForm()
+    variations = Server.get_variations(test_data_id, 'file')
+    form.variation.choices = [(item['variation'], f"{item['variation_name']} ({item['variation']})")
+                              for item in variations]
+    form.variation.choices.append((-1, 'New Variation'))
     if not form.validate_on_submit():
         return render_template('test_data_form.html', title='Add Fixed File', form=form, test_data_id=test_data_id)
     fixed_file = dict()
-    fixed_file['variation'] = form.variation.data
+    if form.variation.data == -1:
+        fixed_file['variation'] = variations[-1]['variation'] + 1 if variations else 0
+        fixed_file['variation_name'] = form.variation_name.data
+    else:
+        fixed_file['variation'] = form.variation.data
+        fixed_file['variation_name'] = str()
     fixed_file['macro_name'] = form.macro_name.data
     fixed_file['rec_id'] = int.from_bytes(bytes.fromhex(form.rec_id.data), byteorder='big')
     fixed_file['fixed_type'] = int(form.fixed_type.data)
@@ -321,23 +358,23 @@ def add_fixed_file(test_data_id: str) -> Response:
         fixed_file['file_items'][0]['count_field'] = form.fixed_item_count.data
     fixed_file['pool_files'] = list()
     if form.pool_macro_name.data:
-        fixed_file['pool_files'].append(dict())
-        fixed_file['pool_files'][0]['macro_name'] = form.pool_macro_name.data
-        fixed_file['pool_files'][0]['rec_id'] = int.from_bytes(bytes.fromhex(form.pool_rec_id.data), byteorder='big')
-        fixed_file['pool_files'][0]['index_field'] = form.pool_index_field.data
-        fixed_file['pool_files'][0]['index_macro_name'] = form.macro_name.data
-        fixed_file['pool_files'][0]['forward_chain_count'] = form.pool_fch_count.data
-        fixed_file['pool_files'][0]['forward_chain_label'] = form.pool_fch_label.data
-        fixed_file['pool_files'][0]['field_data'] = _convert_field_data(form.pool_field_data.data)
-        fixed_file['pool_files'][0]['pool_files'] = list()
-        fixed_file['pool_files'][0]['file_items'] = list()
+        pool_file = dict()
+        fixed_file['pool_files'].append(pool_file)
+        pool_file['macro_name'] = form.pool_macro_name.data
+        pool_file['rec_id'] = int.from_bytes(bytes.fromhex(form.pool_rec_id.data), byteorder='big')
+        pool_file['index_field'] = form.pool_index_field.data
+        pool_file['index_macro_name'] = form.macro_name.data
+        pool_file['forward_chain_count'] = form.pool_fch_count.data
+        pool_file['forward_chain_label'] = form.pool_fch_label.data
+        pool_file['field_data'] = _convert_field_data(form.pool_field_data.data)
+        pool_file['pool_files'] = list()
+        pool_file['file_items'] = list()
         if form.pool_item_field.data:
-            fixed_file['pool_files'][0]['file_items'].append(dict())
-            fixed_file['pool_files'][0]['file_items'][0]['field'] = form.pool_item_field.data
-            fixed_file['pool_files'][0]['file_items'][0]['macro_name'] = form.pool_macro_name.data
-            fixed_file['pool_files'][0]['file_items'][0]['field_data'] = _convert_field_data(
-                form.pool_item_field_data.data)
-            fixed_file['pool_files'][0]['file_items'][0]['count_field'] = form.pool_item_count.data
+            pool_file['file_items'].append(dict())
+            pool_file['file_items'][0]['field'] = form.pool_item_field.data
+            pool_file['file_items'][0]['macro_name'] = form.pool_macro_name.data
+            pool_file['file_items'][0]['field_data'] = _convert_field_data(form.pool_item_field_data.data)
+            pool_file['file_items'][0]['count_field'] = form.pool_item_count.data
     if not Server.add_fixed_file(test_data_id, fixed_file):
         flash('Error in adding Fixed File')
     return redirect(url_for('confirm_test_data', test_data_id=test_data_id))

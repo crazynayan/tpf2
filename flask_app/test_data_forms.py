@@ -158,8 +158,8 @@ class FieldLengthForm(FlaskForm):
 
 
 class FieldDataForm(FlaskForm):
-    variation = IntegerField('Enter variation number', validators=[NumberRange(0, 100)], default=0,
-                             widget=Input(input_type='number'))
+    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
+    variation_name = StringField('New Variation Name - Leave it blank for existing variation')
     field_data = StringField("Enter Data - Input hex characters. Odd number of digit will be considered a number. "
                              "Prefix with 0 to make the number a digit. Non hex characters are considered as text. "
                              "Prefix with quote to enforce text.", validators=[DataRequired()])
@@ -193,8 +193,8 @@ class RegisterFieldDataForm(FlaskForm):
 
 
 class PnrForm(FlaskForm):
-    variation = IntegerField('Enter variation number', validators=[NumberRange(0, 100)], default=0,
-                             widget=Input(input_type='number'))
+    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
+    variation_name = StringField('New Variation Name - Leave it blank for existing variation')
     key = SelectField('Select type of PNR element', choices=tpf2_app.config['PNR_KEYS'], default='name')
     locator = StringField('Enter PNR Locator - 6 character alpha numeric - Leave it blank for AAA PNR')
     text_data = StringField('Enter text - Separate it with comma for multiple PNR elements. '
@@ -240,8 +240,8 @@ class MultipleFieldDataForm(FlaskForm):
 
 
 class TpfdfForm(FlaskForm):
-    variation = IntegerField('Enter variation number', validators=[NumberRange(0, 100)], default=0,
-                             widget=Input(input_type='number'))
+    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
+    variation_name = StringField('New Variation Name - Leave it blank for existing variation')
     macro_name = StringField('Enter the name of TPFDF macro', validators=[DataRequired()])
     key = StringField('Enter key as 2 hex characters',
                       validators=[DataRequired(), Length(min=2, max=2, message='Please enter 2 characters only')])
@@ -282,8 +282,8 @@ class DebugForm(FlaskForm):
 
 
 class FixedFileForm(FlaskForm):
-    variation = IntegerField('Variation Number', validators=[NumberRange(0, 100)], default=0,
-                             widget=Input(input_type='number'))
+    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
+    variation_name = StringField('New Variation Name - Leave it blank for existing variation')
     macro_name = StringField('Fixed File - Macro Name', validators=[DataRequired()])
     rec_id = StringField('Fixed File - Record ID (4 hex characters or 2 alphabets)', validators=[DataRequired()])
     fixed_type = StringField('Fixed File - File Type (Equate name or number)', validators=[DataRequired()])

@@ -246,3 +246,8 @@ class Server:
     @classmethod
     def delete_debug(cls, test_data_id: str, seg_name: str) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/output/debug/{seg_name}", method='DELETE')
+
+    @classmethod
+    def get_variations(cls, test_data_id: str, variation_type: str) -> List[dict]:
+        response = cls._common_request(f"/test_data/{test_data_id}/variations", params={'type': variation_type})
+        return response['variations'] if response else list()
