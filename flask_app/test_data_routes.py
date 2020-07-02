@@ -3,7 +3,6 @@ from functools import wraps
 from urllib.parse import unquote
 
 from flask import render_template, url_for, redirect, flash, request, Response
-from flask_login import login_required
 from werkzeug.datastructures import MultiDict
 from wtforms import BooleanField
 
@@ -12,6 +11,7 @@ from flask_app.server import Server
 from flask_app.test_data_forms import DeleteForm, TestDataForm, ConfirmForm, FieldSearchForm, FieldLengthForm, \
     FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm, MultipleFieldDataForm, TpfdfForm, DebugForm, \
     FixedFileForm
+from flask_app.user import cookie_login_required
 
 
 def test_data_required(func):
@@ -42,14 +42,14 @@ def _convert_field_data(form_data: str) -> list:
 
 
 @tpf2_app.route('/test_data')
-@login_required
+@cookie_login_required
 def get_all_test_data():
     test_data_list = Server.get_all_test_data()
     return render_template('test_data_list.html', title='Test Data', test_data_list=test_data_list)
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>', methods=['GET', 'POST'])
-@login_required
+@cookie_login_required
 def get_test_data(test_data_id):
     test_data = Server.get_test_data(test_data_id)
     if not test_data:
@@ -65,7 +65,7 @@ def get_test_data(test_data_id):
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/run')
-@login_required
+@cookie_login_required
 def run_test_data(test_data_id: str):
     test_data = Server.run_test_data(test_data_id)
     if not test_data:
@@ -84,7 +84,7 @@ def run_test_data(test_data_id: str):
 
 
 @tpf2_app.route('/test_data/create', methods=['GET', 'POST'])
-@login_required
+@cookie_login_required
 def create_test_data():
     form = TestDataForm()
     if not form.validate_on_submit():
@@ -97,7 +97,7 @@ def create_test_data():
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/copy')
-@login_required
+@cookie_login_required
 def copy_test_data(test_data_id):
     response = Server.copy_test_data(test_data_id)
     if not response:
@@ -107,7 +107,7 @@ def copy_test_data(test_data_id):
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/rename', methods=['GET', 'POST'])
-@login_required
+@cookie_login_required
 @test_data_required
 def rename_test_data(test_data_id, **kwargs):
     form_data = TestDataForm().data
@@ -124,7 +124,7 @@ def rename_test_data(test_data_id, **kwargs):
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/confirm', methods=['GET', 'POST'])
-@login_required
+@cookie_login_required
 @test_data_required
 def confirm_test_data(test_data_id: str, **kwargs):
     test_data: dict = kwargs[test_data_id]
@@ -138,7 +138,7 @@ def confirm_test_data(test_data_id: str, **kwargs):
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/output/regs', methods=['GET', 'POST'])
-@login_required
+@cookie_login_required
 def add_output_regs(test_data_id: str):
     form = RegisterForm()
     if not form.validate_on_submit():
@@ -152,14 +152,14 @@ def add_output_regs(test_data_id: str):
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/output/fields', methods=['GET', 'POST'])
-@login_required
+@cookie_login_required
 def search_output_fields(test_data_id: str) -> Response:
     return _search_field('add_output_field', test_data_id)
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/output/cores/<string:macro_name>/fields/<string:field_name>',
                 methods=['GET', 'POST'])
-@login_required
+@cookie_login_required
 @test_data_required
 def add_output_field(test_data_id: str, macro_name: str, field_name: str, **kwargs) -> Response:
     field_name = unquote(field_name)
@@ -181,7 +181,7 @@ def add_output_field(test_data_id: str, macro_name: str, field_name: str, **kwar
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/output/cores/<string:macro_name>/fields/<string:field_name>/delete')
-@login_required
+@cookie_login_required
 def delete_output_field(test_data_id: str, macro_name: str, field_name: str):
     response = Server.delete_output_field(test_data_id, macro_name, field_name)
     if not response:
@@ -190,14 +190,14 @@ def delete_output_field(test_data_id: str, macro_name: str, field_name: str):
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/input/fields', methods=['GET', 'POST'])
-@login_required
+@cookie_login_required
 def search_input_fields(test_data_id: str) -> Response:
     return _search_field('add_input_field', test_data_id)
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/input/cores/<string:macro_name>/fields/<string:field_name>',
                 methods=['GET', 'POST'])
-@login_required
+@cookie_login_required
 def add_input_field(test_data_id: str, macro_name: str, field_name: str):
     field_name = unquote(field_name)
     form = FieldDataForm()
@@ -221,7 +221,7 @@ def add_input_field(test_data_id: str, macro_name: str, field_name: str):
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/input/cores/<string:macro_name>/fields/<string:field_name>/delete')
-@login_required
+@cookie_login_required
 def delete_input_field(test_data_id: str, macro_name: str, field_name: str):
     response = Server.delete_input_field(test_data_id, macro_name, field_name)
     if not response:
@@ -230,7 +230,7 @@ def delete_input_field(test_data_id: str, macro_name: str, field_name: str):
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/input/regs', methods=['GET', 'POST'])
-@login_required
+@cookie_login_required
 def add_input_regs(test_data_id: str):
     form = RegisterFieldDataForm()
     if not form.validate_on_submit():
@@ -241,7 +241,7 @@ def add_input_regs(test_data_id: str):
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/input/regs/<string:reg>')
-@login_required
+@cookie_login_required
 def delete_input_regs(test_data_id: str, reg: str):
     if not Server.delete_input_regs(test_data_id, reg):
         flash("Error in deleting Registers")
@@ -249,7 +249,7 @@ def delete_input_regs(test_data_id: str, reg: str):
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/input/pnr', methods=['GET', 'POST'])
-@login_required
+@cookie_login_required
 def add_input_pnr(test_data_id: str):
     form = PnrForm()
     variations = Server.get_variations(test_data_id, 'pnr')
@@ -272,7 +272,7 @@ def add_input_pnr(test_data_id: str):
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>/fields', methods=['GET', 'POST'])
-@login_required
+@cookie_login_required
 def add_pnr_fields(test_data_id: str, pnr_id: str) -> Response:
     form = MultipleFieldDataForm()
     if not form.validate_on_submit():
@@ -284,7 +284,7 @@ def add_pnr_fields(test_data_id: str, pnr_id: str) -> Response:
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>')
-@login_required
+@cookie_login_required
 def delete_pnr(test_data_id: str, pnr_id: str):
     response = Server.delete_pnr(test_data_id, pnr_id)
     if not response:
@@ -293,7 +293,7 @@ def delete_pnr(test_data_id: str, pnr_id: str):
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/input/tpfdf/', methods=['GET', 'POST'])
-@login_required
+@cookie_login_required
 def add_tpfdf_lrec(test_data_id: str) -> Response:
     form = TpfdfForm()
     variations = Server.get_variations(test_data_id, 'tpfdf')
@@ -317,7 +317,7 @@ def add_tpfdf_lrec(test_data_id: str) -> Response:
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/input/tpfdf/<string:df_id>')
-@login_required
+@cookie_login_required
 def delete_tpfdf_lrec(test_data_id: str, df_id: str):
     response = Server.delete_tpfdf_lrec(test_data_id, df_id)
     if not response:
@@ -325,8 +325,9 @@ def delete_tpfdf_lrec(test_data_id: str, df_id: str):
     return redirect(url_for('confirm_test_data', test_data_id=test_data_id))
 
 
+# noinspection DuplicatedCode
 @tpf2_app.route('/test_data/<string:test_data_id>/input/fixed_files/', methods=['GET', 'POST'])
-@login_required
+@cookie_login_required
 def add_fixed_file(test_data_id: str) -> Response:
     form = FixedFileForm()
     variations = Server.get_variations(test_data_id, 'file')
@@ -381,7 +382,7 @@ def add_fixed_file(test_data_id: str) -> Response:
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/input/fixed_files/<string:file_id>')
-@login_required
+@cookie_login_required
 def delete_fixed_file(test_data_id: str, file_id: str):
     response = Server.delete_fixed_file(test_data_id, file_id)
     if not response:
@@ -390,7 +391,7 @@ def delete_fixed_file(test_data_id: str, file_id: str):
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/output/debug/', methods=['GET', 'POST'])
-@login_required
+@cookie_login_required
 def add_debug(test_data_id: str) -> Response:
     form = DebugForm()
     if not form.validate_on_submit():
@@ -401,7 +402,7 @@ def add_debug(test_data_id: str) -> Response:
 
 
 @tpf2_app.route('/test_data/<string:test_data_id>/output/debug/<string:seg_name>/delete')
-@login_required
+@cookie_login_required
 def delete_debug(test_data_id: str, seg_name: str) -> Response:
     if not Server.delete_debug(test_data_id, seg_name):
         flash('Error in delete debug segment')

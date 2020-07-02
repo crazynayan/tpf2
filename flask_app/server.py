@@ -15,7 +15,7 @@ class Server:
     def _common_request(url: str, method: str = 'GET', **kwargs) -> dict:
         request_url = f"{tpf2_app.config['SERVER_URL']}{url}"
         if 'auth' not in kwargs:
-            auth_header = {'Authorization': f"Bearer {current_user.token}"}
+            auth_header = {'Authorization': f"Bearer {current_user.api_key}"}
             kwargs['headers'] = auth_header
         if method == 'GET':
             response: Response = requests.get(request_url, **kwargs)
@@ -28,7 +28,7 @@ class Server:
         else:
             raise TypeError
         if response.status_code == 401 and current_user.is_authenticated:
-            current_user.token = str()
+            current_user.api_key = str()
             current_user.save()
         return response.json() if response.status_code == 200 else dict()
 
