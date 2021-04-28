@@ -180,8 +180,10 @@
                         {% for field_data in core.field_data %}
                             <td class="text-center">
                                 <kbd>{{ field_data.data[0] }}</kbd>
-                                {% if 9 < field_data.data[1] < 256 %}
-                                    <kbd> ({{ field_data.data[1] }})</kbd>
+                                {% if field_data.data[1] is integer %}
+                                    {% if 9 < field_data.data[1] < 256 %}
+                                        <kbd> ({{ field_data.data[1] }})</kbd>
+                                    {% endif %}
                                 {% endif %}
                             </td>
                         {% endfor %}
