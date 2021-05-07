@@ -50,7 +50,7 @@ class User(FirestoreDocument, UserMixin):
     def check_token(cls, token) -> Optional["User"]:
         if not token:
             return None
-        user = cls.objects.filter_by(token=token).first()
+        user: User = cls.objects.filter_by(token=token).first()
         if user is None or user.token_expiration < dt.datetime.utcnow().replace(tzinfo=pytz.UTC):
             return None
         return user
@@ -108,6 +108,7 @@ def login():
 
 @tpf2_app.route("/logout")
 def logout():
-    User.objects.filter_by(email=current_user.email).delete()
-    logout_user()
+    if current_user.is_authenticated:
+        User.objects.filter_by(email=current_user.email).delete()
+        logout_user()
     return redirect(url_for("home"))
