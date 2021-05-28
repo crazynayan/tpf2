@@ -24,5 +24,6 @@ class Config:
         ("rcvd_from", "RCVD_FROM"),
         ("phone", "PHONE"),
         ("record_loc", "RECORD_LOC"),
+        ("remarks", "REMARKS"),
     ]
     # SERVER_URL = "http://localhost:8010"
