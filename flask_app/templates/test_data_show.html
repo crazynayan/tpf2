@@ -448,6 +448,38 @@
                         {% endfor %}
                     </div>
                 {% endfor %}
+                {% for file_item in fixed_file.file_items %}
+                    <div class="row">
+                        <div class="col-md-3 text-center font-weight-bold">
+                            ITM-{{ file_item.field }}
+                        </div>
+                        <div class="col-md-3">
+                            CNT-
+                            {% if file_item.count_field %}
+                                {{ file_item.count_field }}
+                            {% else %}
+                                No count field
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            ADJ-{{ file_item.adjust }}
+                        </div>
+                        <div class="col-md-3">
+                            REPEAT-{{ file_item.repeat }}
+                        </div>
+                    </div>
+                    {% for field_data in file_item.field_data %}
+                        <div class="row">
+                            <div class="col-md-2"></div>
+                            <div class="col-md-2">
+                                {{ field_data.field }}
+                            </div>
+                            {% for value in field_data.data %}
+                                <div class="col-md-2"><kbd>{{ value }}</kbd></div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                {% endfor %}
                 {% for pool_file in fixed_file.pool_files %}
                     <div class="row">
                         <div class="col-md-3 text-center font-weight-bold">
@@ -477,14 +509,23 @@
                     {% endfor %}
                     {% for file_item in pool_file.file_items %}
                         <div class="row">
-                            <div class="col-md-4 text-center font-weight-bold">
+                            <div class="col-md-3 text-center font-weight-bold">
                                 ITM-{{ file_item.field }}
                             </div>
-                            {% if file_item.count_field %}
-                                <div class="col-md-4">
-                                    CNT-{{ file_item.count_field }}
-                                </div>
-                            {% endif %}
+                            <div class="col-md-3">
+                                CNT-
+                                {% if file_item.count_field %}
+                                    {{ file_item.count_field }}
+                                {% else %}
+                                    No count field
+                                {% endif %}
+                            </div>
+                            <div class="col-md-3">
+                                ADJ-{{ file_item.adjust }}
+                            </div>
+                            <div class="col-md-3">
+                                REPEAT-{{ file_item.repeat }}
+                            </div>
                         </div>
                         {% for field_data in file_item.field_data %}
                             <div class="row">
