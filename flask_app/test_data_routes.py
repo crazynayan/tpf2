@@ -10,7 +10,7 @@ from flask_app import tpf2_app
 from flask_app.server import Server
 from flask_app.test_data_forms import DeleteForm, TestDataForm, ConfirmForm, FieldSearchForm, FieldLengthForm, \
     FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm, MultipleFieldDataForm, TpfdfForm, DebugForm, \
-    FixedFileForm
+    FixedFileForm, PnrOutputForm
 from flask_app.user import cookie_login_required
 
 
@@ -245,6 +245,28 @@ def add_input_regs(test_data_id: str):
 def delete_input_regs(test_data_id: str, reg: str):
     if not Server.delete_input_regs(test_data_id, reg):
         flash("Error in deleting Registers")
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+
+
+@tpf2_app.route("/test_data/<string:test_data_id>/output/pnr", methods=["GET", "POST"])
+@cookie_login_required
+def add_output_pnr(test_data_id: str):
+    form = PnrOutputForm()
+    if not form.validate_on_submit():
+        return render_template("test_data_form.html", title="Add PNR element", form=form)
+    pnr_dict = {"key": form.key.data, "locator": form.locator.data, "field_len": form.field_data.data}
+    response = Server.add_output_pnr(test_data_id, pnr_dict)
+    if not response:
+        flash("Error in creating PNR")
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+
+
+@tpf2_app.route("/test_data/<string:test_data_id>/output/pnr/<string:pnr_id>")
+@cookie_login_required
+def delete_output_pnr(test_data_id: str, pnr_id: str):
+    response = Server.delete_output_pnr(test_data_id, pnr_id)
+    if not response:
+        flash("Error in deleting PNR element")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
 
 

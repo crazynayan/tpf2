@@ -9,10 +9,16 @@ from flask_app import tpf2_app
 from flask_app.server import Server
 
 FIELD_DATA_TEXT: str = """
-Enter multiple field and data separated by comma. The field and data should be separated by colon. All fields should be 
+Enter multiple fields and data separated by comma. The field and data should be separated by colon. All fields should be 
  from a single macro mentioned above. Data by default is in hex characters. Odd number of digit will be considered a 
- number. Prefix with 0 to make it odd for enforcing a number. Non hex characters are considered as text. Prefix with 
- quote to enforce text.
+ 4 byte number. Prefix with 0 to make it odd for enforcing a number. Non hex characters are considered as text. Prefix 
+ with quote to enforce text.
+"""
+
+PNR_OUTPUT_FIELD_DATA_TEXT: str = """
+Enter multiple fields and length separated by comma. The field and length should be separated by colon. All
+ fields should be from PR001W macro. Data is an integer number which indicates the length of the field. If you don't 
+ know the length then put the length as 0 and the length from the data macro will automatically determined.
 """
 
 
@@ -213,6 +219,44 @@ class PnrForm(FlaskForm):
     @staticmethod
     def validate_text_data(_, text_data):
         text_data.data = text_data.data.strip().upper()
+
+
+class PnrOutputForm(FlaskForm):
+    key = SelectField("Select type of PNR element", choices=tpf2_app.config["PNR_KEYS"], default="header")
+    locator = StringField("Enter PNR Locator - 6 character alpha numeric - Leave it blank for AAA PNR")
+    field_data = TextAreaField(PNR_OUTPUT_FIELD_DATA_TEXT, render_kw={"rows": "5"}, validators=[DataRequired()])
+    save = SubmitField("Save & Continue - Add Further Data")
+
+    @staticmethod
+    def validate_field_data(_, field_data: TextAreaField):
+        data_stream: str = field_data.data
+        data_dict = dict()
+        for key_value in data_stream.split(","):
+            if key_value.count(":") != 1:
+                raise ValidationError(f"Include a single colon : to separate field and length - {key_value}")
+            field = key_value.split(":")[0].strip().upper()
+            label_ref = Server.search_field(field)
+            if not label_ref:
+                raise ValidationError(f"Field name not found - {field}")
+            if label_ref["name"] != "PR001W":
+                raise ValidationError(f"Field not in the data macro - {field} not in PR001W")
+            data = key_value.split(":")[1]
+            try:
+                length = int(data)
+            except ValueError:
+                raise ValidationError(f"Length of the {field} is not an integer - {data} not a number")
+            data_dict[field] = length
+        field_data.data = data_dict
+        return
+
+    @staticmethod
+    def validate_locator(_, locator):
+        if not locator.data:
+            return
+        locator.data = locator.data.upper()
+        if len(locator.data) != 6 or not locator.data.isalnum():
+            raise ValidationError("PNR Locator needs to be 6 character alpha numeric")
+        return
 
 
 class MultipleFieldDataForm(FlaskForm):

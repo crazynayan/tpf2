@@ -147,8 +147,15 @@ class Server:
                 for core in output['cores']:
                     for field_data in core['field_data']:
                         field_data['data'] = cls._decode_data(field_data['data'])
+            if 'pnr_outputs' in output:
+                for pnr_output in output['pnr_outputs']:
+                    for field_data in pnr_output['field_data']:
+                        field_data['data'] = cls._decode_data(field_data['data'])
         fields = [field_data['field'] for core in test_data['outputs'][0]['cores'] for field_data in core['field_data']]
+        pnr_fields = [field_data['field'] for pnr_output in test_data['outputs'][0]['pnr_outputs']
+                      for field_data in pnr_output['field_data']]
         test_data['fields'] = fields
+        test_data['pnr_fields'] = pnr_fields
         return test_data
 
     @classmethod
@@ -213,6 +220,14 @@ class Server:
     @classmethod
     def create_pnr(cls, test_data_id: str, pnr_dict: dict) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/input/pnr", method='PATCH', json=pnr_dict)
+
+    @classmethod
+    def add_output_pnr(cls, test_data_id: str, pnr_dict: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/output/pnr", method='PATCH', json=pnr_dict)
+
+    @classmethod
+    def delete_output_pnr(cls, test_data_id: str, pnr_id: str) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/output/pnr/{pnr_id}", method='DELETE')
 
     @classmethod
     def add_pnr_fields(cls, test_data_id: str, pnr_id: str, core_dict: dict) -> dict:

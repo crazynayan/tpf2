@@ -17,6 +17,7 @@ class Config:
     PNR_KEYS = [
         ("name", "NAME"),
         ("hfax", "HFAX"),
+        ("gfax", "GFAX"),
         ("fqtv", "FQTV"),
         ("itin", "ITIN"),
         ("subs_card_seg", "SUBS_CARD_SEG"),
@@ -25,5 +26,9 @@ class Config:
         ("phone", "PHONE"),
         ("record_loc", "RECORD_LOC"),
         ("remarks", "REMARKS"),
+        ("header", "HEADER"),
+        ("prs_seats", "PRS_SEATS"),
+        ("vcr_coupon", "VCR_COUPON"),
+        ("ice_data", "ICE_DATA"),
     ]
     # SERVER_URL = "http://localhost:8010"
