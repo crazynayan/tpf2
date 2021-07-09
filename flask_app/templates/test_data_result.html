@@ -69,16 +69,33 @@
             {% endfor %}
         {% endfor %}
     {% endif %}
+    {% if output.pnr_outputs %}
+        <br>
+        <div class="list-group list-group-item list-group-item-secondary">PNR Fields</div>
+        <br>
+        {% for pnr_output in output.pnr_outputs %}
+            {% for field_data in pnr_output.field_data %}
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <pre>{{ field_data.field }}</pre>
+                    </div>
+                    {% for value in field_data.data %}
+                        <div class="col-md-3 text-center"><kbd>{{ value }}</kbd></div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
     {% if output.debug %}
         <br>
         <div class="list-group list-group-item list-group-item-secondary">Debug</div>
         <br>
         {% for trace in output.debug %}
             <div class="row">
-                <div class="col-md-2 align-middle">
+                <div class="col-md-3">
                     <kbd>{{ trace.hits }}</kbd>-{{ trace.label }}
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     {% for label, hits in trace.next_hits.items() %}
                         {% if hits %}
                             <div class="row">
@@ -89,7 +106,7 @@
                         {% endif %}
                     {% endfor %}
                 </div>
-                <div class="col-md-8 align-middle">
+                <div class="col-md-6">
                     {{ trace.command }} {{ trace.operands }}
                 </div>
             </div>
