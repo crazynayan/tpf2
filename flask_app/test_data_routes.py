@@ -131,9 +131,6 @@ def confirm_test_data(test_data_id: str, **kwargs):
     form = ConfirmForm()
     if not form.validate_on_submit():
         return render_template("test_data_confirm.html", title="Confirm Test Data", test_data=test_data, form=form)
-    if not test_data["outputs"]["regs"] and not test_data["outputs"]["cores"]:
-        flash("You need to add at least one output")
-        return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
     return redirect(url_for("get_test_data", test_data_id=test_data_id))
 
 
