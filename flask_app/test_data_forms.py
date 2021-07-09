@@ -17,8 +17,8 @@ Enter multiple fields and data separated by comma. The field and data should be 
 
 PNR_OUTPUT_FIELD_DATA_TEXT: str = """
 Enter multiple fields and length separated by comma. The field and length should be separated by colon. All
- fields should be from PR001W macro. Data is an integer number which indicates the length of the field. If you don't 
- know the length then put the length as 0 and the length from the data macro will automatically determined.
+ fields should be from PR001W macro. Length is an integer number which indicates the length of the field. If you don't 
+ know the length then put the length as 0 and the length from the data macro will be automatically determined.
 """
 
 
