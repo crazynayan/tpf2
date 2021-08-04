@@ -3,3 +3,4 @@ venv/
 __pycache__
 google-cloud.json
 google-cloud-tokyo.json
+flask_app/static/open-iconic/
