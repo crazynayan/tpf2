@@ -12,5 +12,6 @@ handlers:
     script: auto
 
 env_variables:
-  GOOGLE_APPLICATION_CREDENTIALS: 'google-cloud-tokyo.json'
-  SERVER_URL: 'https://tpf-server-tokyo.crazyideas.co.in/'
+  GOOGLE_APPLICATION_CREDENTIALS: "google-cloud-tokyo.json"
+  SERVER_URL: "https://tpf-server-tokyo.crazyideas.co.in/"
+  ENVIRONMENT: "prod"

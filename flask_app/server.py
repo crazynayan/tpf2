@@ -3,7 +3,7 @@ from typing import Dict, List
 from urllib.parse import quote
 
 import requests
-from flask_login import current_user
+from flask_login import current_user, logout_user
 from requests import Response
 
 from flask_app import tpf2_app
@@ -28,8 +28,7 @@ class Server:
         else:
             raise TypeError
         if response.status_code == 401 and current_user.is_authenticated:
-            current_user.api_key = str()
-            current_user.save()
+            logout_user()
         return response.json() if response.status_code == 200 else dict()
 
     @staticmethod

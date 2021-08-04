@@ -3,6 +3,7 @@ from functools import wraps
 from urllib.parse import unquote
 
 from flask import render_template, url_for, redirect, flash, request, Response
+from flask_login import current_user
 from werkzeug.datastructures import MultiDict
 from wtforms import BooleanField
 
@@ -18,6 +19,9 @@ def test_data_required(func):
     @wraps(func)
     def test_data_wrapper(test_data_id, *args, **kwargs):
         test_data: dict = Server.get_test_data(test_data_id)
+        if not current_user.is_authenticated:
+            flash("Session Expired")
+            return redirect(url_for("logout"))
         if not test_data:
             flash("Error in retrieving the test data")
             return redirect(url_for("get_all_test_data"))
@@ -27,7 +31,7 @@ def test_data_required(func):
     return test_data_wrapper
 
 
-def _search_field(redirect_route: str, test_data_id: str) -> Response:
+def _search_field(redirect_route: str, test_data_id: str):
     form = FieldSearchForm()
     if not form.validate_on_submit():
         return render_template("test_data_form.html", title="Search Fields", form=form)
@@ -45,6 +49,8 @@ def _convert_field_data(form_data: str) -> list:
 @cookie_login_required
 def get_all_test_data():
     test_data_list = Server.get_all_test_data()
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     return render_template("test_data_list.html", title="Test Data", test_data_list=test_data_list)
 
 
@@ -52,6 +58,8 @@ def get_all_test_data():
 @cookie_login_required
 def get_test_data(test_data_id):
     test_data = Server.get_test_data(test_data_id)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     if not test_data:
         flash("Error in retrieving the test data")
         return redirect(url_for("get_all_test_data"))
@@ -68,6 +76,8 @@ def get_test_data(test_data_id):
 @cookie_login_required
 def run_test_data(test_data_id: str):
     test_data = Server.run_test_data(test_data_id)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     if not test_data:
         flash("Error in running test data")
         return redirect(url_for("get_test_data", test_data_id=test_data_id))
@@ -90,6 +100,8 @@ def create_test_data():
     if not form.validate_on_submit():
         return render_template("test_data_form.html", title="Create Test Data", form=form)
     response: dict = Server.create_test_data({"name": form.name.data, "seg_name": form.seg_name.data})
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     if not response:
         flash("Error in creating test data")
         return redirect(url_for("create_test_data"))
@@ -100,6 +112,8 @@ def create_test_data():
 @cookie_login_required
 def copy_test_data(test_data_id):
     response = Server.copy_test_data(test_data_id)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     if not response:
         flash("Error in copying the test data")
         return redirect(url_for("get_test_data", test_data_id=test_data_id))
@@ -117,6 +131,8 @@ def rename_test_data(test_data_id, **kwargs):
     if not form.validate_on_submit():
         return render_template("test_data_form.html", title="Rename Test Data", form=form)
     response: dict = Server.rename_test_data(test_data_id, {"name": form.name.data, "seg_name": form.seg_name.data})
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     if not response:
         flash("Error in renaming test data")
         return redirect(url_for("rename_test_data", test_data_id=test_data_id))
@@ -143,6 +159,8 @@ def add_output_regs(test_data_id: str):
     reg_list = [value.label.text for reg, value in vars(form).items()
                 if reg.startswith("r") and isinstance(value, BooleanField) and value.data]
     response: dict = Server.add_output_regs(test_data_id, {"regs": reg_list})
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     if not response:
         flash("Error in updating output registers")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
@@ -158,7 +176,7 @@ def search_output_fields(test_data_id: str) -> Response:
                 methods=["GET", "POST"])
 @cookie_login_required
 @test_data_required
-def add_output_field(test_data_id: str, macro_name: str, field_name: str, **kwargs) -> Response:
+def add_output_field(test_data_id: str, macro_name: str, field_name: str, **kwargs):
     field_name = unquote(field_name)
     form = FieldLengthForm(macro_name)
     form_data = form.data
@@ -172,6 +190,8 @@ def add_output_field(test_data_id: str, macro_name: str, field_name: str, **kwar
         return render_template("test_data_form.html", title=f"{field_name} ({macro_name})", form=form)
     field_dict = {"field": field_name, "length": form.length.data, "base_reg": form.base_reg.data}
     response = Server.add_output_field(test_data_id, macro_name, field_dict)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     if not response:
         flash("Error in creating field_byte")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
@@ -181,6 +201,8 @@ def add_output_field(test_data_id: str, macro_name: str, field_name: str, **kwar
 @cookie_login_required
 def delete_output_field(test_data_id: str, macro_name: str, field_name: str):
     response = Server.delete_output_field(test_data_id, macro_name, field_name)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     if not response:
         flash("Error in deleting field")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
@@ -212,6 +234,8 @@ def add_input_field(test_data_id: str, macro_name: str, field_name: str):
         field_dict["variation"] = form.variation.data
         field_dict["variation_name"] = str()
     response = Server.add_input_field(test_data_id, macro_name, field_dict)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     if not response:
         flash("Error in creating fields")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
@@ -221,6 +245,8 @@ def add_input_field(test_data_id: str, macro_name: str, field_name: str):
 @cookie_login_required
 def delete_input_field(test_data_id: str, macro_name: str, field_name: str):
     response = Server.delete_input_field(test_data_id, macro_name, field_name)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     if not response:
         flash("Error in deleting field")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
@@ -233,6 +259,8 @@ def add_input_regs(test_data_id: str):
     if not form.validate_on_submit():
         return render_template("test_data_form.html", title="Provide Register Values", form=form)
     if not Server.add_input_regs(test_data_id, {"reg": form.reg.data, "value": form.field_data.data}):
+        if not current_user.is_authenticated:
+            return redirect(url_for("logout"))
         flash("Error in adding Registers")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
 
@@ -241,6 +269,8 @@ def add_input_regs(test_data_id: str):
 @cookie_login_required
 def delete_input_regs(test_data_id: str, reg: str):
     if not Server.delete_input_regs(test_data_id, reg):
+        if not current_user.is_authenticated:
+            return redirect(url_for("logout"))
         flash("Error in deleting Registers")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
 
@@ -253,6 +283,8 @@ def add_output_pnr(test_data_id: str):
         return render_template("test_data_form.html", title="Add PNR element", form=form)
     pnr_dict = {"key": form.key.data, "locator": form.locator.data, "field_len": form.field_data.data}
     response = Server.add_output_pnr(test_data_id, pnr_dict)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     if not response:
         flash("Error in creating PNR")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
@@ -262,6 +294,8 @@ def add_output_pnr(test_data_id: str):
 @cookie_login_required
 def delete_output_pnr(test_data_id: str, pnr_id: str):
     response = Server.delete_output_pnr(test_data_id, pnr_id)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     if not response:
         flash("Error in deleting PNR element")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
@@ -272,6 +306,8 @@ def delete_output_pnr(test_data_id: str, pnr_id: str):
 def add_input_pnr(test_data_id: str):
     form = PnrForm()
     variations = Server.get_variations(test_data_id, "pnr")
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     form.variation.choices = [(item["variation"], f"{item['variation_name']} ({item['variation']})")
                               for item in variations]
     form.variation.choices.append((-1, "New Variation"))
@@ -285,6 +321,8 @@ def add_input_pnr(test_data_id: str):
         pnr_dict["variation"] = form.variation.data
         pnr_dict["variation_name"] = str()
     response = Server.create_pnr(test_data_id, pnr_dict)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     if not response:
         flash("Error in creating PNR")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
@@ -292,7 +330,7 @@ def add_input_pnr(test_data_id: str):
 
 @tpf2_app.route("/test_data/<string:test_data_id>/input/pnr/<string:pnr_id>/fields", methods=["GET", "POST"])
 @cookie_login_required
-def add_pnr_fields(test_data_id: str, pnr_id: str) -> Response:
+def add_pnr_fields(test_data_id: str, pnr_id: str):
     form = MultipleFieldDataForm()
     if not form.validate_on_submit():
         return render_template("test_data_form.html", title="Add Multiple Fields", form=form)
@@ -306,6 +344,8 @@ def add_pnr_fields(test_data_id: str, pnr_id: str) -> Response:
 @cookie_login_required
 def delete_pnr(test_data_id: str, pnr_id: str):
     response = Server.delete_pnr(test_data_id, pnr_id)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     if not response:
         flash("Error in deleting PNR element")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
@@ -313,9 +353,11 @@ def delete_pnr(test_data_id: str, pnr_id: str):
 
 @tpf2_app.route("/test_data/<string:test_data_id>/input/tpfdf/", methods=["GET", "POST"])
 @cookie_login_required
-def add_tpfdf_lrec(test_data_id: str) -> Response:
+def add_tpfdf_lrec(test_data_id: str):
     form = TpfdfForm()
     variations = Server.get_variations(test_data_id, "tpfdf")
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     form.variation.choices = [(item["variation"], f"{item['variation_name']} ({item['variation']})")
                               for item in variations]
     form.variation.choices.append((-1, "New Variation"))
@@ -331,6 +373,8 @@ def add_tpfdf_lrec(test_data_id: str) -> Response:
         tpfdf["variation"] = form.variation.data
         tpfdf["variation_name"] = str()
     if not Server.add_tpfdf_lrec(test_data_id, tpfdf):
+        if not current_user.is_authenticated:
+            return redirect(url_for("logout"))
         flash("Error in adding Tpfdf lrec")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
 
@@ -339,6 +383,8 @@ def add_tpfdf_lrec(test_data_id: str) -> Response:
 @cookie_login_required
 def delete_tpfdf_lrec(test_data_id: str, df_id: str):
     response = Server.delete_tpfdf_lrec(test_data_id, df_id)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     if not response:
         flash("Error in deleting Tpfdf lrec")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
@@ -347,9 +393,11 @@ def delete_tpfdf_lrec(test_data_id: str, df_id: str):
 # noinspection DuplicatedCode
 @tpf2_app.route("/test_data/<string:test_data_id>/input/fixed_files/", methods=["GET", "POST"])
 @cookie_login_required
-def add_fixed_file(test_data_id: str) -> Response:
+def add_fixed_file(test_data_id: str):
     form = FixedFileForm()
     variations = Server.get_variations(test_data_id, "file")
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     form.variation.choices = [(item["variation"], f"{item['variation_name']} ({item['variation']})")
                               for item in variations]
     form.variation.choices.append((-1, "New Variation"))
@@ -400,6 +448,8 @@ def add_fixed_file(test_data_id: str) -> Response:
             fixed_file["file_items"][0]["adjust"] = form.pool_item_adjust.data
             fixed_file["file_items"][0]["repeat"] = form.pool_item_repeat.data
     if not Server.add_fixed_file(test_data_id, fixed_file):
+        if not current_user.is_authenticated:
+            return redirect(url_for("logout"))
         flash("Error in adding Fixed File")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
 
@@ -408,6 +458,8 @@ def add_fixed_file(test_data_id: str) -> Response:
 @cookie_login_required
 def delete_fixed_file(test_data_id: str, file_id: str):
     response = Server.delete_fixed_file(test_data_id, file_id)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     if not response:
         flash("Error in deleting Fixed File")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
@@ -415,11 +467,13 @@ def delete_fixed_file(test_data_id: str, file_id: str):
 
 @tpf2_app.route("/test_data/<string:test_data_id>/output/debug/", methods=["GET", "POST"])
 @cookie_login_required
-def add_debug(test_data_id: str) -> Response:
+def add_debug(test_data_id: str):
     form = DebugForm()
     if not form.validate_on_submit():
         return render_template("test_data_form.html", title="Add Segments to Debug", form=form)
     if not Server.add_debug(test_data_id, {"traces": form.seg_list.data.split(",")}):
+        if not current_user.is_authenticated:
+            return redirect(url_for("logout"))
         flash("Error in adding debug segments")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
 
@@ -428,5 +482,7 @@ def add_debug(test_data_id: str) -> Response:
 @cookie_login_required
 def delete_debug(test_data_id: str, seg_name: str) -> Response:
     if not Server.delete_debug(test_data_id, seg_name):
+        if not current_user.is_authenticated:
+            return redirect(url_for("logout"))
         flash("Error in delete debug segment")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
