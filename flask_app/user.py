@@ -15,7 +15,6 @@ from flask_app.server import Server
 
 
 def cookie_login_required(route_function):
-    # noinspection PyUnresolvedReferences
     @wraps(route_function)
     def decorated_route(*args, **kwargs):
         token = request.cookies.get("token")

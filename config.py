@@ -31,4 +31,3 @@ class Config:
         ("vcr_coupon", "VCR_COUPON"),
         ("ice_data", "ICE_DATA"),
     ]
-    # SERVER_URL = "http://localhost:8010"
