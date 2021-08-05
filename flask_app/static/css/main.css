@@ -13,7 +13,7 @@
 
 .section-title h2 {
     font-size: 32px;
-    color: #e58c28;
+    color: #292929;
     font-weight: bold;
     letter-spacing: -0.6px;
     position: relative;
@@ -52,6 +52,6 @@
 --------------------*/
 
 .dark-bg {
-    background-color: #e58c28;
+    background-color: #292929;
     color: #fff;
 }

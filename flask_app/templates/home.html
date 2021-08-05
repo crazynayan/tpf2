@@ -2,28 +2,14 @@
 
 {% block app_content %}
     <div class="row">
-        <div class="col-md-8">
-            <h1>{{ title }}</h1>
-        </div>
-        <div class="col-md-4">
-            <a class="btn btn-success btn-block text-center"
-               href="{{ url_for('create_test_data') }}">
-                Create Test Data
-            </a>
+        <div class="col-md">
+            <div class="section-title">
+                <h2 class="text-center">TPF Analyzer</h2>
+                <p>TPF Analyzer is a tool to understand TPF code. It is currently in alpha development stage.
+                    Please contact info@crazyideas.co.in if you need to access the tool.
+                    Thank you for your support.</p>
+            </div>
         </div>
     </div>
     <br>
-    <div class="list-group">
-        <a class="list-group-item list-group-item-primary" href="{{ url_for('segments') }}">
-            View Segments
-        </a>
-        <br>
-        <a class="list-group-item list-group-item-primary" href="{{ url_for('macros') }}">
-            View Macros
-        </a>
-        <br>
-        <a class="list-group-item list-group-item-primary" href="{{ url_for('get_all_test_data') }}">
-            View & Run Test Data
-        </a>
-    </div>
 {% endblock %}

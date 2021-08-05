@@ -10,9 +10,8 @@ from flask_app.user import cookie_login_required
 
 @tpf2_app.route('/')
 @tpf2_app.route('/index')
-@cookie_login_required
 def home():
-    return render_template('home.html', title='TPF Analyzer')
+    return render_template('home.html')
 
 
 @tpf2_app.route('/segments')
