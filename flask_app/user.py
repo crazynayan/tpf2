@@ -17,13 +17,12 @@ from flask_app.server import Server
 def cookie_login_required(route_function):
     @wraps(route_function)
     def decorated_route(*args, **kwargs):
-        token = request.cookies.get("token")
-        if not token:
+        user_data = request.cookies.get("user_data")
+        if not user_data:
             return current_app.login_manager.unauthorized()
         if current_user.is_authenticated:
             return route_function(*args, **kwargs)
-        email = request.cookies.get("email")
-        user = User(email, token)
+        user = load_user(user_data)
         login_user(user=user)
         return route_function(*args, **kwargs)
 
@@ -33,28 +32,39 @@ def cookie_login_required(route_function):
 class User(UserMixin):
     SEPARATOR: str = "|"
 
-    def __init__(self, email: str = None, api_key: str = None):
+    def __init__(self, email: str = None, api_key: str = None, initial: str = None, role: str = None):
         super().__init__()
         self.email: str = email.replace(self.SEPARATOR, "") if email else str()
         self.api_key: str = api_key if api_key else str()
+        self.initial: str = initial if initial else str()
+        self.role: str = role if role else str()
 
     def __repr__(self):
-        return f"{self.email}{self.SEPARATOR}{self.api_key}"
+        return f"{self.email}{self.SEPARATOR}{self.api_key}{self.SEPARATOR}{self.initial}{self.SEPARATOR}{self.role}"
 
     def check_password(self, password: str) -> bool:
-        self.api_key = Server().authenticate(self.email, password)
-        return True if self.api_key else False
+        user_response: dict = Server().authenticate(self.email, password)
+        if not user_response:
+            return False
+        try:
+            self.email = user_response["email"].replace(self.SEPARATOR, "")
+            self.initial = user_response["initial"].replace(self.SEPARATOR, "")
+            self.role = user_response["role"].replace(self.SEPARATOR, "")
+            self.api_key = user_response["token"].replace(self.SEPARATOR, "")
+        except KeyError:
+            return False
+        return True
 
     def get_id(self) -> str:
         return str(self)
 
 
 @login.user_loader
-def load_user(user_key: str) -> Optional[User]:
-    if User.SEPARATOR not in user_key:
+def load_user(user_data: str) -> Optional[User]:
+    if User.SEPARATOR not in user_data:
         return None
-    email, token = user_key.split(User.SEPARATOR)
-    return User(email, token)
+    email, token, initial, role = user_data.split(User.SEPARATOR)
+    return User(email, token, initial, role)
 
 
 class LoginForm(FlaskForm):
@@ -77,9 +87,7 @@ def login():
     if not next_page or url_parse(next_page).netloc != '':
         next_page = url_for("home")
     response: Response = make_response(redirect(next_page))
-    response.set_cookie("token", user.api_key, max_age=Config.TOKEN_EXPIRY, secure=Config.CI_SECURITY, httponly=True,
-                        samesite="Strict")
-    response.set_cookie("email", user.email, max_age=Config.TOKEN_EXPIRY, secure=Config.CI_SECURITY, httponly=True,
+    response.set_cookie("user_data", str(user), max_age=Config.TOKEN_EXPIRY, secure=Config.CI_SECURITY, httponly=True,
                         samesite="Strict")
     return response
 
@@ -89,6 +97,5 @@ def logout() -> Response:
     if current_user.is_authenticated:
         logout_user()
     response: Response = make_response(redirect(url_for("home")))
-    response.set_cookie("token", str(), max_age=Config.TOKEN_EXPIRY, secure=Config.CI_SECURITY, httponly=True,
-                        samesite="Strict")
+    response.set_cookie("user_data", str(), max_age=0, secure=Config.CI_SECURITY, httponly=True, samesite="Strict")
     return response
