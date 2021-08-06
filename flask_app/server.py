@@ -126,6 +126,7 @@ class Server:
         if not test_data:
             return dict()
         test_data["outputs"] = test_data["outputs"][0]
+        test_data["class_display"] = "disabled" if test_data["owner"] != current_user.email else str()
         return cls._decode_test_data(test_data)
 
     @classmethod
