@@ -24,7 +24,7 @@ def test_data_required(func):
             return redirect(url_for("logout"))
         if not test_data:
             flash("Error in retrieving the test data")
-            return redirect(url_for("get_all_test_data"))
+            return redirect(url_for("get_my_test_data"))
         kwargs[test_data_id] = test_data
         return func(test_data_id, *args, **kwargs)
 
@@ -51,7 +51,17 @@ def get_all_test_data():
     test_data_list = Server.get_all_test_data()
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
-    return render_template("test_data_list.html", title="Test Data", test_data_list=test_data_list)
+    return render_template("test_data_list.html", title="Test Data", test_data_list=test_data_list, all_flag=True)
+
+
+@tpf2_app.route("/my_test_data")
+@cookie_login_required
+def get_my_test_data():
+    test_data_list = Server.get_all_test_data()
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    my_list = [test_data for test_data in test_data_list if test_data["owner"] == current_user.email]
+    return render_template("test_data_list.html", title="Test Data", test_data_list=my_list, all_flag=False)
 
 
 @tpf2_app.route("/test_data/<string:test_data_id>", methods=["GET", "POST"])
@@ -62,14 +72,16 @@ def get_test_data(test_data_id):
         return redirect(url_for("logout"))
     if not test_data:
         flash("Error in retrieving the test data")
-        return redirect(url_for("get_all_test_data"))
+        return redirect(url_for("get_my_test_data"))
     form = DeleteForm()
     if not form.validate_on_submit():
         return render_template("test_data_view.html", title="Test Data", test_data=test_data, form=form)
     response = Server.delete_test_data(test_data_id)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
     if not response:
         flash("Error in deleting test data")
-    return redirect(url_for("get_all_test_data"))
+    return redirect(url_for("get_my_test_data"))
 
 
 @tpf2_app.route("/test_data/<string:test_data_id>/run")
@@ -99,7 +111,12 @@ def create_test_data():
     form = TestDataForm()
     if not form.validate_on_submit():
         return render_template("test_data_form.html", title="Create Test Data", form=form)
-    response: dict = Server.create_test_data({"name": form.name.data, "seg_name": form.seg_name.data})
+    test_data: dict = {
+        "name": form.name.data,
+        "seg_name": form.seg_name.data,
+        "owner": current_user.email,
+    }
+    response: dict = Server.create_test_data(test_data)
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     if not response:

@@ -85,7 +85,7 @@ def login():
     login_user(user=user)
     next_page = request.args.get("next")
     if not next_page or url_parse(next_page).netloc != '':
-        next_page = url_for("get_all_test_data")
+        next_page = url_for("get_my_test_data")
     response: Response = make_response(redirect(next_page))
     response.set_cookie("user_data", str(user), max_age=Config.TOKEN_EXPIRY, secure=Config.CI_SECURITY, httponly=True,
                         samesite="Strict")

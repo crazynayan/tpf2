@@ -32,7 +32,7 @@
         <div class="collapse navbar-collapse" id="navbarMenu">
             <div class="navbar-nav mr-auto">
                 {%- if current_user.is_authenticated %}
-                    <a class="nav-item nav-link active" href="#">
+                    <a class="nav-item nav-link active" href="{{ url_for('get_my_test_data') }}">
                         <span class="oi oi-phone"></span> My Test Data
                     </a>
                     <a class="nav-item nav-link active" href="{{ url_for('get_all_test_data') }}">
