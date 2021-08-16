@@ -1,5 +1,6 @@
 from base64 import b64encode
 from functools import wraps
+from typing import List
 from urllib.parse import unquote
 
 from flask import render_template, url_for, redirect, flash, request, Response
@@ -115,6 +116,7 @@ def create_test_data():
         "name": form.name.data,
         "seg_name": form.seg_name.data,
         "owner": current_user.email,
+        "stop_segments": form.stop_segments
     }
     response: dict = Server.create_test_data(test_data)
     if not current_user.is_authenticated:
@@ -144,10 +146,13 @@ def rename_test_data(test_data_id, **kwargs):
     form_data = TestDataForm().data
     form_data["name"] = kwargs[test_data_id]["name"]
     form_data["seg_name"] = kwargs[test_data_id]["seg_name"]
+    stop_segments: List[str] = kwargs[test_data_id]["stop_segments"]
+    form_data["stop_segments"] = ", ".join(stop_segments)
     form = TestDataForm(formdata=MultiDict(form_data)) if request.method == "GET" else TestDataForm()
     if not form.validate_on_submit():
         return render_template("test_data_form.html", title="Rename Test Data", form=form)
-    response: dict = Server.rename_test_data(test_data_id, {"name": form.name.data, "seg_name": form.seg_name.data})
+    response: dict = Server.rename_test_data(test_data_id, {"name": form.name.data, "seg_name": form.seg_name.data,
+                                                            "stop_segments": form.stop_segments})
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     if not response:

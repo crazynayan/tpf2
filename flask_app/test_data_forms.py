@@ -1,8 +1,9 @@
 from base64 import b64encode
+from typing import List
 
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, BooleanField, IntegerField, SelectField, TextAreaField
-from wtforms.validators import DataRequired, ValidationError, NumberRange, Length
+from wtforms.validators import InputRequired, ValidationError, NumberRange, Length
 from wtforms.widgets import Input
 
 from flask_app import tpf2_app
@@ -85,20 +86,37 @@ def form_validate_macro_name(macro_name: str) -> str:
 
 
 class TestDataForm(FlaskForm):
-    name = StringField("Name of Test Data (Must be unique in the system)", validators=[DataRequired()])
-    seg_name = StringField("Segment Name (Must exists in the system)", validators=[DataRequired()])
+    name = StringField("Name of Test Data (Must be unique in the system)", validators=[InputRequired()])
+    seg_name = StringField("Segment Name (Must exists in the system)", validators=[InputRequired()])
+    stop_segments = StringField("Stop Segment Name List (Separate multiple segments with comma). Optional")
     save = SubmitField("Save & Continue - Add Further Data")
 
-    @staticmethod
-    def validate_seg_name(_, seg_name: StringField) -> None:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.segments: List[str] = list()
+        self.stop_segments: List[str] = list()
+
+    def validate_seg_name(self, seg_name: StringField):
         seg_name.data = seg_name.data.upper()
-        seg_name = seg_name.data
-        if seg_name not in Server.segments():
-            raise ValidationError(f"{seg_name} not found")
+        segment: str = seg_name.data
+        self.segments: List[str] = self.segments or Server.segments()
+        if segment not in self.segments:
+            raise ValidationError(f"{segment} not found")
         return
 
-    @staticmethod
-    def validate_name(_, name: StringField) -> None:
+    def validate_stop_segments(self, stop_segments: StringField):
+        stop_segments.data = stop_segments.data.upper().strip()
+        if not stop_segments.data:
+            return
+        self.stop_segments: List[str] = stop_segments.data.split(",")
+        self.stop_segments = [segment.strip() for segment in self.stop_segments]
+        self.segments: List[str] = self.segments or Server.segments()
+        not_found_segments: List[str] = [segment for segment in self.stop_segments if segment not in self.segments]
+        if not_found_segments:
+            raise ValidationError(f"{', '.join(not_found_segments)} segment(s) not found")
+        return
+
+    def validate_name(self, name: StringField):
         if Server.get_test_data_by_name(name.data):
             raise ValidationError(f"The name '{name.data}' already exists - Please use an unique name")
         return
@@ -133,7 +151,7 @@ class RegisterForm(FlaskForm):
 
 
 class FieldSearchForm(FlaskForm):
-    field = StringField("Field name", validators=[DataRequired()])
+    field = StringField("Field name", validators=[InputRequired()])
     search = SubmitField("Search")
 
     @staticmethod
@@ -168,7 +186,7 @@ class FieldDataForm(FlaskForm):
     variation_name = StringField("New Variation Name - Leave it blank for existing variation")
     field_data = StringField("Enter Data - Input hex characters. Odd number of digit will be considered a number. "
                              "Prefix with 0 to make the number a digit. Non hex characters are considered as text. "
-                             "Prefix with quote to enforce text.", validators=[DataRequired()])
+                             "Prefix with quote to enforce text.", validators=[InputRequired()])
     save = SubmitField("Save & Continue - Add Further Data")
 
     @staticmethod
@@ -180,7 +198,7 @@ class RegisterFieldDataForm(FlaskForm):
     reg = StringField("Enter Register - Valid values are from R0 to R15")
     field_data = StringField("Enter Data - Input hex characters. Odd number of digit will be considered a number. "
                              "Prefix with 0 to make the number a digit. Non hex characters are considered as text. "
-                             "Prefix with quote to enforce text.", validators=[DataRequired()])
+                             "Prefix with quote to enforce text.", validators=[InputRequired()])
     save = SubmitField("Save & Continue - Add Further Data")
 
     @staticmethod
@@ -224,7 +242,7 @@ class PnrForm(FlaskForm):
 class PnrOutputForm(FlaskForm):
     key = SelectField("Select type of PNR element", choices=tpf2_app.config["PNR_KEYS"], default="header")
     locator = StringField("Enter PNR Locator - 6 character alpha numeric - Leave it blank for AAA PNR")
-    field_data = TextAreaField(PNR_OUTPUT_FIELD_DATA_TEXT, render_kw={"rows": "5"}, validators=[DataRequired()])
+    field_data = TextAreaField(PNR_OUTPUT_FIELD_DATA_TEXT, render_kw={"rows": "5"}, validators=[InputRequired()])
     save = SubmitField("Save & Continue - Add Further Data")
 
     @staticmethod
@@ -260,7 +278,7 @@ class PnrOutputForm(FlaskForm):
 
 
 class MultipleFieldDataForm(FlaskForm):
-    field_data = TextAreaField(FIELD_DATA_TEXT, render_kw={"rows": "5"}, validators=[DataRequired()])
+    field_data = TextAreaField(FIELD_DATA_TEXT, render_kw={"rows": "5"}, validators=[InputRequired()])
     save = SubmitField("Save & Continue - Add Further Data")
 
     @staticmethod
@@ -286,10 +304,10 @@ class MultipleFieldDataForm(FlaskForm):
 class TpfdfForm(FlaskForm):
     variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
     variation_name = StringField("New Variation Name - Leave it blank for existing variation")
-    macro_name = StringField("Enter the name of TPFDF macro", validators=[DataRequired()])
+    macro_name = StringField("Enter the name of TPFDF macro", validators=[InputRequired()])
     key = StringField("Enter key as 2 hex characters",
-                      validators=[DataRequired(), Length(min=2, max=2, message="Please enter 2 characters only")])
-    field_data = TextAreaField(FIELD_DATA_TEXT, render_kw={"rows": "5"}, validators=[DataRequired()])
+                      validators=[InputRequired(), Length(min=2, max=2, message="Please enter 2 characters only")])
+    field_data = TextAreaField(FIELD_DATA_TEXT, render_kw={"rows": "5"}, validators=[InputRequired()])
     save = SubmitField("Save & Continue - Add Further Data")
 
     @staticmethod
@@ -328,11 +346,11 @@ class DebugForm(FlaskForm):
 class FixedFileForm(FlaskForm):
     variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
     variation_name = StringField("New Variation Name - Leave it blank for existing variation")
-    macro_name = StringField("Fixed File - Macro Name", validators=[DataRequired()])
-    rec_id = StringField("Fixed File - Record ID (4 hex characters or 2 alphabets)", validators=[DataRequired()])
-    fixed_type = StringField("Fixed File - File Type (Equate name or number)", validators=[DataRequired()])
+    macro_name = StringField("Fixed File - Macro Name", validators=[InputRequired()])
+    rec_id = StringField("Fixed File - Record ID (4 hex characters or 2 alphabets)", validators=[InputRequired()])
+    fixed_type = StringField("Fixed File - File Type (Equate name or number)", validators=[InputRequired()])
     fixed_ordinal = StringField("Fixed File - Ordinal Number (Even digit is hex or Odd digit is number)",
-                                validators=[DataRequired()])
+                                validators=[InputRequired()])
     fixed_fch_count = IntegerField("Fixed File - Number of Forward Chains", validators=[NumberRange(0, 100)], default=0,
                                    widget=Input(input_type="number"))
     fixed_fch_label = StringField("Fixed File - Forward Chain Label (Required only if number of forward chain is > 0")
