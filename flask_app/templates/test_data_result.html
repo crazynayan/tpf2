@@ -1,42 +1,61 @@
-{% extends "base.html" %}
+{% extends "test_data_show.html" %}
 
 {% block app_content %}
-    <h1>Execution Result</h1>
+    <div class="row">
+        <div class="col-md-9">
+            <h1>Execution Result</h1>
+        </div>
+        <div class="col-md-3">
+            <a class="btn btn-secondary" href="{{ url_for('get_test_data', test_data_id=test_data.id) }}">
+                <span class="oi oi-x"></span> Return to Test Data View
+            </a>
+
+        </div>
+    </div>
     <br>
     <div class="row">
         <div class="col-md">
-            <a class="btn btn-primary" href="{{ url_for('get_test_data', test_data_id=test_data.id) }}">
-                {{ test_data.name }}
-            </a>
-        </div>
-        <div class="col-md">
-            Ends at {{ output.last_line }}
+            <div class="list-group list-group-item list-group-item-secondary">
+                General Summary
+            </div>
         </div>
     </div>
-    {% if output.messages %}
-        <br>
-        <div class="list-group list-group-item list-group-item-secondary">Message</div>
-        <br>
-        {% for message in output.messages %}
-            <div class="row">
-                <div class="col-md">
-                    <div class="col-md"><kbd>{{ message }}</kbd></div>
-                </div>
-            </div>
-        {% endfor %}
-    {% endif %}
-    {% if output.dumps %}
-        <br>
-        <div class="list-group list-group-item list-group-item-danger">Dumps</div>
-        <br>
-        <div class="row">
-            {% for dump in output.dumps %}
-                <div class="col-md-2 text-center">
-                    <kbd>{{ dump }}</kbd>
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
+    <br>
+    <table class="table table-bordered table-sm table-hover">
+        <thead class="thead-dark">
+        <tr>
+            <th scope="col" class="text-center">No</th>
+            <th scope="col" class="text-center">End</th>
+            <th scope="col" class="text-center">Dumps</th>
+            <th scope="col" class="text-center">Message</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <th scope="row" class="text-center">1</th>
+            <td class="text-center"><kbd>{{ output.last_line }}</kbd></td>
+            <td class="text-center">
+                {% if output.dumps %}
+                    {% for dump in output.dumps %}
+                        <kbd>{{ dump }}</kbd>
+                    {% endfor %}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td class="text-center">
+                {% if output.messages %}
+                    {% for message in output.messages %}
+                        <kbd>{{ message }}</kbd>
+                    {% endfor %}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
     {% if output.regs %}
         <br>
         <div class="list-group list-group-item list-group-item-secondary">Registers</div>
@@ -86,6 +105,8 @@
             {% endfor %}
         {% endfor %}
     {% endif %}
+    {{ show_test_data(test_data, edit_mode=False, output=False) }}
+
     {% if output.debug %}
         <br>
         <div class="list-group list-group-item list-group-item-secondary">Debug</div>
@@ -112,5 +133,6 @@
             </div>
         {% endfor %}
     {% endif %}
+
 
 {% endblock %}

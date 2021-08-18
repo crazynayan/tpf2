@@ -1,13 +1,15 @@
 {% extends "test_data_show.html" %}
 
 {% block app_content %}
-    <h1>Execution Result</h1>
-    <br>
     <div class="row">
-        <div class="col-md">
-            <a class="btn btn-primary" href="{{ url_for('get_test_data', test_data_id=test_data.id) }}">
-                {{ test_data.name }}
+        <div class="col-md-9">
+            <h1>Execution Result</h1>
+        </div>
+        <div class="col-md-3">
+            <a class="btn btn-secondary" href="{{ url_for('get_test_data', test_data_id=test_data.id) }}">
+                <span class="oi oi-x"></span> Return to Test Data View
             </a>
+
         </div>
     </div>
 
