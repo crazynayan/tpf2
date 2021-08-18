@@ -1,6 +1,5 @@
 from base64 import b64encode
 from functools import wraps
-from typing import List
 from urllib.parse import unquote
 
 from flask import render_template, url_for, redirect, flash, request, Response
@@ -35,7 +34,7 @@ def test_data_required(func):
 def _search_field(redirect_route: str, test_data_id: str):
     form = FieldSearchForm()
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Search Fields", form=form)
+        return render_template("test_data_form.html", title="Search Fields", form=form, test_data_id=test_data_id)
     label_ref = form.field.data
     return redirect(url_for(redirect_route, test_data_id=test_data_id, field_name=label_ref["label"],
                             macro_name=label_ref["name"], length=label_ref["length"]))
@@ -116,7 +115,7 @@ def create_test_data():
         "name": form.name.data,
         "seg_name": form.seg_name.data,
         "owner": current_user.email,
-        "stop_segments": form.stop_segments
+        "stop_segments": form.stop_segment_list,
     }
     response: dict = Server.create_test_data(test_data)
     if not current_user.is_authenticated:
@@ -143,16 +142,12 @@ def copy_test_data(test_data_id):
 @cookie_login_required
 @test_data_required
 def rename_test_data(test_data_id, **kwargs):
-    form_data = TestDataForm().data
-    form_data["name"] = kwargs[test_data_id]["name"]
-    form_data["seg_name"] = kwargs[test_data_id]["seg_name"]
-    stop_segments: List[str] = kwargs[test_data_id]["stop_segments"]
-    form_data["stop_segments"] = ", ".join(stop_segments)
-    form = TestDataForm(formdata=MultiDict(form_data)) if request.method == "GET" else TestDataForm()
+    form = TestDataForm(kwargs[test_data_id])
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Rename Test Data", form=form)
+        return render_template("test_data_form.html", title="Edit Test Data Header", form=form,
+                               test_data_id=test_data_id)
     response: dict = Server.rename_test_data(test_data_id, {"name": form.name.data, "seg_name": form.seg_name.data,
-                                                            "stop_segments": form.stop_segments})
+                                                            "stop_segments": form.stop_segment_list})
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     if not response:
@@ -174,7 +169,7 @@ def confirm_test_data(test_data_id: str, **kwargs):
 def add_output_regs(test_data_id: str):
     form = RegisterForm()
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Add Registers", form=form)
+        return render_template("test_data_form.html", title="Add Registers", form=form, test_data_id=test_data_id)
     reg_list = [value.label.text for reg, value in vars(form).items()
                 if reg.startswith("r") and isinstance(value, BooleanField) and value.data]
     response: dict = Server.add_output_regs(test_data_id, {"regs": reg_list})
@@ -206,7 +201,8 @@ def add_output_field(test_data_id: str, macro_name: str, field_name: str, **kwar
     form = FieldLengthForm(macro_name, formdata=MultiDict(form_data)) if request.method == "GET" \
         else FieldLengthForm(macro_name)
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title=f"{field_name} ({macro_name})", form=form)
+        return render_template("test_data_form.html", title=f"{field_name} ({macro_name})", form=form,
+                               test_data_id=test_data_id)
     field_dict = {"field": field_name, "length": form.length.data, "base_reg": form.base_reg.data}
     response = Server.add_output_field(test_data_id, macro_name, field_dict)
     if not current_user.is_authenticated:
@@ -244,7 +240,8 @@ def add_input_field(test_data_id: str, macro_name: str, field_name: str):
                               for item in variations]
     form.variation.choices.append((-1, "New Variation"))
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title=f"{field_name} ({macro_name})", form=form)
+        return render_template("test_data_form.html", title=f"{field_name} ({macro_name})", form=form,
+                               test_data_id=test_data_id)
     field_dict = {"field": field_name, "data": form.field_data.data}
     if form.variation.data == -1:
         field_dict["variation"] = variations[-1]["variation"] + 1 if variations else 0
@@ -276,7 +273,8 @@ def delete_input_field(test_data_id: str, macro_name: str, field_name: str):
 def add_input_regs(test_data_id: str):
     form = RegisterFieldDataForm()
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Provide Register Values", form=form)
+        return render_template("test_data_form.html", title="Provide Register Values", form=form,
+                               test_data_id=test_data_id)
     if not Server.add_input_regs(test_data_id, {"reg": form.reg.data, "value": form.field_data.data}):
         if not current_user.is_authenticated:
             return redirect(url_for("logout"))
@@ -299,7 +297,7 @@ def delete_input_regs(test_data_id: str, reg: str):
 def add_output_pnr(test_data_id: str):
     form = PnrOutputForm()
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Add PNR element", form=form)
+        return render_template("test_data_form.html", title="Add PNR element", form=form, test_data_id=test_data_id)
     pnr_dict = {"key": form.key.data, "locator": form.locator.data, "field_len": form.field_data.data}
     response = Server.add_output_pnr(test_data_id, pnr_dict)
     if not current_user.is_authenticated:
@@ -331,7 +329,7 @@ def add_input_pnr(test_data_id: str):
                               for item in variations]
     form.variation.choices.append((-1, "New Variation"))
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Add PNR element", form=form)
+        return render_template("test_data_form.html", title="Add PNR element", form=form, test_data_id=test_data_id)
     pnr_dict = {"key": form.key.data, "locator": form.locator.data, "data": form.text_data.data}
     if form.variation.data == -1:
         pnr_dict["variation"] = variations[-1]["variation"] + 1 if variations else 0
@@ -352,7 +350,7 @@ def add_input_pnr(test_data_id: str):
 def add_pnr_fields(test_data_id: str, pnr_id: str):
     form = MultipleFieldDataForm()
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Add Multiple Fields", form=form)
+        return render_template("test_data_form.html", title="Add Multiple Fields", form=form, test_data_id=test_data_id)
     core_dict = form.field_data.data
     if not Server.add_pnr_fields(test_data_id, pnr_id, core_dict):
         flash("Error in adding PNR fields")
@@ -381,7 +379,7 @@ def add_tpfdf_lrec(test_data_id: str):
                               for item in variations]
     form.variation.choices.append((-1, "New Variation"))
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Add Tpfdf lrec", form=form)
+        return render_template("test_data_form.html", title="Add Tpfdf lrec", form=form, test_data_id=test_data_id)
     field_data = {field_data.split(":")[0]: b64encode(bytes.fromhex(field_data.split(":")[1])).decode()
                   for field_data in form.field_data.data.split(",")}
     tpfdf = {"field_data": field_data, "key": form.key.data, "macro_name": form.macro_name.data}
@@ -489,7 +487,8 @@ def delete_fixed_file(test_data_id: str, file_id: str):
 def add_debug(test_data_id: str):
     form = DebugForm()
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Add Segments to Debug", form=form)
+        return render_template("test_data_form.html", title="Add Segments to Debug", form=form,
+                               test_data_id=test_data_id)
     if not Server.add_debug(test_data_id, {"traces": form.seg_list.data.split(",")}):
         if not current_user.is_authenticated:
             return redirect(url_for("logout"))
