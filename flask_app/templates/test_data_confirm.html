@@ -1,25 +1,14 @@
 {% extends "test_data_show.html" %}
 
 {% block app_content %}
-    <h1>{{ test_data.name }} ({{ test_data.seg_name }})</h1>
-    <br>
     <div class="row">
-        <div class="col-md">
-            <form action="" method="post" novalidate>
-                {{ form.hidden_tag() }}
-                {{ form.confirm(class="btn btn-primary btn-block text-center") }}
-            </form>
+        <div class="col-md-9">
+            <h1>Edit Test Data</h1>
         </div>
-        <div class="col-md">
-            <a class="btn btn-warning btn-block"
-               href="{{ url_for('rename_test_data', test_data_id=test_data.id) }}">
-                Edit Name
-            </a>
-        </div>
-        <div class="col-md">
-            <a class="btn btn-danger btn-block"
+        <div class="col-md-3">
+            <a class="btn btn-secondary btn-block"
                href="{{ url_for('get_test_data', test_data_id=test_data.id) }}">
-                Cancel
+                <span class="oi oi-x"></span> Return to Test Data View
             </a>
         </div>
     </div>

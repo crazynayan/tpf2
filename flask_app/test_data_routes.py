@@ -10,7 +10,7 @@ from wtforms import BooleanField
 
 from flask_app import tpf2_app
 from flask_app.server import Server
-from flask_app.test_data_forms import DeleteForm, TestDataForm, ConfirmForm, FieldSearchForm, FieldLengthForm, \
+from flask_app.test_data_forms import DeleteForm, TestDataForm, FieldSearchForm, FieldLengthForm, \
     FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm, MultipleFieldDataForm, TpfdfForm, DebugForm, \
     FixedFileForm, PnrOutputForm
 from flask_app.user import cookie_login_required
@@ -166,10 +166,7 @@ def rename_test_data(test_data_id, **kwargs):
 @test_data_required
 def confirm_test_data(test_data_id: str, **kwargs):
     test_data: dict = kwargs[test_data_id]
-    form = ConfirmForm()
-    if not form.validate_on_submit():
-        return render_template("test_data_confirm.html", title="Confirm Test Data", test_data=test_data, form=form)
-    return redirect(url_for("get_test_data", test_data_id=test_data_id))
+    return render_template("test_data_confirm.html", title="Confirm Test Data", test_data=test_data)
 
 
 @tpf2_app.route("/test_data/<string:test_data_id>/output/regs", methods=["GET", "POST"])
