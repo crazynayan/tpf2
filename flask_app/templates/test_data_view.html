@@ -1,36 +1,48 @@
 {% extends "test_data_show.html" %}
 
 {% block app_content %}
-    <h1>{{ test_data.name }} ({{ test_data.seg_name }})</h1>
+    <div class="row">
+        <div class="col-md-9">
+            <h1>Test Data View</h1>
+        </div>
+        <div class="col-md-3">
+            <a class="btn btn-secondary" href="{{ url_for('get_my_test_data') }}">
+                <span class="oi oi-x"></span> Return to My Test Data List
+            </a>
+
+        </div>
+    </div>
     <br>
     <div class="row">
         <div class="col-md-3">
             <a class="btn btn-primary btn-block text-center"
                href="{{ url_for('run_test_data', test_data_id=test_data.id) }}">
-                Run {{ test_data.seg_name }}
+                <span class="oi oi-task"></span> Run Test Data
             </a>
         </div>
         <div class="col-md-3">
             <a class="btn btn-success btn-block text-center"
                href="{{ url_for('copy_test_data', test_data_id=test_data.id) }}">
-                Copy Test Data
+                <span class="oi oi-clipboard"></span> Copy Test Data
             </a>
         </div>
         <div class="col-md-3">
             <a class="btn btn-warning btn-block text-center {{ test_data.class_display }}"
                href="{{ url_for('confirm_test_data', test_data_id=test_data.id) }}">
-                Edit Test Data
+                <span class="oi oi-pencil"></span> Edit Test Data
             </a>
         </div>
         <div class="col-md-3">
             {% if test_data.class_display %}
                 <a class="btn btn-danger btn-block text-center {{ test_data.class_display }}">
-                    Delete Test Data
+                    <span class="oi oi-trash"></span> Delete Test Data
                 </a>
             {% else %}
-                <form action="" method="post" novalidate>
+                <button id="deleteTestDataButton" class="btn btn-block btn-danger">
+                    <span class="oi oi-trash"></span> Delete Test Data
+                </button>
+                <form id="deleteTestDataForm" action="" method="post" novalidate>
                     {{ form.hidden_tag() }}
-                    {{ form.delete(class="btn btn-danger btn-block text-center") }}
                 </form>
             {% endif %}
         </div>
@@ -38,4 +50,14 @@
     <br>
     {{ show_test_data(test_data, edit_mode=False) }}
     <br>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <!--suppress JSUnresolvedVariable -->
+    <script>
+        document.getElementById("deleteTestDataButton").addEventListener("click", () => {
+            document.forms["deleteTestDataForm"].submit();
+        });
+    </script>
 {% endblock %}
