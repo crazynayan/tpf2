@@ -1,6 +1,7 @@
 from base64 import b64encode
 from typing import List
 
+from flask import request
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, BooleanField, IntegerField, SelectField, TextAreaField
 from wtforms.validators import InputRequired, ValidationError, NumberRange, Length
@@ -91,10 +92,16 @@ class TestDataForm(FlaskForm):
     stop_segments = StringField("Stop Segment Name List (Separate multiple segments with comma). Optional")
     save = SubmitField("Save & Continue - Add Further Data")
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, test_data: dict = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.segments: List[str] = list()
-        self.stop_segments: List[str] = list()
+        self.stop_segment_list: List[str] = list()
+        self.test_data: dict = test_data if test_data else dict()
+        if test_data and request.method == "GET":
+            self.name.data = test_data["name"]
+            self.seg_name.data = test_data["seg_name"]
+            stop_segments: List[str] = test_data["stop_segments"]
+            self.stop_segments.data = ", ".join(stop_segments)
 
     def validate_seg_name(self, seg_name: StringField):
         seg_name.data = seg_name.data.upper()
@@ -108,22 +115,18 @@ class TestDataForm(FlaskForm):
         stop_segments.data = stop_segments.data.upper().strip()
         if not stop_segments.data:
             return
-        self.stop_segments: List[str] = stop_segments.data.split(",")
-        self.stop_segments = [segment.strip() for segment in self.stop_segments]
+        self.stop_segment_list: List[str] = stop_segments.data.split(",")
+        self.stop_segment_list = [segment.strip() for segment in self.stop_segment_list]
         self.segments: List[str] = self.segments or Server.segments()
-        not_found_segments: List[str] = [segment for segment in self.stop_segments if segment not in self.segments]
+        not_found_segments: List[str] = [segment for segment in self.stop_segment_list if segment not in self.segments]
         if not_found_segments:
             raise ValidationError(f"{', '.join(not_found_segments)} segment(s) not found")
         return
 
     def validate_name(self, name: StringField):
-        if Server.get_test_data_by_name(name.data):
+        if (not self.test_data or self.test_data["name"] != name.data) and Server.get_test_data_by_name(name.data):
             raise ValidationError(f"The name '{name.data}' already exists - Please use an unique name")
         return
-
-
-class ConfirmForm(FlaskForm):
-    confirm = SubmitField("Save & Close")
 
 
 class DeleteForm(FlaskForm):
