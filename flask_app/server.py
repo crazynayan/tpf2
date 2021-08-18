@@ -127,6 +127,8 @@ class Server:
             return dict()
         test_data["outputs"] = test_data["outputs"][0]
         test_data["class_display"] = "disabled" if test_data["owner"] != current_user.email else str()
+        test_data["stop_seg_string"] = ", ".join(test_data["stop_segments"]) if test_data["stop_segments"] else \
+            "No Stop Segments"
         return cls._decode_test_data(test_data)
 
     @classmethod
@@ -156,6 +158,8 @@ class Server:
                       for field_data in pnr_output["field_data"]]
         test_data["fields"] = fields
         test_data["pnr_fields"] = pnr_fields
+        test_data["stop_seg_string"] = ", ".join(test_data["stop_segments"]) if test_data["stop_segments"] else \
+            "No Stop Segments"
         return test_data
 
     @classmethod

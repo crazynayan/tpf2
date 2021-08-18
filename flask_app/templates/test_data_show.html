@@ -1,6 +1,48 @@
 {% extends "base.html" %}
 
 {% macro show_test_data(test_data, edit_mode, output=True) -%}
+    {#  Header#}
+    <br>
+    <div class="row">
+        <div class="col-md">
+            <div class="list-group list-group-item list-group-item-secondary">
+                Test Data Header
+            </div>
+        </div>
+        {% if edit_mode %}
+            <div class="col-md">
+                <a class="btn btn-block btn-warning"
+                   href="{{ url_for('rename_test_data', test_data_id=test_data.id) }}">
+                    <span class="oi oi-pencil"></span> Edit Header
+                </a>
+            </div>
+        {% endif %}
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-2 text-center font-weight-bold">
+            Name
+        </div>
+        <div class="col-md-10">
+            {{ test_data.name }}
+        </div>
+    </div>
+    <div class="row ">
+        <div class="col-md-2 text-center font-weight-bold">
+            Start
+        </div>
+        <div class="col-md-10">
+            {{ test_data.seg_name }}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-2 text-center font-weight-bold">
+            Stop
+        </div>
+        <div class="col-md-10">
+            {{ test_data.stop_seg_string }}
+        </div>
+    </div>
     {% if output %}
         {#  Debug #}
         {% if edit_mode or test_data.outputs.debug %}
@@ -15,7 +57,7 @@
                     <div class="col-md">
                         <a class="btn btn-block btn-success "
                            href="{{ url_for('add_debug', test_data_id=test_data.id) }}">
-                            Add Debug Segments
+                            <span class="oi oi-plus"></span> Add Debug Segments
                         </a>
                     </div>
                 {% endif %}
@@ -56,7 +98,7 @@
                     <div class="col-md">
                         <a class="btn btn-block btn-success "
                            href="{{ url_for('add_output_regs', test_data_id=test_data.id) }}">
-                            Add Registers
+                            <span class="oi oi-plus"></span> Add Registers
                         </a>
                     </div>
                 {% endif %}
@@ -90,7 +132,7 @@
                     <div class="col-md">
                         <a class="btn btn-block btn-success "
                            href="{{ url_for('search_output_fields', test_data_id=test_data.id) }}">
-                            Add Fields
+                            <span class="oi oi-plus"></span> Add Fields
                         </a>
                     </div>
                 {% endif %}
@@ -142,7 +184,7 @@
                 <div class="col-md">
                     <a class="btn btn-block btn-success "
                        href="{{ url_for('add_output_pnr', test_data_id=test_data.id) }}">
-                        Add PNR Elements
+                        <span class="oi oi-plus"></span> Add PNR Elements
                     </a>
                 </div>
             {% endif %}
@@ -195,7 +237,7 @@
                 <div class="col-md">
                     <a class="btn btn-block btn-success "
                        href="{{ url_for('search_input_fields', test_data_id=test_data.id) }}">
-                        Add Fields
+                        <span class="oi oi-plus"></span> Add Fields
                     </a>
                 </div>
             {% endif %}
@@ -259,7 +301,7 @@
                 <div class="col-md">
                     <a class="btn btn-block btn-success "
                        href="{{ url_for('add_input_regs', test_data_id=test_data.id) }}">
-                        Add Registers
+                        <span class="oi oi-plus"></span> Add Registers
                     </a>
                 </div>
             {% endif %}
@@ -304,7 +346,7 @@
                 <div class="col-md">
                     <a class="btn btn-block btn-success "
                        href="{{ url_for('add_input_pnr', test_data_id=test_data.id) }}">
-                        Add PNR Elements
+                        <span class="oi oi-plus"></span> Add PNR Elements
                     </a>
                 </div>
             {% endif %}
@@ -381,7 +423,7 @@
                 <div class="col-md">
                     <a class="btn btn-block btn-success"
                        href="{{ url_for('add_tpfdf_lrec', test_data_id=test_data.id) }}">
-                        Add TPFDF Lrec
+                        <span class="oi oi-plus"></span> Add TPFDF Lrec
                     </a>
                 </div>
             {% endif %}
@@ -447,7 +489,7 @@
                 <div class="col-md">
                     <a class="btn btn-block btn-success"
                        href="{{ url_for('add_fixed_file', test_data_id=test_data.id) }}">
-                        Add Fixed File
+                        <span class="oi oi-plus"></span> Add Fixed File
                     </a>
                 </div>
             {% endif %}
