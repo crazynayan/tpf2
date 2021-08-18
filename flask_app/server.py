@@ -35,7 +35,7 @@ class Server:
     def _decode_data(encoded_data) -> List[str]:
         data = b64decode(encoded_data)
         hex_data = data.hex().upper()
-        number_data = "NA"
+        number_data = "Not a number"
         if len(hex_data) <= 8:
             number_data = int(hex_data, 16)
         if len(hex_data) == 4 and number_data > 0x7FFF:
@@ -43,6 +43,8 @@ class Server:
         if len(hex_data) == 8 and number_data > 0x7FFFFFFF:
             number_data -= Config.REG_MAX + 1
         char_data = data.decode("cp037")
+        if any(not char.isascii() for char in char_data):
+            char_data = "Not displayable"
         return [hex_data, number_data, char_data]
 
     @staticmethod
