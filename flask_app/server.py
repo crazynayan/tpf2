@@ -42,9 +42,8 @@ class Server:
             number_data -= 0x10000
         if len(hex_data) == 8 and number_data > 0x7FFFFFFF:
             number_data -= Config.REG_MAX + 1
-        char_data = data.decode("cp037")
-        if any(not char.isascii() for char in char_data):
-            char_data = "Not displayable"
+        char_data = "".join([bytes([char]).decode("cp037") if bytes([char]).decode("cp037").isascii() and char >= 0x40
+                             else "\u2666" for char in data])
         return [hex_data, number_data, char_data]
 
     @staticmethod
