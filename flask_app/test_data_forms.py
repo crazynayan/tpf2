@@ -117,10 +117,10 @@ class TestDataForm(FlaskForm):
             return
         self.stop_segment_list: List[str] = stop_segments.data.split(",")
         self.stop_segment_list = [segment.strip() for segment in self.stop_segment_list]
-        self.segments: List[str] = self.segments or Server.segments()
-        not_found_segments: List[str] = [segment for segment in self.stop_segment_list if segment not in self.segments]
-        if not_found_segments:
-            raise ValidationError(f"{', '.join(not_found_segments)} segment(s) not found")
+        invalid_segments: List[str] = [segment for segment in self.stop_segment_list
+                                       if len(segment) != 4 or not segment.isalnum()]
+        if invalid_segments:
+            raise ValidationError(f"{', '.join(invalid_segments)} are invalid segments.")
         return
 
     def validate_name(self, name: StringField):
