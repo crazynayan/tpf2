@@ -97,10 +97,10 @@ class Server:
         return response["macros"] if response else list()
 
     @classmethod
-    def instructions(cls, seg_name: str) -> List[dict]:
+    def instructions(cls, seg_name: str) -> dict:
         response: dict = cls._common_request(f"/segments/{seg_name}/instructions")
         instructions = response["instructions"] if response else list()
-        response_list: List[dict] = list()
+        response["formatted_instructions"] = list()
         for instruction in instructions:
             ins_dict = dict()
             ins = instruction.split(":")
@@ -108,8 +108,11 @@ class Server:
             ins_dict["label"] = ins[1]
             ins_dict["command"] = ins[2]
             ins_dict["operands"] = ins[3] if len(ins) > 3 else str()
-            response_list.append(ins_dict)
-        return response_list
+            ins_dict["supported"] = instruction not in response["not_supported"]
+            response["formatted_instructions"].append(ins_dict)
+        response["formatted_not_supported"] = [ins for ins in response["formatted_instructions"]
+                                               if not ins["supported"]]
+        return response
 
     @classmethod
     def symbol_table(cls, macro_name: str) -> List[dict]:

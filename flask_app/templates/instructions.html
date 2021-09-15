@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-    <h1>{{ seg_name }}</h1>
+    <h2 class="mb-3">{{ seg_name }}</h2>
     {% for instruction in instructions %}
-        <div class="row">
+        <div class="row mt-0 mb-0" style="line-height: 100%">
             <div class="col-md-1">
                 <pre>{{ instruction.index }}</pre>
             </div>
@@ -11,11 +11,36 @@
                 <pre>{{ instruction.label }}</pre>
             </div>
             <div class="col-md-1">
-                <pre>{{ instruction.command }}</pre>
+                {% if instruction.supported %}
+                    <pre>{{ instruction.command }}</pre>
+                {% else %}
+                    <pre class="alert-danger">{{ instruction.command }}</pre>
+                {% endif %}
             </div>
             <div class="col-md-8">
                 <pre>{{ instruction.operands }}</pre>
             </div>
         </div>
     {% endfor %}
+    <h3 class="mb-3 mt-3">Unsupported Instructions</h3>
+    {% if not_supported_instructions %}
+        {% for instruction in not_supported_instructions %}
+            <div class="row mt-0 mb-0" style="line-height: 100%">
+                <div class="col-md-1">
+                    <pre>{{ instruction.index }}</pre>
+                </div>
+                <div class="col-md-2">
+                    <pre>{{ instruction.label }}</pre>
+                </div>
+                <div class="col-md-1">
+                    <pre>{{ instruction.command }}</pre>
+                </div>
+                <div class="col-md-8">
+                    <pre>{{ instruction.operands }}</pre>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>All instructions are supported</p>
+    {% endif %}
 {% endblock %}
