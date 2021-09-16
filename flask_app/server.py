@@ -87,9 +87,14 @@ class Server:
         return response if "token" in response else dict()
 
     @classmethod
-    def segments(cls) -> List[str]:
+    def segments(cls) -> dict:
         response: dict = cls._common_request(f"/segments")
-        return response["segments"] if response else list()
+        return response if response else dict()
+
+    @classmethod
+    def upload_segment(cls, blob_name) -> dict:
+        response: dict = cls._common_request(f"/segments/upload", method="POST", json={"blob_name": blob_name})
+        return response
 
     @classmethod
     def macros(cls) -> List[str]:

@@ -4,6 +4,7 @@ from flask import render_template, redirect, url_for
 from flask_login import current_user
 
 from flask_app import tpf2_app
+from flask_app.forms import UploadForm
 from flask_app.server import Server
 from flask_app.user import cookie_login_required
 
@@ -17,10 +18,23 @@ def home():
 @tpf2_app.route("/segments")
 @cookie_login_required
 def segments():
-    seg_list: List[str] = Server.segments()
+    response = Server.segments()
+    segment_attributes = [(seg_name, response["attributes"][seg_name]) for seg_name in response["segments"]]
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
-    return render_template("segments.html", title="Segments", segments=seg_list)
+    return render_template("segments.html", title="Segments", segments=segment_attributes)
+
+
+@tpf2_app.route("/segments/upload", methods=["GET", "POST"])
+@cookie_login_required
+def upload_segments():
+    form = UploadForm()
+    if not form.validate_on_submit():
+        return render_template("upload_form.html", form=form, title="Upload Listings", response=dict())
+    response: dict = Server.upload_segment(form.blob_name)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    return render_template("upload_form.html", form=form, title="Upload Listings", response=response)
 
 
 @tpf2_app.route("/segments/<string:seg_name>/instructions")

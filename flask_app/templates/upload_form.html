@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+    <div class="row">
+        <div class="col-md-9">
+            <h1>Upload Listings</h1>
+        </div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col-md-6">
+            <form class="form" method="POST" enctype="multipart/form-data" novalidate>
+                {{ form.csrf_token() }}
+                <div class="form-group required">
+                    <div class="custom-file">
+                        {% if form.listing.errors %}
+                            {{ form.listing(class_="custom-file-input is-invalid") }}
+                        {% else %}
+                            {{ form.listing(class_="custom-file-input") }}
+                        {% endif %}
+                        <label for="{{ form.listing.id }}" class="custom-file-label">{{ form.listing.label }}</label>
+                        {% if form.listing.errors %}
+                            <div class="invalid-feedback">
+                                {{ form.listing.errors[0] }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <br>
+                {{ form.submit(class_="btn btn-primary") }}
+            </form>
+        </div>
+    </div>
+    {% if response %}
+        <br>
+        <p>{{ response.message }}</p>
+        {% if response.error %}
+            <p class="small alert-danger">Your file is not uploaded</p>
+        {% endif %}
+        <p class="small alert-danger">{{ response.warning }}</p>
+    {% endif %}
+    <br>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(".custom-file-input").on("change", function () {
+            const fileName = $(this).val().split("\\").pop();
+            $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+        });
+    </script>
+
+{% endblock %}

@@ -7,6 +7,8 @@ class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY") or b64encode(os.urandom(24)).decode()
     SERVER_URL = os.environ.get("SERVER_URL") or f"http://{gethostbyname(gethostname())}:8000"
     CI_SECURITY = True if os.environ.get("ENVIRONMENT") == "prod" else False
+    DOWNLOAD_PATH = os.path.join(os.path.abspath(os.sep), "tmp")
+    BUCKET = "tpf-listings"
     SESSION_COOKIE_SECURE = CI_SECURITY
     TOKEN_EXPIRY = 3600  # 1 hour = 3600 seconds
     REG_BITS: int = 32
