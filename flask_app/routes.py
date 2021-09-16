@@ -19,9 +19,9 @@ def home():
 @cookie_login_required
 def segments():
     response = Server.segments()
-    segment_attributes = [(seg_name, response["attributes"][seg_name]) for seg_name in response["segments"]]
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
+    segment_attributes = [(seg_name, response["attributes"][seg_name]) for seg_name in response["segments"]]
     return render_template("segments.html", title="Segments", segments=segment_attributes)
 
 
