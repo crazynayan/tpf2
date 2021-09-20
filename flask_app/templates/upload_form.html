@@ -9,7 +9,7 @@
     <br>
     <div class="row">
         <div class="col-md-6">
-            <form class="form" method="POST" enctype="multipart/form-data" novalidate>
+            <form id="uploadForm" class="form" method="POST" enctype="multipart/form-data" novalidate>
                 {{ form.csrf_token() }}
                 <div class="form-group required">
                     <div class="custom-file">
@@ -27,28 +27,49 @@
                     </div>
                 </div>
                 <br>
-                {{ form.submit(class_="btn btn-primary") }}
+                <button id="uploadButton" class="btn btn-primary">
+                    <span id="uploadSpinner" role="status"></span>
+                    <i class="oi oi-cloud-upload"></i>
+                    <span id="uploadText">Upload</span>
+                </button>
             </form>
         </div>
     </div>
-    {% if response %}
-        <br>
-        <p>{{ response.message }}</p>
-        {% if response.error %}
-            <p class="small alert-danger">Your file is not uploaded</p>
-        {% endif %}
-        <p class="small alert-danger">{{ response.warning }}</p>
-    {% endif %}
+    <br>
+    <div class="row">
+        <div class="col-md-6">
+            <p id="message">{{ response.message }}</p>
+            <p id="error-message" class="small alert-danger">
+                {% if response.error %}
+                    Your file is not uploaded
+                {% endif %}
+            </p>
+            <p id="warning-message" class="small alert-danger">{{ response.warning }}</p>
+        </div>
+    </div>
     <br>
 {% endblock %}
 
 {% block scripts %}
     {{ super() }}
     <script>
-        $(".custom-file-input").on("change", function () {
-            const fileName = $(this).val().split("\\").pop();
-            $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+        document.querySelector(".custom-file-input").addEventListener("change", (e) => {
+            const fileName = e.target.value.split("\\").pop();
+            e.target.classList.remove("is-invalid");
+            const label = document.querySelector(".custom-file-label");
+            label.classList.add("selected");
+            label.innerText = fileName;
+            document.getElementById("message").innerText = "";
+            document.getElementById("error-message").innerText = "";
+            document.getElementById("warning-message").innerText = "";
         });
+        document.getElementById("uploadButton").addEventListener("click", () => {
+            document.getElementById("uploadSpinner").classList.add("spinner-border", "spinner-border-sm");
+            document.getElementById("uploadText").innerText = "Uploading..";
+            document.getElementById("uploadButton").disabled = true;
+            document.forms["uploadForm"].submit();
+        });
+
     </script>
 
 {% endblock %}
