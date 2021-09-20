@@ -30,6 +30,8 @@ def segments():
 def upload_segments():
     form = UploadForm()
     if not form.validate_on_submit():
+        if not current_user.is_authenticated:
+            return redirect(url_for("logout"))
         return render_template("upload_form.html", form=form, title="Upload Listings", response=dict())
     response: dict = Server.upload_segment(form.blob_name)
     if not current_user.is_authenticated:
