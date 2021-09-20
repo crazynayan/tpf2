@@ -46,7 +46,8 @@ def instructions(seg_name: str):
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     return render_template("instructions.html", title="Assembly", instructions=response["formatted_instructions"],
-                           seg_name=seg_name, not_supported_instructions=response["formatted_not_supported"])
+                           seg_name=seg_name, not_supported_instructions=response["formatted_not_supported"],
+                           response=response)
 
 
 @tpf2_app.route("/macros")
