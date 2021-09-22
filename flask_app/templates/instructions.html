@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-    <h2 class="mb-3">{{ seg_name }}</h2>
+    <h2 class="mb-3">{{ seg_name }} - {{ supported_percentage }}% supported</h2>
     {% if response.error %}
         <p>{{ response.message }}</p>
     {% else %}

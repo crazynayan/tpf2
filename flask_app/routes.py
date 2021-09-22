@@ -32,22 +32,25 @@ def upload_segments():
     if not form.validate_on_submit():
         if not current_user.is_authenticated:
             return redirect(url_for("logout"))
-        return render_template("upload_form.html", form=form, title="Upload Listings", response=dict())
+        return render_template("upload_form.html", form=form, title="Upload Listing", response=dict())
     response: dict = Server.upload_segment(form.blob_name)
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
-    return render_template("upload_form.html", form=form, title="Upload Listings", response=response)
+    return render_template("upload_form.html", form=form, title="Upload Listing", response=response)
 
 
 @tpf2_app.route("/segments/<string:seg_name>/instructions")
 @cookie_login_required
 def instructions(seg_name: str):
     response: dict = Server.instructions(seg_name)
+    total_count: int = len(response["formatted_instructions"])
+    unsupported_count: int = len(response["formatted_not_supported"])
+    supported_percentage: int = (total_count - unsupported_count) * 100 // total_count if total_count > 0 else 0
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     return render_template("instructions.html", title="Assembly", instructions=response["formatted_instructions"],
                            seg_name=seg_name, not_supported_instructions=response["formatted_not_supported"],
-                           response=response)
+                           response=response, supported_percentage=supported_percentage)
 
 
 @tpf2_app.route("/macros")
