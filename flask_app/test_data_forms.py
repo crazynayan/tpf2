@@ -106,7 +106,9 @@ class TestDataForm(FlaskForm):
     def validate_seg_name(self, seg_name: StringField):
         seg_name.data = seg_name.data.upper()
         segment: str = seg_name.data
-        self.segments: List[str] = self.segments or Server.segments()
+        if not self.segments:
+            response = Server.segments()
+            self.segments: List[str] = response["segments"] if "segments" in response else list()
         if segment not in self.segments:
             raise ValidationError(f"{segment} not found")
         return
