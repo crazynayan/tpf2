@@ -8,20 +8,20 @@
         {% for instruction in instructions %}
             <div class="row mt-0 mb-0" style="line-height: 100%">
                 <div class="col-md-1">
-                    <pre>{{ instruction.index }}</pre>
+                    <pre class="mb-0">{{ instruction.index }}</pre>
                 </div>
                 <div class="col-md-2">
-                    <pre>{{ instruction.label }}</pre>
+                    <pre class="mb-0">{{ instruction.label }}</pre>
                 </div>
                 <div class="col-md-1">
                     {% if instruction.supported %}
-                        <pre>{{ instruction.command }}</pre>
+                        <pre class="mb-0">{{ instruction.command }}</pre>
                     {% else %}
-                        <pre class="alert-danger">{{ instruction.command }}</pre>
+                        <pre class="alert-danger mb-0">{{ instruction.command }}</pre>
                     {% endif %}
                 </div>
                 <div class="col-md-8">
-                    <pre>{{ instruction.operands }}</pre>
+                    <pre class="mb-0">{{ instruction.operands }}</pre>
                 </div>
             </div>
         {% endfor %}
