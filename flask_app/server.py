@@ -3,6 +3,7 @@ from typing import Dict, List
 from urllib.parse import quote
 
 import requests
+from flask import flash
 from flask_login import current_user, logout_user
 from requests import Response
 
@@ -15,6 +16,8 @@ class Server:
     def _common_request(url: str, method: str = "GET", **kwargs) -> dict:
         request_url = f"{Config.SERVER_URL}{url}"
         if "auth" not in kwargs:
+            if current_user.is_anonymous:
+                return dict()
             auth_header = {"Authorization": f"Bearer {current_user.api_key}"}
             kwargs["headers"] = auth_header
         if method == "GET":
@@ -28,6 +31,7 @@ class Server:
         else:
             raise TypeError
         if response.status_code == 401 and current_user.is_authenticated:
+            flash("Session timeout. Please login again.")
             logout_user()
         return response.json() if response.status_code == 200 else dict()
 
