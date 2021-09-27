@@ -109,7 +109,10 @@ def run_test_data(test_data_id: str):
 @cookie_login_required
 def create_test_data():
     form = TestDataForm()
-    if not form.validate_on_submit():
+    form_validation_successful = form.validate_on_submit()
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    if not form_validation_successful:
         return render_template("test_data_form.html", title="Create Test Data", form=form)
     test_data: dict = {
         "name": form.name.data,
