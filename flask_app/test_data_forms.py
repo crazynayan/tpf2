@@ -339,7 +339,8 @@ class DebugForm(FlaskForm):
     @staticmethod
     def validate_seg_list(_, seg_list: StringField):
         updated_seg_list = list()
-        segments = Server.segments()
+        response = Server.segments()
+        segments: List[str] = response["segments"] if "segments" in response else list()
         for seg_name in seg_list.data.split(","):
             seg_name = seg_name.upper()
             if seg_name not in segments:

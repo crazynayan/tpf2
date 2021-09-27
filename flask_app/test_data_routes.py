@@ -489,7 +489,10 @@ def delete_fixed_file(test_data_id: str, file_id: str):
 @cookie_login_required
 def add_debug(test_data_id: str):
     form = DebugForm()
-    if not form.validate_on_submit():
+    form_validation_successful = form.validate_on_submit()
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    if not form_validation_successful:
         return render_template("test_data_form.html", title="Add Segments to Debug", form=form,
                                test_data_id=test_data_id)
     if not Server.add_debug(test_data_id, {"traces": form.seg_list.data.split(",")}):
