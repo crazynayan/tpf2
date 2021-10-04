@@ -228,16 +228,22 @@
     {% if edit_mode or test_data.cores %}
         <br>
         <div class="row">
-            <div class="col-md">
+            <div class="col-md{% if edit_mode %}-6{% endif %}">
                 <div class="list-group list-group-item list-group-item-secondary">
-                    Input - Fields
+                    Input - Fields & Heap
                 </div>
             </div>
             {% if edit_mode %}
-                <div class="col-md">
+                <div class="col-md-3">
                     <a class="btn btn-block btn-success "
                        href="{{ url_for('search_input_fields', test_data_id=test_data.id) }}">
                         <span class="oi oi-plus"></span> Add Fields
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a class="btn btn-block btn-success "
+                       href="{{ url_for('add_heap', test_data_id=test_data.id) }}">
+                        <span class="oi oi-plus"></span> Add Heap
                     </a>
                 </div>
             {% endif %}
@@ -256,28 +262,48 @@
                 </div>
             {% endif %}
             {% for core in variation.list %}
-                <div class="row">
-                    <div class="col-md-2 text-center font-weight-bold">
-                        {{ core.macro_name }}
-                    </div>
-                </div>
-                {% for field_data in core.field_data %}
+                {% if core.macro_name %}
                     <div class="row">
-                        <div class="col-md-3 text-center">
-                            {{ field_data.field }}
-                            {% if edit_mode %}
-                                <a class="badge badge-danger"
-                                   href="{{ url_for('delete_input_field', test_data_id=test_data.id,
+                        <div class="col-md-2 text-center font-weight-bold">
+                            {{ core.macro_name }}
+                        </div>
+                    </div>
+                    {% for field_data in core.field_data %}
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                {{ field_data.field }}
+                                {% if edit_mode %}
+                                    <a class="badge badge-danger"
+                                       href="{{ url_for('delete_input_field', test_data_id=test_data.id,
                                                 macro_name=core.macro_name, field_name=field_data.field) }}">
-                                    X
-                                </a>
+                                        X
+                                    </a>
+                                {% endif %}
+                            </div>
+                            {% for value in field_data.data %}
+                                <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                {% elif core.heap_name %}
+                    <div class="row">
+                        <div class="col-md-2 text-center font-weight-bold">
+                            {{ core.heap_name }}
+                            {% if edit_mode %}
+                                <a class="badge badge-danger" href="{{ url_for('delete_heap', test_data_id=test_data.id,
+                                heap_name=core.heap_name, variation=core.variation) }}">X</a>
                             {% endif %}
                         </div>
-                        {% for value in field_data.data %}
-                            <div class="col-md-3"><kbd>{{ value }}</kbd></div>
-                        {% endfor %}
+                        <div class="col-md-1"></div>
+                        <div class="col-md-9">
+                            {% if core.hex_data[0] %}
+                                {{ core.hex_data[0] }}
+                            {% else %}
+                                Heap initialized with zeroes
+                            {% endif %}
+                        </div>
                     </div>
-                {% endfor %}
+                {% endif %}
             {% endfor %}
         {% endfor %}
     {% elif edit_mode %}

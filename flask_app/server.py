@@ -40,6 +40,8 @@ class Server:
         data = b64decode(encoded_data)
         hex_data = data.hex().upper()
         number_data = "Not a number"
+        if not encoded_data:
+            return [hex_data, number_data, str()]
         if len(hex_data) <= 8:
             number_data = int(hex_data, 16)
         if len(hex_data) == 4 and number_data > 0x7FFF:
@@ -59,6 +61,7 @@ class Server:
         if "regs" in test_data and test_data["regs"]:
             test_data["regs"] = cls._decode_regs(test_data["regs"])
         for core in test_data["cores"]:
+            core["hex_data"] = cls._decode_data(core["hex_data"])
             for field_data in core["field_data"]:
                 field_data["data"] = cls._decode_data(field_data["data"])
         for pnr in test_data["pnr"]:
@@ -142,6 +145,7 @@ class Server:
         test_data["class_display"] = "disabled" if test_data["owner"] != current_user.email else str()
         test_data["stop_seg_string"] = ", ".join(test_data["stop_segments"]) if test_data["stop_segments"] else \
             "No Stop Segments"
+        test_data["cores"].sort(key=lambda item: (item["macro_name"], item["heap_name"]))
         return cls._decode_test_data(test_data)
 
     @classmethod
@@ -221,6 +225,16 @@ class Server:
     def delete_input_field(cls, test_data_id: str, macro_name: str, field_name: str) -> dict:
         field_name = quote(field_name)
         return cls._common_request(f"/test_data/{test_data_id}/input/cores/{macro_name}/fields/{field_name}",
+                                   method="DELETE")
+
+    @classmethod
+    def add_input_heap(cls, test_data_id: str, body: dict) -> dict:
+        body["hex_data"] = b64encode(bytes.fromhex(body["hex_data"])).decode()
+        return cls._common_request(f"/test_data/{test_data_id}/input/heap", method="PATCH", json=body)
+
+    @classmethod
+    def delete_input_heap(cls, test_data_id: str, heap_name: str, variation: int) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/heap/{heap_name}/variations/{variation}",
                                    method="DELETE")
 
     @classmethod

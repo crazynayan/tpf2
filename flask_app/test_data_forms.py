@@ -2,6 +2,7 @@ from base64 import b64encode
 from typing import List
 
 from flask import request
+from flask_login import current_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, BooleanField, IntegerField, SelectField, TextAreaField
 from wtforms.validators import InputRequired, ValidationError, NumberRange, Length
@@ -197,6 +198,52 @@ class FieldDataForm(FlaskForm):
     @staticmethod
     def validate_field_data(_, field_data: StringField) -> None:
         field_data.data = form_validate_field_data(field_data.data)
+
+
+class HeapForm(FlaskForm):
+    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
+    variation_name = StringField("New Variation Name - Leave it blank for existing variation")
+    heap_name = StringField("Enter Heap Name - Must be alphanumeric", validators=[InputRequired()])
+    hex_data = StringField("Enter input data in hex format to initialize the heap. Leave it blank to init with zeroes")
+    save = SubmitField("Save & Continue - Add Further Data")
+
+    def __init__(self, test_data_id: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.variations = Server.get_variations(test_data_id, "core")
+        self.body: dict = dict()
+        if not current_user.is_authenticated:
+            return
+        self.variation.choices = [(item["variation"], f"{item['variation_name']} ({item['variation']})")
+                                  for item in self.variations]
+        self.variation.choices.append((-1, "New Variation"))
+
+    def validate_variation(self, variation: SelectField) -> None:
+        if variation.data == -1:
+            self.body["variation"] = self.variations[-1]["variation"] + 1 if self.variations else 0
+        else:
+            self.body["variation"] = variation.data
+        return
+
+    def validate_variation_name(self, variation_name: StringField) -> None:
+        if self.variation.data == -1:
+            variation_name.data = variation_name.data.strip()
+        else:
+            variation_name.data = next(variation_name for variation, variation_name in self.variation.choices)
+        self.body["variation_name"] = variation_name.data
+
+    def validate_heap_name(self, heap_name: StringField) -> None:
+        if not heap_name.data.isalnum():
+            raise ValidationError("Heap name must be alphanumeric.")
+        heap_name.data = heap_name.data.upper()
+        self.body["heap_name"] = heap_name.data
+
+    def validate_hex_data(self, hex_data: StringField) -> None:
+        if not all(char.isdigit() or char in ("A", "B", "C", "D", "E", "F", " ") for char in hex_data.data):
+            raise ValidationError("Hex characters can only be 0-F. Only spaces allowed.")
+        hex_data.data = "".join(char.upper() for char in hex_data.data if char != " ")
+        if len(hex_data.data) % 2 != 0:
+            raise ValidationError("The length of hex characters should be even.")
+        self.body["hex_data"] = hex_data.data
 
 
 class RegisterFieldDataForm(FlaskForm):
