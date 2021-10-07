@@ -238,6 +238,15 @@ class Server:
                                    method="DELETE")
 
     @classmethod
+    def add_input_ecb_level(cls, test_data_id: str, body: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/ecb_level", method="PATCH", json=body)
+
+    @classmethod
+    def delete_input_ecb_level(cls, test_data_id: str, ecb_level: str, variation: int) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/ecb_level/{ecb_level}/variations/{variation}",
+                                   method="DELETE")
+
+    @classmethod
     def add_input_regs(cls, test_data_id: str, reg_dict: dict) -> dict:
         reg_dict["value"] = int(reg_dict["value"], 16)
         if reg_dict["value"] > 0x7FFFFFFF:

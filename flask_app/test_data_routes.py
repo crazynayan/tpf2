@@ -11,7 +11,7 @@ from flask_app import tpf2_app
 from flask_app.server import Server
 from flask_app.test_data_forms import DeleteForm, TestDataForm, FieldSearchForm, FieldLengthForm, \
     FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm, MultipleFieldDataForm, TpfdfForm, DebugForm, \
-    FixedFileForm, PnrOutputForm, HeapForm
+    FixedFileForm, PnrOutputForm, HeapForm, EcbLevelForm
 from flask_app.user import cookie_login_required
 
 
@@ -296,7 +296,29 @@ def delete_heap(test_data_id: str, heap_name: str, variation: int):
     response = Server.delete_input_heap(test_data_id, heap_name, variation)
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
-    flash(response["message"]) if response else flash("Error in adding heap")
+    flash(response["message"]) if response else flash("Error in deleting heap")
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+
+
+@tpf2_app.route("/test_data/<string:test_data_id>/input/ecb_level", methods=["GET", "POST"])
+@cookie_login_required
+def add_ecb_level(test_data_id: str):
+    form = EcbLevelForm(test_data_id)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    if not form.validate_on_submit():
+        return render_template("test_data_form.html", title="Add ECB Level", form=form, test_data_id=test_data_id)
+    flash(form.response["message"])
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+
+
+@tpf2_app.route("/test_data/<string:test_data_id>/input/ecb_level/<string:ecb_level>/variations/<int:variation>")
+@cookie_login_required
+def delete_ecb_level(test_data_id: str, ecb_level: str, variation: int):
+    response = Server.delete_input_ecb_level(test_data_id, ecb_level, variation)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    flash(response["message"]) if response else flash("Error in deleting ECB level")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
 
 

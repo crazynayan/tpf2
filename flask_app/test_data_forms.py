@@ -8,6 +8,7 @@ from wtforms import StringField, SubmitField, BooleanField, IntegerField, Select
 from wtforms.validators import InputRequired, ValidationError, NumberRange, Length
 from wtforms.widgets import Input
 
+from config import Config
 from flask_app import tpf2_app
 from flask_app.server import Server
 
@@ -200,6 +201,23 @@ class FieldDataForm(FlaskForm):
         field_data.data = form_validate_field_data(field_data.data)
 
 
+def init_variation(variation: SelectField, variation_name: StringField, test_data_id: str) -> dict:
+    variations = Server.get_variations(test_data_id, "core")
+    if not current_user.is_authenticated:
+        return dict()
+    variation.choices = [(item["variation"], f"{item['variation_name']} ({item['variation']})") for item in variations]
+    variation.choices.append((-1, "New Variation"))
+    if request.method != "POST":
+        return dict()
+    if variation.data == -1:
+        variation_name.data = variation_name.data.strip()
+        variation = variations[-1]["variation"] + 1 if variations else 0
+    else:
+        variation_name.data = next(variation_name for variation, variation_name in variation.choices)
+        variation = variation.data
+    return {"variation": variation, "variation_name": variation_name.data}
+
+
 class HeapForm(FlaskForm):
     variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
     variation_name = StringField("New Variation Name - Leave it blank for existing variation")
@@ -209,27 +227,7 @@ class HeapForm(FlaskForm):
 
     def __init__(self, test_data_id: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.variations = Server.get_variations(test_data_id, "core")
-        self.body: dict = dict()
-        if not current_user.is_authenticated:
-            return
-        self.variation.choices = [(item["variation"], f"{item['variation_name']} ({item['variation']})")
-                                  for item in self.variations]
-        self.variation.choices.append((-1, "New Variation"))
-
-    def validate_variation(self, variation: SelectField) -> None:
-        if variation.data == -1:
-            self.body["variation"] = self.variations[-1]["variation"] + 1 if self.variations else 0
-        else:
-            self.body["variation"] = variation.data
-        return
-
-    def validate_variation_name(self, variation_name: StringField) -> None:
-        if self.variation.data == -1:
-            variation_name.data = variation_name.data.strip()
-        else:
-            variation_name.data = next(variation_name for variation, variation_name in self.variation.choices)
-        self.body["variation_name"] = variation_name.data
+        self.body: dict = init_variation(self.variation, self.variation_name, test_data_id)
 
     def validate_heap_name(self, heap_name: StringField) -> None:
         if not heap_name.data.isalnum():
@@ -244,6 +242,54 @@ class HeapForm(FlaskForm):
         if len(hex_data.data) % 2 != 0:
             raise ValidationError("The length of hex characters should be even.")
         self.body["hex_data"] = hex_data.data
+
+
+class EcbLevelForm(FlaskForm):
+    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
+    variation_name = StringField("New Variation Name - Leave it blank for existing variation")
+    ecb_level = SelectField("Select an ECB Level to allocate memory")
+    hex_data = StringField("Enter input data in hex format to initialize the heap. Leave it blank to either init with "
+                           "zeroes or with field data")
+    seg_name = StringField("Segment Name. Leave it blank to either init with zeroes or with hex data")
+    field_data = TextAreaField(FIELD_DATA_TEXT, render_kw={"rows": "5"})
+    save = SubmitField("Save & Continue - Add Further Data")
+
+    def __init__(self, test_data_id: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.body = init_variation(self.variation, self.variation_name, test_data_id)
+        self.ecb_level.choices = [(level, level) for level in Config.ECB_LEVELS]
+        self.response: dict = dict()
+        if request.method == "POST":
+            self.body["ecb_level"] = self.ecb_level.data
+            self.body["hex_data"] = "".join(char.upper() for char in self.hex_data.data if char != " ")
+            self.body["seg_name"] = self.seg_name.data.upper()
+            self.body["field_data"] = self.field_data.data
+            self.response = Server.add_input_ecb_level(test_data_id, self.body)
+
+    def validate_variation(self, variation):
+        if "error" in self.response and self.response["error"] and \
+                "message" in self.response and self.response["message"]:
+            raise ValidationError(self.response["message"])
+        if "error_fields" in self.response and "variation" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["variation"])
+        if variation.data == -1:
+            variation.data = 0
+
+    def validate_ecb_level(self, _):
+        if "error_fields" in self.response and "ecb_level" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["ecb_level"])
+
+    def validate_hex_data(self, _):
+        if "error_fields" in self.response and "hex_data" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["hex_data"])
+
+    def validate_seg_name(self, _):
+        if "error_fields" in self.response and "seg_name" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["seg_name"])
+
+    def validate_field_data(self, _):
+        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["field_data"])
 
 
 class RegisterFieldDataForm(FlaskForm):

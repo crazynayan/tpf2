@@ -230,20 +230,26 @@
         <div class="row">
             <div class="col-md{% if edit_mode %}-6{% endif %}">
                 <div class="list-group list-group-item list-group-item-secondary">
-                    Input - Fields & Heap
+                    Input - Fields, Heap and ECB Levels
                 </div>
             </div>
             {% if edit_mode %}
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <a class="btn btn-block btn-success "
                        href="{{ url_for('search_input_fields', test_data_id=test_data.id) }}">
-                        <span class="oi oi-plus"></span> Add Fields
+                        <span class="oi oi-plus"></span> Fields
                     </a>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <a class="btn btn-block btn-success "
                        href="{{ url_for('add_heap', test_data_id=test_data.id) }}">
-                        <span class="oi oi-plus"></span> Add Heap
+                        <span class="oi oi-plus"></span> Heap
+                    </a>
+                </div>
+                <div class="col-md-2">
+                    <a class="btn btn-block btn-success "
+                       href="{{ url_for('add_ecb_level', test_data_id=test_data.id) }}">
+                        <span class="oi oi-plus"></span> ECB Level
                     </a>
                 </div>
             {% endif %}
@@ -279,6 +285,34 @@
                                         X
                                     </a>
                                 {% endif %}
+                            </div>
+                            {% for value in field_data.data %}
+                                <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                {% elif core.ecb_level %}
+                    <div class="row">
+                        <div class="col-md-2 text-center font-weight-bold">
+                            Level D{{ core.ecb_level }}
+                            {% if edit_mode %}
+                                <a class="badge badge-danger" href="{{ url_for('delete_ecb_level', test_data_id=test_data.id,
+                                ecb_level=core.ecb_level, variation=core.variation) }}">X</a>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-1"></div>
+                        <div class="col-md-9">
+                            {% if core.hex_data[0] %}
+                                {{ core.hex_data[0] }}
+                            {% elif not core.seg_name %}
+                                ECB Level initialized with zeroes
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% for field_data in core.field_data %}
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                {{ field_data.field }}
                             </div>
                             {% for value in field_data.data %}
                                 <div class="col-md-3"><kbd>{{ value }}</kbd></div>
