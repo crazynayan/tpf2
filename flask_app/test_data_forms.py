@@ -247,11 +247,13 @@ class HeapForm(FlaskForm):
 class EcbLevelForm(FlaskForm):
     variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
     variation_name = StringField("New Variation Name - Leave it blank for existing variation")
-    ecb_level = SelectField("Select an ECB Level to allocate memory")
+    ecb_level = SelectField("Select an ECB level")
     hex_data = StringField("Enter input data in hex format to initialize the heap. Leave it blank to either init with "
                            "zeroes or with field data")
     seg_name = StringField("Segment Name. Leave it blank to either init with zeroes or with hex data")
-    field_data = TextAreaField(FIELD_DATA_TEXT, render_kw={"rows": "5"})
+    field_data = TextAreaField("Enter multiple fields and data separated by comma. The field and data should be "
+                               "separated by colon. Data should be in hex format. Leave it blank to either init with "
+                               "zeroes or with hex data", render_kw={"rows": "5"})
     save = SubmitField("Save & Continue - Add Further Data")
 
     def __init__(self, test_data_id: str, *args, **kwargs):
