@@ -21,6 +21,17 @@
         </div>
     </div>
     <br>
+    {% for label, value in form.display_fields %}
+        <div class="row">
+            <div class="col-md-2 text-center font-weight-bold">
+                {{ label }}
+            </div>
+            <div class="col-md-10">
+                {{ value }}
+            </div>
+        </div>
+        <br>
+    {% endfor %}
     <div class="row">
         <div class="col-md-8">
             {{ quick_form(form) }}

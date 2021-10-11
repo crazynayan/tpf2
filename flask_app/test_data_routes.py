@@ -11,7 +11,7 @@ from flask_app import tpf2_app
 from flask_app.server import Server
 from flask_app.test_data_forms import DeleteForm, TestDataForm, FieldSearchForm, FieldLengthForm, \
     FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm, MultipleFieldDataForm, TpfdfForm, DebugForm, \
-    FixedFileForm, PnrOutputForm, HeapForm, EcbLevelForm
+    FixedFileForm, PnrOutputForm, HeapForm, EcbLevelForm, UpdateEcbLevelForm
 from flask_app.user import cookie_login_required
 
 
@@ -20,7 +20,6 @@ def test_data_required(func):
     def test_data_wrapper(test_data_id, *args, **kwargs):
         test_data: dict = Server.get_test_data(test_data_id)
         if not current_user.is_authenticated:
-            flash("Session Expired")
             return redirect(url_for("logout"))
         if not test_data:
             flash("Error in retrieving the test data")
@@ -308,6 +307,26 @@ def add_ecb_level(test_data_id: str):
         return redirect(url_for("logout"))
     if not form.validate_on_submit():
         return render_template("test_data_form.html", title="Add ECB Level", form=form, test_data_id=test_data_id)
+    flash(form.response["message"])
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+
+
+@tpf2_app.route("/test_data/<string:test_data_id>/input/ecb_level/<string:ecb_level>/variations/<int:variation>/e",
+                methods=["GET", "POST"])
+@cookie_login_required
+@test_data_required
+def update_ecb_level(test_data_id: str, ecb_level: str, variation: int, **kwargs):
+    test_data: dict = kwargs[test_data_id]
+    core: dict = next((core for core in test_data["cores"] if core["ecb_level"] == ecb_level
+                       and core["variation"] == variation), None)
+    if not core:
+        flash(f"Invalid ECB level {ecb_level} for variation {variation}.")
+        return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    form = UpdateEcbLevelForm(test_data_id, core)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    if not form.validate_on_submit():
+        return render_template("test_data_form.html", title="Update ECB Level", form=form, test_data_id=test_data_id)
     flash(form.response["message"])
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
 
