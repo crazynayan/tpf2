@@ -222,7 +222,7 @@ def delete_output_field(test_data_id: str, macro_name: str, field_name: str):
         return redirect(url_for("logout"))
     if not response:
         flash("Error in deleting field")
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="output-core"))
 
 
 @tpf2_app.route("/test_data/<string:test_data_id>/input/fields", methods=["GET", "POST"])
@@ -269,7 +269,7 @@ def delete_input_field(test_data_id: str, macro_name: str, field_name: str):
         return redirect(url_for("logout"))
     if not response:
         flash("Error in deleting field")
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-core"))
 
 
 @tpf2_app.route("/test_data/<string:test_data_id>/input/heap", methods=["GET", "POST"])
@@ -296,7 +296,7 @@ def delete_heap(test_data_id: str, heap_name: str, variation: int):
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     flash(response["message"]) if response else flash("Error in deleting heap")
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-core"))
 
 
 @tpf2_app.route("/test_data/<string:test_data_id>/input/ecb_level", methods=["GET", "POST"])
@@ -338,7 +338,7 @@ def delete_ecb_level(test_data_id: str, ecb_level: str, variation: int):
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     flash(response["message"]) if response else flash("Error in deleting ECB level")
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-core"))
 
 
 @tpf2_app.route("/test_data/<string:test_data_id>/input/regs", methods=["GET", "POST"])
@@ -362,7 +362,7 @@ def delete_input_regs(test_data_id: str, reg: str):
         if not current_user.is_authenticated:
             return redirect(url_for("logout"))
         flash("Error in deleting Registers")
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-register"))
 
 
 @tpf2_app.route("/test_data/<string:test_data_id>/output/pnr", methods=["GET", "POST"])
@@ -388,7 +388,7 @@ def delete_output_pnr(test_data_id: str, pnr_id: str):
         return redirect(url_for("logout"))
     if not response:
         flash("Error in deleting PNR element")
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="output-pnr"))
 
 
 @tpf2_app.route("/test_data/<string:test_data_id>/input/pnr", methods=["GET", "POST"])
@@ -438,7 +438,7 @@ def delete_pnr(test_data_id: str, pnr_id: str):
         return redirect(url_for("logout"))
     if not response:
         flash("Error in deleting PNR element")
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-pnr"))
 
 
 @tpf2_app.route("/test_data/<string:test_data_id>/input/tpfdf/", methods=["GET", "POST"])
@@ -477,7 +477,7 @@ def delete_tpfdf_lrec(test_data_id: str, df_id: str):
         return redirect(url_for("logout"))
     if not response:
         flash("Error in deleting Tpfdf lrec")
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-tpfdf"))
 
 
 # noinspection DuplicatedCode
@@ -552,7 +552,7 @@ def delete_fixed_file(test_data_id: str, file_id: str):
         return redirect(url_for("logout"))
     if not response:
         flash("Error in deleting Fixed File")
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-file"))
 
 
 @tpf2_app.route("/test_data/<string:test_data_id>/output/debug/", methods=["GET", "POST"])

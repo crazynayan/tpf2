@@ -88,7 +88,7 @@
         {# Output Registers #}
         {% if edit_mode or test_data.outputs.regs %}
             <br>
-            <div class="row">
+            <div class="row" id="output-register">
                 <div class="col-md">
                     <div class="list-group list-group-item list-group-item-secondary">
                         Output - Registers
@@ -122,7 +122,7 @@
         {# Output Fields #}
         {% if edit_mode or test_data.outputs.cores %}
             <br>
-            <div class="row">
+            <div class="row" id="output-core">
                 <div class="col-md">
                     <div class="list-group list-group-item list-group-item-secondary">
                         Output - Fields
@@ -174,7 +174,7 @@
     {# Output PNR #}
     {% if edit_mode or test_data.outputs.pnr_outputs %}
         <br>
-        <div class="row">
+        <div class="row" id="output-pnr">
             <div class="col-md">
                 <div class="list-group list-group-item list-group-item-secondary">
                     Output - PNR
@@ -227,7 +227,7 @@
     {# Input Fields #}
     {% if edit_mode or test_data.cores %}
         <br>
-        <div class="row">
+        <div class="row" id="input-core">
             <div class="col-md{% if edit_mode %}-6{% endif %}">
                 <div class="list-group list-group-item list-group-item-secondary">
                     Input - Fields, Heap and ECB levels
@@ -354,7 +354,7 @@
     {# Input Registers #}
     {% if edit_mode or test_data.regs %}
         <br>
-        <div class="row">
+        <div class="row" id="input-register">
             <div class="col-md">
                 <div class="list-group list-group-item list-group-item-secondary">
                     Input - Register
@@ -399,7 +399,7 @@
     {# Input PNR #}
     {% if edit_mode or test_data.pnr %}
         <br>
-        <div class="row">
+        <div class="row" id="input-pnr">
             <div class="col-md">
                 <div class="list-group list-group-item list-group-item-secondary">
                     Input - PNR
@@ -476,7 +476,7 @@
     {# Input Tpfdf #}
     {% if edit_mode or test_data.tpfdf %}
         <br>
-        <div class="row">
+        <div class="row" id="input-tpfdf">
             <div class="col-md">
                 <div class="list-group list-group-item list-group-item-secondary">
                     Input - TPFDF
@@ -542,7 +542,7 @@
     {# Input Fixed Files #}
     {% if edit_mode or test_data.fixed_files %}
         <br>
-        <div class="row">
+        <div class="row" id="input-file">
             <div class="col-md">
                 <div class="list-group list-group-item list-group-item-secondary">
                     Input - Fixed Files
