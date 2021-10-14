@@ -299,6 +299,46 @@
                     </div>
                 </div>
             </div>
+            <br>
+            <table id="test-data-list" class="table table-bordered table-hover table-sm">
+                <thead class="thead-dark">
+                <tr>
+                    <th class="" scope="col">Instruction</th>
+                    <th class="text-center" scope="col">1</th>
+                    <th class="text-center" scope="col">2</th>
+                    <th class="text-center" scope="col">Ptr</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for trace in output.traces %}
+                    <tr>
+                        <td class="small">{{ trace.instruction }}</td>
+                        <td class="text-center">
+                            {% if  trace.read1 %}
+                                <kbd>{{ trace.read1 }}</kbd>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if  trace.read2 %}
+                                <kbd>{{ trace.read2 }}</kbd>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if  trace.reg_pointer %}
+                                <kbd>{{ trace.reg_pointer }}</kbd>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <br>
             {% for trace in output.debug %}
                 <div class="row">
                     <div class="col-md-3">
