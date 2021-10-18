@@ -11,7 +11,7 @@ from flask_app import tpf2_app
 from flask_app.server import Server
 from flask_app.test_data_forms import DeleteForm, TestDataForm, FieldSearchForm, FieldLengthForm, \
     FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm, MultipleFieldDataForm, TpfdfForm, DebugForm, \
-    FixedFileForm, PnrOutputForm, HeapForm, EcbLevelForm, UpdateEcbLevelForm
+    FixedFileForm, PnrOutputForm, HeapForm, EcbLevelForm, UpdateHexFieldDataForm
 from flask_app.user import cookie_login_required
 
 
@@ -280,12 +280,27 @@ def add_heap(test_data_id: str):
         return redirect(url_for("logout"))
     if not form.validate_on_submit():
         return render_template("test_data_form.html", title="Add Heap", form=form, test_data_id=test_data_id)
-    response = Server.add_input_heap(test_data_id, form.body)
+    flash(form.response["message"])
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+
+
+@tpf2_app.route("/test_data/<string:test_data_id>/input/heap/<string:heap_name>/variations/<int:variation>/e",
+                methods=["GET", "POST"])
+@cookie_login_required
+@test_data_required
+def update_heap(test_data_id: str, heap_name: str, variation: int, **kwargs):
+    test_data: dict = kwargs[test_data_id]
+    core: dict = next((core for core in test_data["cores"] if core["heap_name"] == heap_name
+                       and core["variation"] == variation), None)
+    if not core:
+        flash(f"Invalid Heap {heap_name} for variation {variation}.")
+        return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    form = UpdateHexFieldDataForm(test_data_id, core)
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
-    if not response or response["error"]:
-        flash(response["message"]) if response else flash("Error in adding heap")
-        return render_template("test_data_form.html", title="Add Heap", form=form, test_data_id=test_data_id)
+    if not form.validate_on_submit():
+        return render_template("test_data_form.html", title="Update Heap", form=form, test_data_id=test_data_id)
+    flash(form.response["message"])
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
 
 
@@ -322,7 +337,7 @@ def update_ecb_level(test_data_id: str, ecb_level: str, variation: int, **kwargs
     if not core:
         flash(f"Invalid ECB level {ecb_level} for variation {variation}.")
         return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
-    form = UpdateEcbLevelForm(test_data_id, core)
+    form = UpdateHexFieldDataForm(test_data_id, core)
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     if not form.validate_on_submit():

@@ -223,25 +223,47 @@ class HeapForm(FlaskForm):
     variation_name = StringField("New Variation Name - Leave it blank for existing variation")
     heap_name = StringField("Enter Heap Name - Must be alphanumeric", validators=[InputRequired()])
     hex_data = StringField("Enter input data in hex format to initialize the heap. Leave it blank to init with zeroes")
+    seg_name = StringField("Segment Name. Leave it blank to either init with zeroes or with hex data")
+    field_data = TextAreaField("Enter multiple fields and data separated by comma. The field and data should be "
+                               "separated by colon. Data should be in hex format. Leave it blank to either init with "
+                               "zeroes or with hex data", render_kw={"rows": "5"})
     save = SubmitField("Save & Continue - Add Further Data")
 
     def __init__(self, test_data_id: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.body: dict = init_variation(self.variation, self.variation_name, test_data_id)
+        self.body = init_variation(self.variation, self.variation_name, test_data_id)
+        self.response: dict = dict()
+        if request.method == "POST":
+            self.body["heap_name"] = self.heap_name.data
+            self.body["hex_data"] = "".join(char.upper() for char in self.hex_data.data if char != " ")
+            self.body["seg_name"] = self.seg_name.data.upper()
+            self.body["field_data"] = self.field_data.data
+            self.response = Server.add_input_heap(test_data_id, self.body)
 
-    def validate_heap_name(self, heap_name: StringField) -> None:
-        if not heap_name.data.isalnum():
-            raise ValidationError("Heap name must be alphanumeric.")
-        heap_name.data = heap_name.data.upper()
-        self.body["heap_name"] = heap_name.data
+    def validate_variation(self, variation):
+        if "error" in self.response and self.response["error"] and \
+                "message" in self.response and self.response["message"]:
+            raise ValidationError(self.response["message"])
+        if "error_fields" in self.response and "variation" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["variation"])
+        if variation.data == -1:
+            variation.data = 0
 
-    def validate_hex_data(self, hex_data: StringField) -> None:
-        if not all(char.isdigit() or char in ("A", "B", "C", "D", "E", "F", " ") for char in hex_data.data):
-            raise ValidationError("Hex characters can only be 0-F. Only spaces allowed.")
-        hex_data.data = "".join(char.upper() for char in hex_data.data if char != " ")
-        if len(hex_data.data) % 2 != 0:
-            raise ValidationError("The length of hex characters should be even.")
-        self.body["hex_data"] = hex_data.data
+    def validate_heap_name(self, _) -> None:
+        if "error_fields" in self.response and "heap_name" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["heap_name"])
+
+    def validate_hex_data(self, _):
+        if "error_fields" in self.response and "hex_data" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["hex_data"])
+
+    def validate_seg_name(self, _):
+        if "error_fields" in self.response and "seg_name" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["seg_name"])
+
+    def validate_field_data(self, _):
+        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["field_data"])
 
 
 class EcbLevelForm(FlaskForm):
@@ -294,7 +316,7 @@ class EcbLevelForm(FlaskForm):
             raise ValidationError(self.response["error_fields"]["field_data"])
 
 
-class UpdateEcbLevelForm(FlaskForm):
+class UpdateHexFieldDataForm(FlaskForm):
     hex_data = StringField("Enter input data in hex format to initialize the block. Leave it blank to either init with "
                            "zeroes or with field data")
     seg_name = StringField("Segment Name. Leave it blank to either init with zeroes or with hex data")
@@ -306,10 +328,12 @@ class UpdateEcbLevelForm(FlaskForm):
     def __init__(self, test_data_id: str, core: dict, *args, **kwargs):
         super().__init__(*args, **kwargs)
         variation_name = f" ({core['variation_name']})" if core["variation_name"] else str()
-        self.display_fields = [
-            ("ECB Level", core["ecb_level"]),
-            ("Variation", f"{core['variation']}{variation_name}")
-        ]
+        self.display_fields = list()
+        if core["ecb_level"]:
+            self.display_fields.append(("ECB Level", core["ecb_level"]))
+        elif core["heap_name"]:
+            self.display_fields.append(("Heap", core["heap_name"]))
+        self.display_fields.append(("Variation", f"{core['variation']}{variation_name}"))
         self.response: dict = dict()
         if request.method == "GET":
             self.hex_data.data = core["hex_data"][0]
@@ -320,7 +344,11 @@ class UpdateEcbLevelForm(FlaskForm):
             body["hex_data"] = "".join(char.upper() for char in self.hex_data.data if char != " ")
             body["seg_name"] = self.seg_name.data.upper()
             body["field_data"] = self.field_data.data
-            self.response = Server.update_input_ecb_level(test_data_id, core["ecb_level"], core["variation"], body)
+            if core["ecb_level"]:
+                self.response = Server.update_input_ecb_level(test_data_id, core["ecb_level"], core["variation"], body)
+            elif core["heap_name"]:
+                self.response = Server.update_input_heap(test_data_id, core["heap_name"], core["variation"], body)
+        return
 
     def validate_hex_data(self, _):
         if "error" in self.response and self.response["error"] and \

@@ -327,6 +327,9 @@
                         <div class="col-md-2 text-center font-weight-bold">
                             {{ core.heap_name }}
                             {% if edit_mode %}
+                                <a class="badge badge-warning edit-icon"
+                                   href="{{ url_for('update_heap', test_data_id=test_data.id, heap_name=core.heap_name,
+                                   variation=core.variation) }}">&#9998;</a>
                                 <a class="badge badge-danger" href="{{ url_for('delete_heap', test_data_id=test_data.id,
                                 heap_name=core.heap_name, variation=core.variation) }}">X</a>
                             {% endif %}
@@ -335,11 +338,21 @@
                         <div class="col-md-9">
                             {% if core.hex_data[0] %}
                                 <kbd>{{ core.hex_data[0] }}</kbd>
-                            {% else %}
+                            {% elif not core.seg_name %}
                                 Heap initialized with zeroes
                             {% endif %}
                         </div>
                     </div>
+                    {% for field_data in core.field_data %}
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                {{ field_data.field }}
+                            </div>
+                            {% for value in field_data.data %}
+                                <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
                 {% endif %}
             {% endfor %}
         {% endfor %}

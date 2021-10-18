@@ -229,8 +229,12 @@ class Server:
 
     @classmethod
     def add_input_heap(cls, test_data_id: str, body: dict) -> dict:
-        body["hex_data"] = b64encode(bytes.fromhex(body["hex_data"])).decode()
         return cls._common_request(f"/test_data/{test_data_id}/input/heap", method="PATCH", json=body)
+
+    @classmethod
+    def update_input_heap(cls, test_data_id: str, heap_name: str, variation: int, body: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/heap/{heap_name}/variations/{variation}",
+                                   method="PATCH", json=body)
 
     @classmethod
     def delete_input_heap(cls, test_data_id: str, heap_name: str, variation: int) -> dict:
