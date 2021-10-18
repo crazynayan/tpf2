@@ -11,7 +11,7 @@ from flask_app import tpf2_app
 from flask_app.server import Server
 from flask_app.test_data_forms import DeleteForm, TestDataForm, FieldSearchForm, FieldLengthForm, \
     FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm, MultipleFieldDataForm, TpfdfForm, DebugForm, \
-    FixedFileForm, PnrOutputForm, HeapForm, EcbLevelForm, UpdateHexFieldDataForm
+    FixedFileForm, PnrOutputForm, HeapForm, EcbLevelForm, UpdateHexFieldDataForm, MacroForm, UpdateMacroForm
 from flask_app.user import cookie_login_required
 
 
@@ -311,6 +311,48 @@ def delete_heap(test_data_id: str, heap_name: str, variation: int):
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     flash(response["message"]) if response else flash("Error in deleting heap")
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-core"))
+
+
+@tpf2_app.route("/test_data/<string:test_data_id>/input/macro", methods=["GET", "POST"])
+@cookie_login_required
+def add_macro(test_data_id: str):
+    form = MacroForm(test_data_id)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    if not form.validate_on_submit():
+        return render_template("test_data_form.html", title="Add Data Macro", form=form, test_data_id=test_data_id)
+    flash(form.response["message"])
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+
+
+@tpf2_app.route("/test_data/<string:test_data_id>/input/macro/<string:macro_name>/variations/<int:variation>/e",
+                methods=["GET", "POST"])
+@cookie_login_required
+@test_data_required
+def update_macro(test_data_id: str, macro_name: str, variation: int, **kwargs):
+    test_data: dict = kwargs[test_data_id]
+    core: dict = next((core for core in test_data["cores"] if core["macro_name"] == macro_name
+                       and core["variation"] == variation), None)
+    if not core:
+        flash(f"Invalid Heap {macro_name} for variation {variation}.")
+        return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    form = UpdateMacroForm(test_data_id, core)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    if not form.validate_on_submit():
+        return render_template("test_data_form.html", title="Update Data Macro", form=form, test_data_id=test_data_id)
+    flash(form.response["message"])
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+
+
+@tpf2_app.route("/test_data/<string:test_data_id>/input/macro/<string:macro_name>/variations/<int:variation>")
+@cookie_login_required
+def delete_macro(test_data_id: str, macro_name: str, variation: int):
+    response = Server.delete_input_macro(test_data_id, macro_name, variation)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    flash(response["message"]) if response else flash("Error in deleting data macro.")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-core"))
 
 

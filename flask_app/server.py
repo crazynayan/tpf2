@@ -228,6 +228,20 @@ class Server:
                                    method="DELETE")
 
     @classmethod
+    def add_input_macro(cls, test_data_id: str, body: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/macro", method="PATCH", json=body)
+
+    @classmethod
+    def update_input_macro(cls, test_data_id: str, macro_name: str, variation: int, body: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/macro/{macro_name}/variations/{variation}",
+                                   method="PATCH", json=body)
+
+    @classmethod
+    def delete_input_macro(cls, test_data_id: str, macro_name: str, variation: int) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/macro/{macro_name}/variations/{variation}",
+                                   method="DELETE")
+
+    @classmethod
     def add_input_heap(cls, test_data_id: str, body: dict) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/input/heap", method="PATCH", json=body)
 

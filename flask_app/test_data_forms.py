@@ -231,14 +231,14 @@ class HeapForm(FlaskForm):
 
     def __init__(self, test_data_id: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.body = init_variation(self.variation, self.variation_name, test_data_id)
+        body = init_variation(self.variation, self.variation_name, test_data_id)
         self.response: dict = dict()
         if request.method == "POST":
-            self.body["heap_name"] = self.heap_name.data
-            self.body["hex_data"] = "".join(char.upper() for char in self.hex_data.data if char != " ")
-            self.body["seg_name"] = self.seg_name.data.upper()
-            self.body["field_data"] = self.field_data.data
-            self.response = Server.add_input_heap(test_data_id, self.body)
+            body["heap_name"] = self.heap_name.data
+            body["hex_data"] = "".join(char.upper() for char in self.hex_data.data if char != " ")
+            body["seg_name"] = self.seg_name.data.upper()
+            body["field_data"] = self.field_data.data
+            self.response = Server.add_input_heap(test_data_id, body)
 
     def validate_variation(self, variation):
         if "error" in self.response and self.response["error"] and \
@@ -266,6 +266,43 @@ class HeapForm(FlaskForm):
             raise ValidationError(self.response["error_fields"]["field_data"])
 
 
+class MacroForm(FlaskForm):
+    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
+    variation_name = StringField("New Variation Name - Leave it blank for existing variation")
+    macro_name = SelectField("Select a data macro", validators=[InputRequired()])
+    field_data = TextAreaField("Enter multiple fields and data separated by comma. The field and data should be "
+                               "separated by colon. Data should be in hex format. Leave it blank to either init with "
+                               "zeroes or with hex data", render_kw={"rows": "5"})
+    save = SubmitField("Save & Continue - Add Further Data")
+
+    def __init__(self, test_data_id: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        body = init_variation(self.variation, self.variation_name, test_data_id)
+        self.response: dict = dict()
+        self.macro_name.choices = [(macro_name, macro_name) for macro_name in Config.DEFAULT_MACROS]
+        if request.method == "POST":
+            body["macro_name"] = self.macro_name.data
+            body["field_data"] = self.field_data.data
+            self.response = Server.add_input_macro(test_data_id, body)
+
+    def validate_variation(self, variation):
+        if "error" in self.response and self.response["error"] and \
+                "message" in self.response and self.response["message"]:
+            raise ValidationError(self.response["message"])
+        if "error_fields" in self.response and "variation" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["variation"])
+        if variation.data == -1:
+            variation.data = 0
+
+    def validate_macro_name(self, _) -> None:
+        if "error_fields" in self.response and "macro_name" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["macro_name"])
+
+    def validate_field_data(self, _):
+        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["field_data"])
+
+
 class EcbLevelForm(FlaskForm):
     variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
     variation_name = StringField("New Variation Name - Leave it blank for existing variation")
@@ -280,15 +317,15 @@ class EcbLevelForm(FlaskForm):
 
     def __init__(self, test_data_id: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.body = init_variation(self.variation, self.variation_name, test_data_id)
+        body = init_variation(self.variation, self.variation_name, test_data_id)
         self.ecb_level.choices = [(level, level) for level in Config.ECB_LEVELS]
         self.response: dict = dict()
         if request.method == "POST":
-            self.body["ecb_level"] = self.ecb_level.data
-            self.body["hex_data"] = "".join(char.upper() for char in self.hex_data.data if char != " ")
-            self.body["seg_name"] = self.seg_name.data.upper()
-            self.body["field_data"] = self.field_data.data
-            self.response = Server.add_input_ecb_level(test_data_id, self.body)
+            body["ecb_level"] = self.ecb_level.data
+            body["hex_data"] = "".join(char.upper() for char in self.hex_data.data if char != " ")
+            body["seg_name"] = self.seg_name.data.upper()
+            body["field_data"] = self.field_data.data
+            self.response = Server.add_input_ecb_level(test_data_id, body)
 
     def validate_variation(self, variation):
         if "error" in self.response and self.response["error"] and \
@@ -362,6 +399,35 @@ class UpdateHexFieldDataForm(FlaskForm):
             raise ValidationError(self.response["error_fields"]["seg_name"])
 
     def validate_field_data(self, _):
+        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["field_data"])
+
+
+class UpdateMacroForm(FlaskForm):
+    field_data = TextAreaField("Enter multiple fields and data separated by comma. The field and data should be "
+                               "separated by colon. Data should be in hex format. Leave it blank to either init with "
+                               "zeroes or with hex data", render_kw={"rows": "5"})
+    save = SubmitField("Save & Continue - Add Further Data")
+
+    def __init__(self, test_data_id: str, core: dict, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        variation_name = f" ({core['variation_name']})" if core["variation_name"] else str()
+        self.display_fields = list()
+        self.display_fields.append(("Data macro", core["macro_name"]))
+        self.display_fields.append(("Variation", f"{core['variation']}{variation_name}"))
+        self.response: dict = dict()
+        if request.method == "GET":
+            self.field_data.data = core["original_field_data"]
+        if request.method == "POST":
+            body: dict = dict()
+            body["field_data"] = self.field_data.data
+            self.response = Server.update_input_macro(test_data_id, core["macro_name"], core["variation"], body)
+        return
+
+    def validate_field_data(self, _):
+        if "error" in self.response and self.response["error"] and \
+                "message" in self.response and self.response["message"]:
+            raise ValidationError(self.response["message"])
         if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
             raise ValidationError(self.response["error_fields"]["field_data"])
 
