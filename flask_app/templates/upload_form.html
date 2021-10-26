@@ -39,11 +39,15 @@
     <div class="row">
         <div class="col-md-6">
             <p id="message">{{ response.message }}</p>
-            <p id="error-message" class="small alert-danger">
-                {% if response.error %}
+            {% if response.error %}
+                <p id="error-message" class="small alert-danger">
                     Your file is not uploaded
-                {% endif %}
-            </p>
+                </p>
+            {% elif response %}
+                <a class="btn btn-primary" href="{{ url_for('instructions', seg_name=form.seg_name) }}">
+                    View {{ form.seg_name }}
+                </a>
+            {% endif %}
             <p id="warning-message" class="small alert-danger">{{ response.warning }}</p>
         </div>
     </div>

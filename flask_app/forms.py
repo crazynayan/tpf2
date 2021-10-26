@@ -18,6 +18,7 @@ class UploadForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.blob_name = str()
+        self.seg_name = str()
 
     def validate_listing(self, listing: FileField):
         file_storage: FileStorage = listing.data
@@ -27,8 +28,8 @@ class UploadForm(FlaskForm):
         response = Server.segments()
         if not current_user.is_authenticated:
             raise ValidationError("Session expired")
-        seg_name = filename[:4].upper()
-        if seg_name in response["attributes"] and response["attributes"][seg_name]["source"] == "local":
+        self.seg_name = filename[:4].upper()
+        if self.seg_name in response["attributes"] and response["attributes"][self.seg_name]["source"] == "local":
             raise ValidationError("Cannot upload segments which are present in local")
         file_path = os.path.join(Config.DOWNLOAD_PATH, filename)
         file_storage.save(file_path)

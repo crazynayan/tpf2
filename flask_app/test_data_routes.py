@@ -321,7 +321,8 @@ def add_macro(test_data_id: str):
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Add Data Macro", form=form, test_data_id=test_data_id)
+        return render_template("test_data_form.html", title="Update Default Fields", form=form,
+                               test_data_id=test_data_id)
     flash(form.response["message"])
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
 
@@ -341,7 +342,8 @@ def update_macro(test_data_id: str, macro_name: str, variation: int, **kwargs):
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Update Data Macro", form=form, test_data_id=test_data_id)
+        return render_template("test_data_form.html", title="Update Default Fields", form=form,
+                               test_data_id=test_data_id)
     flash(form.response["message"])
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
 
