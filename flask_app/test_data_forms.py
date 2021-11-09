@@ -134,7 +134,7 @@ class TestDataForm(FlaskForm):
 
 
 class DeleteForm(FlaskForm):
-    delete = SubmitField("Delete Test Data")
+    submit = SubmitField("Yes - Delete")
 
 
 class RegisterForm(FlaskForm):

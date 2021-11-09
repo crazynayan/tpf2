@@ -38,26 +38,38 @@
                     <span class="oi oi-trash"></span> Delete Test Data
                 </a>
             {% else %}
-                <button id="deleteTestDataButton" class="btn btn-block btn-danger">
+                <button type="button" id="deleteTestDataButton" class="btn btn-block btn-danger"
+                        data-toggle="modal" data-target="#deleteConfirmation">
                     <span class="oi oi-trash"></span> Delete Test Data
                 </button>
-                <form id="deleteTestDataForm" action="" method="post" novalidate>
-                    {{ form.hidden_tag() }}
-                </form>
             {% endif %}
         </div>
     </div>
     <br>
     {{ show_test_data(test_data, edit_mode=False) }}
     <br>
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteConfirmation" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Test Data Delete</h5>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the test data?</p>
+                    <p> This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer">
+                    <form id="deleteTestDataForm" action="" method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        {{ form.submit(class_="btn btn-danger") }}
+                    </form>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">No - Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 
-{% block scripts %}
-    {{ super() }}
-    <!--suppress JSUnresolvedVariable -->
-    <script>
-        document.getElementById("deleteTestDataButton").addEventListener("click", () => {
-            document.forms["deleteTestDataForm"].submit();
-        });
-    </script>
-{% endblock %}
