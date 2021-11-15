@@ -44,7 +44,7 @@
                     Your file is not uploaded
                 </p>
             {% elif response %}
-                <a class="btn btn-primary" href="{{ url_for('instructions', seg_name=form.seg_name) }}">
+                <a id="viewSeg" class="btn btn-primary" href="{{ url_for('instructions', seg_name=form.seg_name) }}">
                     View {{ form.seg_name }}
                 </a>
             {% endif %}
@@ -71,6 +71,10 @@
             document.getElementById("uploadSpinner").classList.add("spinner-border", "spinner-border-sm");
             document.getElementById("uploadText").innerText = "Uploading..";
             document.getElementById("uploadButton").disabled = true;
+            const viewSeg = document.getElementById("viewSeg");
+            if (viewSeg) {
+                viewSeg.hidden = true;
+            }
             document.forms["uploadForm"].submit();
         });
 
