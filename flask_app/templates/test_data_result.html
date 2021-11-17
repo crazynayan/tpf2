@@ -126,21 +126,21 @@
                     <td class="small">{{ trace.instruction }}</td>
                     <td class="text-center">
                         {% if  trace.read1 %}
-                            <kbd>{{ trace.read1 }}</kbd>
+                            <kbd>{{ trace.read1[:20] }}</kbd>
                         {% else %}
                             -
                         {% endif %}
                     </td>
                     <td class="text-center">
                         {% if  trace.read2 %}
-                            <kbd>{{ trace.read2 }}</kbd>
+                            <kbd>{{ trace.read2[:20] }}</kbd>
                         {% else %}
                             -
                         {% endif %}
                     </td>
                     <td class="text-center">
                         {% if  trace.reg_pointer %}
-                            <kbd>{{ trace.reg_pointer }}</kbd>
+                            <kbd>{{ trace.reg_pointer[:20] }}</kbd>
                         {% else %}
                             -
                         {% endif %}
