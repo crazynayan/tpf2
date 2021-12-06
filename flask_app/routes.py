@@ -69,3 +69,13 @@ def symbol_table_view(macro_name: str):
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     return render_template("symbol_table.html", title="Symbol Table", symbol_table=symbol_table, macro_name=macro_name)
+
+
+@tpf2_app.route("/unsupported_instructions")
+@cookie_login_required
+def unsupported_instructions():
+    instructions: dict = Server.unsupported_instructions()
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    return render_template("unsupported_instructions.html", title="Unsupported Instructions",
+                           commands=instructions["unsupported_instructions"])

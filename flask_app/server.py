@@ -127,6 +127,11 @@ class Server:
         return response
 
     @classmethod
+    def unsupported_instructions(cls) -> dict:
+        response: dict = cls._common_request(f"/unsupported_instructions")
+        return response
+
+    @classmethod
     def symbol_table(cls, macro_name: str) -> List[dict]:
         response: dict = cls._common_request(f"/macros/{macro_name}/symbol_table")
         return response["symbol_table"] if response else list()
