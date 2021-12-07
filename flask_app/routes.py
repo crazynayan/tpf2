@@ -74,8 +74,8 @@ def symbol_table_view(macro_name: str):
 @tpf2_app.route("/unsupported_instructions")
 @cookie_login_required
 def unsupported_instructions():
-    instructions: dict = Server.unsupported_instructions()
+    commands: dict = Server.unsupported_instructions()
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     return render_template("unsupported_instructions.html", title="Unsupported Instructions",
-                           commands=instructions["unsupported_instructions"])
+                           commands=commands["unsupported_instructions"])
