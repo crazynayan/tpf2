@@ -20,9 +20,11 @@ Enter multiple fields and data separated by comma. The field and data should be 
 """
 
 PNR_OUTPUT_FIELD_DATA_TEXT: str = """
-Enter multiple fields and length separated by comma. The field and length should be separated by colon. All
- fields should be from PR001W macro. Length is an integer number which indicates the length of the field. If you don't 
- know the length then put the length as 0 and the length from the data macro will be automatically determined.
+Enter multiple fields with attributes separated by comma. Each attribute should be separated by colon. All
+ fields should be from PR001W macro. Length attribute should be denoted with a suffix of :L. If it is not specified
+ then the length from the data macro will be automatically determined. Item attribute should be denoted with a suffix
+ of :I. If it is not specified then the data from item number 1 will be provided. An e.g. is as follows
+ PR00_G0_TYP,PR00_G0_TYP:I2,PR00_G0_TYP:L2:I3
 """
 
 
@@ -432,6 +434,63 @@ class UpdateMacroForm(FlaskForm):
             raise ValidationError(self.response["error_fields"]["field_data"])
 
 
+class PnrOutputForm(FlaskForm):
+    key = SelectField("Select type of PNR element", choices=tpf2_app.config["PNR_KEYS"], default="header")
+    locator = StringField("Enter PNR Locator - 6 character alpha numeric - Leave it blank for AAA PNR")
+    field_item_len = TextAreaField(PNR_OUTPUT_FIELD_DATA_TEXT, render_kw={"rows": "5"})
+    save = SubmitField("Save & Continue - Add Further Data")
+
+    def __init__(self, test_data_id: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.response: dict = dict()
+        if request.method == "POST":
+            body: dict = dict()
+            body["key"] = self.key.data
+            body["locator"] = self.locator.data
+            body["field_item_len"] = self.field_item_len.data
+            self.response = Server.add_output_pnr(test_data_id, body)
+
+    def validate_key(self, _):
+        if "error" in self.response and self.response["error"] and \
+                "message" in self.response and self.response["message"]:
+            raise ValidationError(self.response["message"])
+        if "error_fields" in self.response and "key" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["key"])
+
+    def validate_locator(self, _):
+        if "error_fields" in self.response and "locator" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["locator"])
+
+    def validate_field_item_len(self, _):
+        if "error_fields" in self.response and "field_item_len" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["field_item_len"])
+
+
+class UpdatePnrOutputForm(FlaskForm):
+    field_item_len = TextAreaField(PNR_OUTPUT_FIELD_DATA_TEXT, render_kw={"rows": "5"})
+    save = SubmitField("Save & Continue - Add Further Data")
+
+    def __init__(self, test_data_id: str, pnr_output: dict, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.display_fields = list()
+        self.display_fields.append(("Key", pnr_output["key"].upper()))
+        pwc = f"{' (PNR Working copy' if pnr_output['locator'] == Config.AAAPNR else str()}"
+        self.display_fields.append(("PNR Locator", f"{pnr_output['locator']}{pwc}"))
+        self.response: dict = dict()
+        if request.method == "GET":
+            self.field_item_len.data = pnr_output["original_field_item_len"]
+        if request.method == "POST":
+            body: dict = {"field_item_len": self.field_item_len.data}
+            self.response = Server.update_output_pnr(test_data_id, pnr_output["id"], body)
+
+    def validate_field_item_len(self, _):
+        if "error" in self.response and self.response["error"] and \
+                "message" in self.response and self.response["message"]:
+            raise ValidationError(self.response["message"])
+        if "error_fields" in self.response and "field_item_len" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["field_item_len"])
+
+
 class RegisterFieldDataForm(FlaskForm):
     reg = StringField("Enter Register - Valid values are from R0 to R15")
     field_data = StringField("Enter Data - Input hex characters. Odd number of digit will be considered a number. "
@@ -475,44 +534,6 @@ class PnrForm(FlaskForm):
     @staticmethod
     def validate_text_data(_, text_data):
         text_data.data = text_data.data.strip().upper()
-
-
-class PnrOutputForm(FlaskForm):
-    key = SelectField("Select type of PNR element", choices=tpf2_app.config["PNR_KEYS"], default="header")
-    locator = StringField("Enter PNR Locator - 6 character alpha numeric - Leave it blank for AAA PNR")
-    field_data = TextAreaField(PNR_OUTPUT_FIELD_DATA_TEXT, render_kw={"rows": "5"}, validators=[InputRequired()])
-    save = SubmitField("Save & Continue - Add Further Data")
-
-    @staticmethod
-    def validate_field_data(_, field_data: TextAreaField):
-        data_stream: str = field_data.data
-        data_dict = dict()
-        for key_value in data_stream.split(","):
-            if key_value.count(":") != 1:
-                raise ValidationError(f"Include a single colon : to separate field and length - {key_value}")
-            field = key_value.split(":")[0].strip().upper()
-            label_ref = Server.search_field(field)
-            if not label_ref:
-                raise ValidationError(f"Field name not found - {field}")
-            if label_ref["name"] != "PR001W":
-                raise ValidationError(f"Field not in the data macro - {field} not in PR001W")
-            data = key_value.split(":")[1]
-            try:
-                length = int(data)
-            except ValueError:
-                raise ValidationError(f"Length of the {field} is not an integer - {data} not a number")
-            data_dict[field] = length
-        field_data.data = data_dict
-        return
-
-    @staticmethod
-    def validate_locator(_, locator):
-        if not locator.data:
-            return
-        locator.data = locator.data.upper()
-        if len(locator.data) != 6 or not locator.data.isalnum():
-            raise ValidationError("PNR Locator needs to be 6 character alpha numeric")
-        return
 
 
 class MultipleFieldDataForm(FlaskForm):

@@ -195,25 +195,29 @@
             <br>
             <div class="row">
                 <div class="col-md-2 text-center font-weight-bold">
-                    {{ pnr.locator }}
+                    {% if pnr.locator != "AAAAAA" %}
+                        {{ pnr.locator }}
+                    {% endif %}
                 </div>
                 <div class="col-md-2 font-weight-bold">
                     {{ pnr.key.upper() }}
                     {% if edit_mode %}
+                        <a class="badge badge-warning edit-icon"
+                           href="{{ url_for('update_output_pnr', test_data_id=test_data.id,pnr_output_id=pnr.id) }}">
+                            &#9998;</a>
                         <a class="badge badge-danger"
-                           href="{{ url_for('delete_output_pnr', test_data_id=test_data.id, pnr_id=pnr.id) }}">
-                            X
-                        </a>
+                           href="{{ url_for('delete_output_pnr', test_data_id=test_data.id, pnr_output_id=pnr.id) }}">
+                            X</a>
                     {% endif %}
                 </div>
             </div>
-            <div class="row">
-                {% for field, length in pnr.field_len.items() %}
-                    <div class="col-md-3 text-center">
-                        {{ field }} ({{ length }})
+            {% for field_item_len in pnr.field_item_len %}
+                <div class="row">
+                    <div class="col-md">
+                        {{ field_item_len.field }} ({{ field_item_len.length }}) #{{ field_item_len.item_number }}
                     </div>
-                {% endfor %}
-            </div>
+                </div>
+            {% endfor %}
         {% endfor %}
     {% elif edit_mode %}
         <br>
@@ -305,7 +309,7 @@
                         </div>
                         <div class="col-md-1"></div>
                         <div class="col-md-9">
-                            {% if core.hex_data[0] %}
+                            {% if core.hex_data[0] != "No data" %}
                                 <kbd>{{ core.hex_data[0] }}</kbd>
                             {% elif not core.seg_name %}
                                 ECB level initialized with zeroes
@@ -336,7 +340,7 @@
                         </div>
                         <div class="col-md-1"></div>
                         <div class="col-md-9">
-                            {% if core.hex_data[0] %}
+                            {% if core.hex_data[0] != "No data" %}
                                 <kbd>{{ core.hex_data[0] }}</kbd>
                             {% elif not core.seg_name %}
                                 Heap initialized with zeroes

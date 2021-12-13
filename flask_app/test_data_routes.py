@@ -11,7 +11,8 @@ from flask_app import tpf2_app
 from flask_app.server import Server
 from flask_app.test_data_forms import DeleteForm, TestDataForm, FieldSearchForm, FieldLengthForm, \
     FieldDataForm, RegisterForm, RegisterFieldDataForm, PnrForm, MultipleFieldDataForm, TpfdfForm, DebugForm, \
-    FixedFileForm, PnrOutputForm, HeapForm, EcbLevelForm, UpdateHexFieldDataForm, MacroForm, UpdateMacroForm
+    FixedFileForm, PnrOutputForm, HeapForm, EcbLevelForm, UpdateHexFieldDataForm, MacroForm, UpdateMacroForm, \
+    UpdatePnrOutputForm
 from flask_app.user import cookie_login_required
 
 
@@ -427,26 +428,41 @@ def delete_input_regs(test_data_id: str, reg: str):
 @tpf2_app.route("/test_data/<string:test_data_id>/output/pnr", methods=["GET", "POST"])
 @cookie_login_required
 def add_output_pnr(test_data_id: str):
-    form = PnrOutputForm()
-    if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Add PNR element", form=form, test_data_id=test_data_id)
-    pnr_dict = {"key": form.key.data, "locator": form.locator.data, "field_len": form.field_data.data}
-    response = Server.add_output_pnr(test_data_id, pnr_dict)
+    form = PnrOutputForm(test_data_id)
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
-    if not response:
-        flash("Error in creating PNR")
+    if not form.validate_on_submit():
+        return render_template("test_data_form.html", title="Add PNR Output", form=form, test_data_id=test_data_id)
+    flash(form.response["message"])
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
 
 
-@tpf2_app.route("/test_data/<string:test_data_id>/output/pnr/<string:pnr_id>")
+@tpf2_app.route("/test_data/<string:test_data_id>/output/pnr/<string:pnr_output_id>/e", methods=["GET", "POST"])
 @cookie_login_required
-def delete_output_pnr(test_data_id: str, pnr_id: str):
-    response = Server.delete_output_pnr(test_data_id, pnr_id)
+@test_data_required
+def update_output_pnr(test_data_id: str, pnr_output_id: str, **kwargs):
+    test_data: dict = kwargs[test_data_id]
+    pnr_output: dict = next((output for output in test_data["outputs"]["pnr_outputs"]
+                             if output["id"] == pnr_output_id), None)
+    if not pnr_output:
+        flash(f"Invalid PNR Output.")
+        return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    form = UpdatePnrOutputForm(test_data_id, pnr_output)
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
-    if not response:
-        flash("Error in deleting PNR element")
+    if not form.validate_on_submit():
+        return render_template("test_data_form.html", title="Update ECB Level", form=form, test_data_id=test_data_id)
+    flash(form.response["message"])
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+
+
+@tpf2_app.route("/test_data/<string:test_data_id>/output/pnr/<string:pnr_output_id>")
+@cookie_login_required
+def delete_output_pnr(test_data_id: str, pnr_output_id: str):
+    response = Server.delete_output_pnr(test_data_id, pnr_output_id)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    flash(response["message"]) if response else flash("Error in deleting Output")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="output-pnr"))
 
 

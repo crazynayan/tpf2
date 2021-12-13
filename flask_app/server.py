@@ -41,7 +41,7 @@ class Server:
         hex_data = data.hex().upper()
         number_data = "Not a number"
         if not encoded_data:
-            return [hex_data, number_data, str()]
+            return ["No data", number_data, str()]
         if len(hex_data) <= 8:
             number_data = int(hex_data, 16)
         if len(hex_data) == 4 and number_data > 0x7FFF:
@@ -176,7 +176,7 @@ class Server:
                     for field_data in pnr_output["field_data"]:
                         field_data["data"] = cls._decode_data(field_data["data"])
         fields = [field_data["field"] for core in test_data["outputs"][0]["cores"] for field_data in core["field_data"]]
-        pnr_fields = [field_data["field"] for pnr_output in test_data["outputs"][0]["pnr_outputs"]
+        pnr_fields = [field_data["field_text"] for pnr_output in test_data["outputs"][0]["pnr_outputs"]
                       for field_data in pnr_output["field_data"]]
         test_data["fields"] = fields
         test_data["pnr_fields"] = pnr_fields
@@ -292,6 +292,10 @@ class Server:
     @classmethod
     def add_output_pnr(cls, test_data_id: str, pnr_dict: dict) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/output/pnr", method="PATCH", json=pnr_dict)
+
+    @classmethod
+    def update_output_pnr(cls, test_data_id: str, pnr_id: str, pnr_dict: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/output/pnr/{pnr_id}", method="PATCH", json=pnr_dict)
 
     @classmethod
     def delete_output_pnr(cls, test_data_id: str, pnr_id: str) -> dict:

@@ -96,7 +96,7 @@
             {% for field_data in pnr_output.field_data %}
                 <div class="row">
                     <div class="col-md-3 text-center">
-                        <pre>{{ field_data.field }}</pre>
+                        <pre>{{ field_data.field_text }}</pre>
                     </div>
                     {% for value in field_data.data %}
                         <div class="col-md-3 text-center"><kbd>{{ value }}</kbd></div>
