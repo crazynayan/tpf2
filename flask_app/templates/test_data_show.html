@@ -309,7 +309,7 @@
                         </div>
                         <div class="col-md-1"></div>
                         <div class="col-md-9">
-                            {% if core.hex_data[0] != "No data" %}
+                            {% if core.hex_data[0] != "" %}
                                 <kbd>{{ core.hex_data[0] }}</kbd>
                             {% elif not core.seg_name %}
                                 ECB level initialized with zeroes
@@ -340,7 +340,7 @@
                         </div>
                         <div class="col-md-1"></div>
                         <div class="col-md-9">
-                            {% if core.hex_data[0] != "No data" %}
+                            {% if core.hex_data[0] != "" %}
                                 <kbd>{{ core.hex_data[0] }}</kbd>
                             {% elif not core.seg_name %}
                                 Heap initialized with zeroes
@@ -447,19 +447,19 @@
             {% for pnr in variation.list %}
                 <div class="row">
                     <div class="col-md-2 text-center font-weight-bold">
-                        {{ pnr.locator }}
+                        {% if pnr.locator != "AAAAAA" %}
+                            {{ pnr.locator }}
+                        {% endif %}
                     </div>
                     <div class="col-md-2 font-weight-bold">
                         {{ pnr.key.upper() }}
                         {% if edit_mode %}
-                            {% if pnr.data %} {% else %}
-                                <a class="badge badge-warning edit-icon"
-                                   href="{{ url_for('add_pnr_fields', test_data_id=test_data.id, pnr_id=pnr.id) }}">
-                                    &#9998;
-                                </a>
-                            {% endif %}
+                            <a class="badge badge-warning edit-icon"
+                               href="{{ url_for('update_input_pnr', test_data_id=test_data.id, pnr_input_id=pnr.id) }}">
+                                &#9998;
+                            </a>
                             <a class="badge badge-danger"
-                               href="{{ url_for('delete_pnr', test_data_id=test_data.id, pnr_id=pnr.id) }}">
+                               href="{{ url_for('delete_input_pnr', test_data_id=test_data.id, pnr_input_id=pnr.id) }}">
                                 X
                             </a>
                         {% endif %}
@@ -476,6 +476,22 @@
                             {{ field_data.field }}
                         </div>
                         {% for value in field_data.data %}
+                            <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+                {% for pnr_text in pnr.text %}
+                    <div class="row">
+                        <div class="col-md-3">Item Number #{{ loop.index }}</div>
+                        <div class="col-md-9">{{ pnr_text }}</div>
+                    </div>
+                {% endfor %}
+                {% for field_data_item in pnr.field_data_item %}
+                    <div class="row">
+                        <div class="col-md-3">
+                            {{ field_data_item.field }} #{{ field_data_item.item_number }}
+                        </div>
+                        {% for value in field_data_item.data %}
                             <div class="col-md-3"><kbd>{{ value }}</kbd></div>
                         {% endfor %}
                     </div>

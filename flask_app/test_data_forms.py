@@ -1,4 +1,3 @@
-from base64 import b64encode
 from typing import List
 
 from flask import request
@@ -20,11 +19,18 @@ Enter multiple fields and data separated by comma. The field and data should be 
 """
 
 PNR_OUTPUT_FIELD_DATA_TEXT: str = """
-Enter multiple fields with attributes separated by comma. Each attribute should be separated by colon. All
- fields should be from PR001W macro. Length attribute should be denoted with a suffix of :L. If it is not specified
- then the length from the data macro will be automatically determined. Item attribute should be denoted with a suffix
- of :I. If it is not specified then the data from item number 1 will be provided. An e.g. is as follows
+Enter multiple fields with attributes separated by comma. Format of each field is FieldName:Length:ItemNumber.
+ FieldName should be from PNR macros. Length should start with L followed by a number. If it is not specified
+ then the length from the data macro will be automatically determined. ItemNumber should start with I followed by a
+ number. If it is not specified then item number 1 is assumed. An e.g. is as follows
  PR00_G0_TYP,PR00_G0_TYP:I2,PR00_G0_TYP:L2:I3
+"""
+
+PNR_INPUT_FIELD_DATA_TEXT: str = """
+Enter multiple fields with attributes separated by comma. Leave it blank if you want to provide PNR text.
+ Format of each field is FieldName:HexData:ItemNumber. FieldName should be from PNR macros. 
+ ItemNumber should start with I followed by a number. All item numbers should be in sequence without gaps. 
+ An e.g. is as follows PR00_G0_BAS_0_AAC:E2E2:I1,PR00_G0_TYP:02:I2
 """
 
 
@@ -203,8 +209,8 @@ class FieldDataForm(FlaskForm):
         field_data.data = form_validate_field_data(field_data.data)
 
 
-def init_variation(variation: SelectField, variation_name: StringField, test_data_id: str) -> dict:
-    variations = Server.get_variations(test_data_id, "core")
+def init_variation(variation: SelectField, variation_name: StringField, test_data_id: str, v_type: str) -> dict:
+    variations = Server.get_variations(test_data_id, v_type)
     if not current_user.is_authenticated:
         return dict()
     variation.choices = [(item["variation"], f"{item['variation_name']} ({item['variation']})") for item in variations]
@@ -233,7 +239,7 @@ class HeapForm(FlaskForm):
 
     def __init__(self, test_data_id: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        body = init_variation(self.variation, self.variation_name, test_data_id)
+        body = init_variation(self.variation, self.variation_name, test_data_id, "core")
         self.response: dict = dict()
         if request.method == "POST":
             body["heap_name"] = self.heap_name.data
@@ -279,7 +285,7 @@ class MacroForm(FlaskForm):
 
     def __init__(self, test_data_id: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        body = init_variation(self.variation, self.variation_name, test_data_id)
+        body = init_variation(self.variation, self.variation_name, test_data_id, "core")
         self.response: dict = dict()
         self.macro_name.choices = [(macro_name, macro_name) for macro_name in Config.DEFAULT_MACROS]
         if request.method == "POST":
@@ -319,7 +325,7 @@ class EcbLevelForm(FlaskForm):
 
     def __init__(self, test_data_id: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        body = init_variation(self.variation, self.variation_name, test_data_id)
+        body = init_variation(self.variation, self.variation_name, test_data_id, "core")
         self.ecb_level.choices = [(level, level) for level in Config.ECB_LEVELS]
         self.response: dict = dict()
         if request.method == "POST":
@@ -366,13 +372,13 @@ class UpdateHexFieldDataForm(FlaskForm):
 
     def __init__(self, test_data_id: str, core: dict, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        variation_name = f" ({core['variation_name']})" if core["variation_name"] else str()
         self.display_fields = list()
+        variation_name = f" ({core['variation_name']})" if core["variation_name"] else str()
+        self.display_fields.append(("Variation", f"{core['variation']}{variation_name}"))
         if core["ecb_level"]:
             self.display_fields.append(("ECB Level", core["ecb_level"]))
         elif core["heap_name"]:
             self.display_fields.append(("Heap", core["heap_name"]))
-        self.display_fields.append(("Variation", f"{core['variation']}{variation_name}"))
         self.response: dict = dict()
         if request.method == "GET":
             self.hex_data.data = core["hex_data"][0]
@@ -491,6 +497,87 @@ class UpdatePnrOutputForm(FlaskForm):
             raise ValidationError(self.response["error_fields"]["field_item_len"])
 
 
+class PnrInputForm(FlaskForm):
+    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
+    variation_name = StringField("New Variation Name - Leave it blank for existing variation")
+    key = SelectField("Select type of PNR element", choices=tpf2_app.config["PNR_KEYS"], default="header")
+    locator = StringField("Enter PNR Locator - 6 character alpha numeric - Leave it blank for AAA PNR")
+    text = StringField("Enter text - Separate it with comma for multiple PNR elements. Leave it blank if you want to"
+                       " provide field  data in hex.")
+    field_data_item = TextAreaField(PNR_INPUT_FIELD_DATA_TEXT, render_kw={"rows": "5"})
+    save = SubmitField("Save & Continue - Add Further Data")
+
+    def __init__(self, test_data_id: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.response: dict = dict()
+        body: dict = init_variation(self.variation, self.variation_name, test_data_id, "pnr")
+        if request.method == "POST":
+            body["key"] = self.key.data
+            body["locator"] = self.locator.data
+            body["text"] = self.text.data
+            body["field_data_item"] = self.field_data_item.data
+            self.response = Server.add_input_pnr(test_data_id, body)
+
+    def validate_variation(self, variation):
+        if "error" in self.response and self.response["error"] and \
+                "message" in self.response and self.response["message"]:
+            raise ValidationError(self.response["message"])
+        if "error_fields" in self.response and "variation" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["variation"])
+        if variation.data == -1:
+            variation.data = 0
+
+    def validate_key(self, _):
+        if "error_fields" in self.response and "key" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["key"])
+
+    def validate_locator(self, _):
+        if "error_fields" in self.response and "locator" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["locator"])
+
+    def validate_text(self, _):
+        if "error_fields" in self.response and "text" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["text"])
+
+    def validate_field_data_item(self, _):
+        if "error_fields" in self.response and "field_data_item" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["text"])
+
+
+class UpdatePnrInputForm(FlaskForm):
+    text = StringField("Enter text - Separate it with comma for multiple PNR elements. Leave it blank if you want to"
+                       " provide field  data in hex.")
+    field_data_item = TextAreaField(PNR_INPUT_FIELD_DATA_TEXT, render_kw={"rows": "5"})
+    save = SubmitField("Save & Continue - Add Further Data")
+
+    def __init__(self, test_data_id: str, pnr_input: dict, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.display_fields = list()
+        variation_name = f" ({pnr_input['variation_name']})" if pnr_input["variation_name"] else str()
+        self.display_fields.append(("Variation", f"{pnr_input['variation']}{variation_name}"))
+        self.display_fields.append(("Key", pnr_input["key"].upper()))
+        pwc = f"{' (PNR Working copy' if pnr_input['locator'] == Config.AAAPNR else str()}"
+        self.display_fields.append(("PNR Locator", f"{pnr_input['locator']}{pwc}"))
+        self.response: dict = dict()
+        if request.method == "GET":
+            self.text.data = pnr_input["original_text"]
+            self.field_data_item.data = pnr_input["original_field_data_item"]
+        if request.method == "POST":
+            body: dict = {"text": self.text.data, "field_data_item": self.field_data_item.data}
+            self.response = Server.update_input_pnr(test_data_id, pnr_input["id"], body)
+
+    def validate_text(self, _):
+        if "error" in self.response and self.response["error"] and \
+                "message" in self.response and self.response["message"]:
+            raise ValidationError(self.response["message"])
+        if "error_fields" in self.response and "text" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["text"])
+
+    def validate_field_data_item(self, _):
+        if "error_fields" in self.response and "field_data_item" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["field_data_item"])
+
+
 class RegisterFieldDataForm(FlaskForm):
     reg = StringField("Enter Register - Valid values are from R0 to R15")
     field_data = StringField("Enter Data - Input hex characters. Odd number of digit will be considered a number. "
@@ -511,53 +598,6 @@ class RegisterFieldDataForm(FlaskForm):
         hex_data = hex_data[:8]
         hex_data = hex_data.zfill(8)
         field_data.data = hex_data
-
-
-class PnrForm(FlaskForm):
-    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
-    variation_name = StringField("New Variation Name - Leave it blank for existing variation")
-    key = SelectField("Select type of PNR element", choices=tpf2_app.config["PNR_KEYS"], default="name")
-    locator = StringField("Enter PNR Locator - 6 character alpha numeric - Leave it blank for AAA PNR")
-    text_data = StringField("Enter text - Separate it with comma for multiple PNR elements. "
-                            "Leave it blank for adding PNR fields later.")
-    save = SubmitField("Save & Continue - Add Further Data")
-
-    @staticmethod
-    def validate_locator(_, locator):
-        if not locator.data:
-            return
-        locator.data = locator.data.upper()
-        if len(locator.data) != 6 or not locator.data.isalnum():
-            raise ValidationError("PNR Locator needs to be 6 character alpha numeric")
-        return
-
-    @staticmethod
-    def validate_text_data(_, text_data):
-        text_data.data = text_data.data.strip().upper()
-
-
-class MultipleFieldDataForm(FlaskForm):
-    field_data = TextAreaField(FIELD_DATA_TEXT, render_kw={"rows": "5"}, validators=[InputRequired()])
-    save = SubmitField("Save & Continue - Add Further Data")
-
-    @staticmethod
-    def validate_field_data(_, field_data: TextAreaField):
-        data_stream: str = field_data.data
-        data_dict = {"macro_name": str(), "field_data": dict()}
-        for key_value in data_stream.split(","):
-            if key_value.count(":") != 1:
-                raise ValidationError(f"Include a single colon : to separate field and data - {key_value}")
-            key = key_value.split(":")[0].strip().upper()
-            label_ref = Server.search_field(key)
-            if not label_ref:
-                raise ValidationError(f"Field name not found - {key}")
-            data_dict["macro_name"] = data_dict["macro_name"] or label_ref["name"]
-            if data_dict["macro_name"] != label_ref["name"]:
-                raise ValidationError(f"Field not in the same macro - {key} not in {data_dict['macro_name']}")
-            data = form_validate_field_data(key_value.split(":")[1])
-            data = b64encode(bytes.fromhex(data)).decode()
-            data_dict["field_data"][key] = data
-        field_data.data = data_dict
 
 
 class TpfdfForm(FlaskForm):

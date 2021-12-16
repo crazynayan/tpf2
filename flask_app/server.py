@@ -41,7 +41,7 @@ class Server:
         hex_data = data.hex().upper()
         number_data = "Not a number"
         if not encoded_data:
-            return ["No data", number_data, str()]
+            return ["", number_data, str()]
         if len(hex_data) <= 8:
             number_data = int(hex_data, 16)
         if len(hex_data) == 4 and number_data > 0x7FFF:
@@ -67,6 +67,9 @@ class Server:
         for pnr in test_data["pnr"]:
             for field_data in pnr["field_data"]:
                 field_data["data"] = cls._decode_data(field_data["data"])
+            if "field_data_item" in pnr:
+                for field_data in pnr["field_data_item"]:
+                    field_data["data"] = cls._decode_data(field_data["data"])
         for tpfdf in test_data["tpfdf"]:
             for field_data in tpfdf["field_data"]:
                 field_data["data"] = cls._decode_data(field_data["data"])
@@ -286,10 +289,6 @@ class Server:
         return cls._common_request(f"/test_data/{test_data_id}/input/regs/{reg}", method="DELETE")
 
     @classmethod
-    def create_pnr(cls, test_data_id: str, pnr_dict: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/input/pnr", method="PATCH", json=pnr_dict)
-
-    @classmethod
     def add_output_pnr(cls, test_data_id: str, pnr_dict: dict) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/output/pnr", method="PATCH", json=pnr_dict)
 
@@ -302,12 +301,15 @@ class Server:
         return cls._common_request(f"/test_data/{test_data_id}/output/pnr/{pnr_id}", method="DELETE")
 
     @classmethod
-    def add_pnr_fields(cls, test_data_id: str, pnr_id: str, core_dict: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/input/pnr/{pnr_id}/fields",
-                                   method="PATCH", json=core_dict)
+    def add_input_pnr(cls, test_data_id: str, pnr_dict: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/pnr", method="PATCH", json=pnr_dict)
 
     @classmethod
-    def delete_pnr(cls, test_data_id: str, pnr_id: str) -> dict:
+    def update_input_pnr(cls, test_data_id: str, pnr_id: str, pnr_dict: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/pnr/{pnr_id}", method="PATCH", json=pnr_dict)
+
+    @classmethod
+    def delete_input_pnr(cls, test_data_id: str, pnr_id: str) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/input/pnr/{pnr_id}", method="DELETE")
 
     @classmethod
