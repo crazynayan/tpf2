@@ -99,7 +99,13 @@
                         <pre>{{ field_data.field_text }}</pre>
                     </div>
                     {% for value in field_data.data %}
-                        <div class="col-md-3 text-center"><kbd>{{ value }}</kbd></div>
+                        <div class="col-md-3 text-center">
+                            {% if value %}
+                                <kbd>{{ value }}</kbd>
+                            {% else %}
+                                <kbd>No data</kbd>
+                            {% endif %}
+                        </div>
                     {% endfor %}
                 </div>
             {% endfor %}
