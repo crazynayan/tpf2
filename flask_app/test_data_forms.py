@@ -480,7 +480,7 @@ class UpdatePnrOutputForm(FlaskForm):
         super().__init__(*args, **kwargs)
         self.display_fields = list()
         self.display_fields.append(("Key", pnr_output["key"].upper()))
-        pwc = f"{' (PNR Working copy' if pnr_output['locator'] == Config.AAAPNR else str()}"
+        pwc = f"{' (PNR Working copy)' if pnr_output['locator'] == Config.AAAPNR else str()}"
         self.display_fields.append(("PNR Locator", f"{pnr_output['locator']}{pwc}"))
         self.response: dict = dict()
         if request.method == "GET":
@@ -541,7 +541,7 @@ class PnrInputForm(FlaskForm):
 
     def validate_field_data_item(self, _):
         if "error_fields" in self.response and "field_data_item" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["text"])
+            raise ValidationError(self.response["error_fields"]["field_data_item"])
 
 
 class UpdatePnrInputForm(FlaskForm):
@@ -556,7 +556,7 @@ class UpdatePnrInputForm(FlaskForm):
         variation_name = f" ({pnr_input['variation_name']})" if pnr_input["variation_name"] else str()
         self.display_fields.append(("Variation", f"{pnr_input['variation']}{variation_name}"))
         self.display_fields.append(("Key", pnr_input["key"].upper()))
-        pwc = f"{' (PNR Working copy' if pnr_input['locator'] == Config.AAAPNR else str()}"
+        pwc = f"{' (PNR Working copy)' if pnr_input['locator'] == Config.AAAPNR else str()}"
         self.display_fields.append(("PNR Locator", f"{pnr_input['locator']}{pwc}"))
         self.response: dict = dict()
         if request.method == "GET":
