@@ -440,6 +440,104 @@ class UpdateMacroForm(FlaskForm):
             raise ValidationError(self.response["error_fields"]["field_data"])
 
 
+class GlobalForm(FlaskForm):
+    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
+    variation_name = StringField("New Variation Name - Leave it blank for existing variation")
+    global_name = StringField("Enter Global Name - Must exists in global definition", validators=[InputRequired()])
+    is_global_record = BooleanField("Check this if this global is a global record. (Unchecked indicates global field)")
+    hex_data = StringField("Global Field - Enter input data in hex format to initialize the heap. "
+                           "Leave it blank for global record")
+    seg_name = StringField("Global Record - Segment Name. Only required if data for global record is specified.")
+    field_data = TextAreaField("Global Record - Enter multiple fields and data separated by comma. "
+                               "The field and data should be separated by colon. Data should be in hex format. "
+                               "Leave it blank to init with zeroes.", render_kw={"rows": "5"})
+    save = SubmitField("Save & Continue - Add Further Data")
+
+    def __init__(self, test_data_id: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        body = init_variation(self.variation, self.variation_name, test_data_id, "core")
+        self.response: dict = dict()
+        if request.method == "POST":
+            body["global_name"] = self.global_name.data.upper()
+            body["hex_data"] = "".join(char.upper() for char in self.hex_data.data if char != " ")
+            body["seg_name"] = self.seg_name.data.upper()
+            body["field_data"] = self.field_data.data
+            body["is_global_record"] = self.is_global_record.data
+            self.response = Server.add_input_global(test_data_id, body)
+
+    def validate_variation(self, variation):
+        if "error" in self.response and self.response["error"] and \
+                "message" in self.response and self.response["message"]:
+            raise ValidationError(self.response["message"])
+        if "error_fields" in self.response and "variation" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["variation"])
+        if variation.data == -1:
+            variation.data = 0
+
+    def validate_global_name(self, _) -> None:
+        if "error_fields" in self.response and "global_name" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["global_name"])
+
+    def validate_hex_data(self, _):
+        if "error_fields" in self.response and "hex_data" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["hex_data"])
+
+    def validate_seg_name(self, _):
+        if "error_fields" in self.response and "seg_name" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["seg_name"])
+
+    def validate_field_data(self, _):
+        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["field_data"])
+
+
+class UpdateGlobalForm(FlaskForm):
+    is_global_record = BooleanField("Check this if this global is a global record. (Unchecked indicates global field)")
+    hex_data = StringField("Global Field - Enter input data in hex format to initialize the heap. "
+                           "Leave it blank for global record")
+    seg_name = StringField("Global Record - Segment Name. Only required if data for global record is specified.")
+    field_data = TextAreaField("Global Record - Enter multiple fields and data separated by comma. "
+                               "The field and data should be separated by colon. Data should be in hex format. "
+                               "Leave it blank to init with zeroes.", render_kw={"rows": "5"})
+    save = SubmitField("Save & Continue - Add Further Data")
+
+    def __init__(self, test_data_id: str, core: dict, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.display_fields = list()
+        variation_name = f" ({core['variation_name']})" if core["variation_name"] else str()
+        self.display_fields.append(("Variation", f"{core['variation']}{variation_name}"))
+        self.display_fields.append(("Global Name", core["global_name"]))
+        self.response: dict = dict()
+        if request.method == "GET":
+            self.is_global_record.data = core["is_global_record"]
+            self.hex_data.data = core["hex_data"][0]
+            self.seg_name.data = core["seg_name"]
+            self.field_data.data = core["original_field_data"]
+        if request.method == "POST":
+            body: dict = dict()
+            body["hex_data"] = "".join(char.upper() for char in self.hex_data.data if char != " ")
+            body["seg_name"] = self.seg_name.data.upper()
+            body["field_data"] = self.field_data.data
+            body["is_global_record"] = self.is_global_record.data
+            self.response = Server.update_input_global(test_data_id, core["id"], body)
+        return
+
+    def validate_hex_data(self, _):
+        if "error" in self.response and self.response["error"] and \
+                "message" in self.response and self.response["message"]:
+            raise ValidationError(self.response["message"])
+        if "error_fields" in self.response and "hex_data" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["hex_data"])
+
+    def validate_seg_name(self, _):
+        if "error_fields" in self.response and "seg_name" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["seg_name"])
+
+    def validate_field_data(self, _):
+        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["field_data"])
+
+
 class PnrOutputForm(FlaskForm):
     key = SelectField("Select type of PNR element", choices=tpf2_app.config["PNR_KEYS"], default="header")
     locator = StringField("Enter PNR Locator - 6 character alpha numeric - Leave it blank for AAA PNR")

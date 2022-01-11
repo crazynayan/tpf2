@@ -153,7 +153,8 @@ class Server:
         test_data["class_display"] = "disabled" if test_data["owner"] != current_user.email else str()
         test_data["stop_seg_string"] = ", ".join(test_data["stop_segments"]) if test_data["stop_segments"] else \
             "No Stop Segments"
-        test_data["cores"].sort(key=lambda item: (item["macro_name"], item["heap_name"]))
+        test_data["cores"].sort(key=lambda item: (item["macro_name"], item["heap_name"], item["ecb_level"],
+                                                  item["global_name"]))
         return cls._decode_test_data(test_data)
 
     @classmethod
@@ -262,6 +263,18 @@ class Server:
     def delete_input_heap(cls, test_data_id: str, heap_name: str, variation: int) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/input/heap/{heap_name}/variations/{variation}",
                                    method="DELETE")
+
+    @classmethod
+    def add_input_global(cls, test_data_id: str, body: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/global", method="PATCH", json=body)
+
+    @classmethod
+    def update_input_global(cls, test_data_id: str, core_id: str, body: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/global/{core_id}", method="PATCH", json=body)
+
+    @classmethod
+    def delete_input_core(cls, test_data_id: str, core_id: str, ) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/core/{core_id}", method="DELETE")
 
     @classmethod
     def add_input_ecb_level(cls, test_data_id: str, body: dict) -> dict:

@@ -12,7 +12,7 @@ from flask_app.server import Server
 from flask_app.test_data_forms import DeleteForm, TestDataForm, FieldSearchForm, FieldLengthForm, \
     FieldDataForm, RegisterForm, RegisterFieldDataForm, TpfdfForm, DebugForm, \
     FixedFileForm, PnrOutputForm, HeapForm, EcbLevelForm, UpdateHexFieldDataForm, MacroForm, UpdateMacroForm, \
-    UpdatePnrOutputForm, PnrInputForm, UpdatePnrInputForm
+    UpdatePnrOutputForm, PnrInputForm, UpdatePnrInputForm, GlobalForm, UpdateGlobalForm
 from flask_app.user import cookie_login_required
 
 
@@ -312,6 +312,46 @@ def delete_heap(test_data_id: str, heap_name: str, variation: int):
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     flash(response["message"]) if response else flash("Error in deleting heap")
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-core"))
+
+
+@tpf2_app.route("/test_data/<string:test_data_id>/input/global", methods=["GET", "POST"])
+@cookie_login_required
+def add_global(test_data_id: str):
+    form = GlobalForm(test_data_id)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    if not form.validate_on_submit():
+        return render_template("test_data_form.html", title="Add Global", form=form, test_data_id=test_data_id)
+    flash(form.response["message"])
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+
+
+@tpf2_app.route("/test_data/<string:test_data_id>/input/global/<string:core_id>/e", methods=["GET", "POST"])
+@cookie_login_required
+@test_data_required
+def update_global(test_data_id: str, core_id: str, **kwargs):
+    test_data: dict = kwargs[test_data_id]
+    core: dict = next((core for core in test_data["cores"] if core["id"] == core_id), None)
+    if not core:
+        flash(f"Core with Id {core_id} not found.")
+        return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    form = UpdateGlobalForm(test_data_id, core)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    if not form.validate_on_submit():
+        return render_template("test_data_form.html", title="Update Global", form=form, test_data_id=test_data_id)
+    flash(form.response["message"])
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+
+
+@tpf2_app.route("/test_data/<string:test_data_id>/input/global/<string:core_id>")
+@cookie_login_required
+def delete_global(test_data_id: str, core_id: str):
+    response = Server.delete_input_core(test_data_id, core_id)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    flash(response["message"]) if response else flash("Error in deleting core.")
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-core"))
 
 

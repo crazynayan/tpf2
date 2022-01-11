@@ -238,22 +238,28 @@
                 </div>
             </div>
             {% if edit_mode %}
-                <div class="col-md-2">
+                <div class="col-md">
                     <a class="btn btn-block btn-warning"
                        href="{{ url_for('add_macro', test_data_id=test_data.id) }}">
-                        <span class="oi oi-pencil"></span> Default Fields
+                        <span class="oi oi-pencil"></span> Default
                     </a>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md">
                     <a class="btn btn-block btn-success "
                        href="{{ url_for('add_heap', test_data_id=test_data.id) }}">
                         <span class="oi oi-plus"></span> Heap
                     </a>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md">
                     <a class="btn btn-block btn-success "
                        href="{{ url_for('add_ecb_level', test_data_id=test_data.id) }}">
-                        <span class="oi oi-plus"></span> ECB Level
+                        <span class="oi oi-plus"></span> ECB
+                    </a>
+                </div>
+                <div class="col-md">
+                    <a class="btn btn-block btn-success "
+                       href="{{ url_for('add_global', test_data_id=test_data.id) }}">
+                        <span class="oi oi-plus"></span> Global
                     </a>
                 </div>
             {% endif %}
@@ -284,6 +290,8 @@
                                 macro_name=core.macro_name, variation=core.variation) }}">X</a>
                             {% endif %}
                         </div>
+                        <div class="col-md-1">Default</div>
+
                     </div>
                     {% for field_data in core.field_data %}
                         <div class="row">
@@ -307,7 +315,7 @@
                                 ecb_level=core.ecb_level, variation=core.variation) }}">X</a>
                             {% endif %}
                         </div>
-                        <div class="col-md-1"></div>
+                        <div class="col-md-1">ECB-L</div>
                         <div class="col-md-9">
                             {% if core.hex_data[0] != "" %}
                                 <kbd>{{ core.hex_data[0] }}</kbd>
@@ -338,12 +346,44 @@
                                 heap_name=core.heap_name, variation=core.variation) }}">X</a>
                             {% endif %}
                         </div>
-                        <div class="col-md-1"></div>
+                        <div class="col-md-1">Heap</div>
                         <div class="col-md-9">
                             {% if core.hex_data[0] != "" %}
                                 <kbd>{{ core.hex_data[0] }}</kbd>
                             {% elif not core.seg_name %}
                                 Heap initialized with zeroes
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% for field_data in core.field_data %}
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                {{ field_data.field }}
+                            </div>
+                            {% for value in field_data.data %}
+                                <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                {% elif core.global_name %}
+                    <div class="row">
+                        <div class="col-md-2 text-center font-weight-bold">
+                            {{ core.global_name }}
+                            {% if edit_mode %}
+                                <a class="badge badge-warning edit-icon"
+                                   href="{{ url_for('update_global', test_data_id=test_data.id, core_id=core.id) }}">
+                                    &#9998;</a>
+                                <a class="badge badge-danger"
+                                   href="{{ url_for('delete_global', test_data_id=test_data.id, core_id=core.id) }}">
+                                    X</a>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-1">Global</div>
+                        <div class="col-md-9">
+                            {% if core.hex_data[0] != "" %}
+                                <kbd>{{ core.hex_data[0] }}</kbd>
+                            {% elif not core.field_data and core.is_global_record %}
+                                Global record initialized with zeroes
                             {% endif %}
                         </div>
                     </div>

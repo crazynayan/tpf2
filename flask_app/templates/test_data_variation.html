@@ -286,7 +286,7 @@
     {% endif %}
 
     {{ show_test_data(test_data, edit_mode=False, output=False) }}
-    {% if test_data.outputs[0].traces %}
+    {% if test_data.outputs[0].traces or test_data.outputs[1].traces %}
         <br>
         <div class="list-group list-group-item list-group-item-secondary">Debug</div>
         <br>
