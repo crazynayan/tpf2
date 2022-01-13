@@ -10,7 +10,7 @@
             <th class="text-center" scope="col">Source</th>
             <th class="text-center" scope="col">LOC</th>
             <th class="text-center" scope="col">%</th>
-            <th class="" scope="col">Description</th>
+            <th class="" scope="col">Unsupported Instruction</th>
             <th class="text-center" scope="col">Action</th>
         </tr>
         </thead>
@@ -26,7 +26,6 @@
                     {% if attribute.assembly_error %}
                         Assembly Error on the instruction {{ attribute.assembly_error }}
                     {% elif attribute.error_cmds %}
-                        Commands not supported in execution are
                         {% for cmd in attribute.error_cmds %} {{ cmd }} {% endfor %}
                     {% endif %}
                 </td>
