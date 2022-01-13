@@ -234,10 +234,16 @@
         <div class="row" id="input-core">
             <div class="col-md{% if edit_mode %}-6{% endif %}">
                 <div class="list-group list-group-item list-group-item-secondary">
-                    Input - Fields, Heap and ECB levels
+                    Input - Global, Default, Heap and ECB levels
                 </div>
             </div>
             {% if edit_mode %}
+                <div class="col-md">
+                    <a class="btn btn-block btn-success "
+                       href="{{ url_for('add_global', test_data_id=test_data.id) }}">
+                        <span class="oi oi-plus"></span> Global
+                    </a>
+                </div>
                 <div class="col-md">
                     <a class="btn btn-block btn-warning"
                        href="{{ url_for('add_macro', test_data_id=test_data.id) }}">
@@ -254,12 +260,6 @@
                     <a class="btn btn-block btn-success "
                        href="{{ url_for('add_ecb_level', test_data_id=test_data.id) }}">
                         <span class="oi oi-plus"></span> ECB
-                    </a>
-                </div>
-                <div class="col-md">
-                    <a class="btn btn-block btn-success "
-                       href="{{ url_for('add_global', test_data_id=test_data.id) }}">
-                        <span class="oi oi-plus"></span> Global
                     </a>
                 </div>
             {% endif %}
@@ -280,8 +280,10 @@
             {% for core in variation.list %}
                 {% if core.macro_name %}
                     <div class="row">
-                        <div class="col-md-2 text-center font-weight-bold">
+                        <div class="col-md-1 font-weight-bold">
                             {{ core.macro_name }}
+                        </div>
+                        <div class="col-md-1">
                             {% if edit_mode %}
                                 <a class="badge badge-warning edit-icon"
                                    href="{{ url_for('update_macro', test_data_id=test_data.id, macro_name=core.macro_name,
@@ -291,7 +293,6 @@
                             {% endif %}
                         </div>
                         <div class="col-md-1">Default</div>
-
                     </div>
                     {% for field_data in core.field_data %}
                         <div class="row">
@@ -305,8 +306,10 @@
                     {% endfor %}
                 {% elif core.ecb_level %}
                     <div class="row">
-                        <div class="col-md-2 text-center font-weight-bold">
-                            Level D{{ core.ecb_level }}
+                        <div class="col-md-1 font-weight-bold">
+                            D{{ core.ecb_level }}
+                        </div>
+                        <div class="col-md-1">
                             {% if edit_mode %}
                                 <a class="badge badge-warning edit-icon"
                                    href="{{ url_for('update_ecb_level', test_data_id=test_data.id, ecb_level=core.ecb_level,
@@ -319,7 +322,7 @@
                         <div class="col-md-9">
                             {% if core.hex_data[0] != "" %}
                                 <kbd>{{ core.hex_data[0] }}</kbd>
-                            {% elif not core.seg_name %}
+                            {% elif not core.field_data %}
                                 ECB level initialized with zeroes
                             {% endif %}
                         </div>
@@ -336,8 +339,10 @@
                     {% endfor %}
                 {% elif core.heap_name %}
                     <div class="row">
-                        <div class="col-md-2 text-center font-weight-bold">
+                        <div class="col-md-1 font-weight-bold">
                             {{ core.heap_name }}
+                        </div>
+                        <div class="col-md-1">
                             {% if edit_mode %}
                                 <a class="badge badge-warning edit-icon"
                                    href="{{ url_for('update_heap', test_data_id=test_data.id, heap_name=core.heap_name,
@@ -350,7 +355,7 @@
                         <div class="col-md-9">
                             {% if core.hex_data[0] != "" %}
                                 <kbd>{{ core.hex_data[0] }}</kbd>
-                            {% elif not core.seg_name %}
+                            {% elif not core.field_data %}
                                 Heap initialized with zeroes
                             {% endif %}
                         </div>
@@ -367,8 +372,10 @@
                     {% endfor %}
                 {% elif core.global_name %}
                     <div class="row">
-                        <div class="col-md-2 text-center font-weight-bold">
+                        <div class="col-md-1 font-weight-bold">
                             {{ core.global_name }}
+                        </div>
+                        <div class="col-md-1">
                             {% if edit_mode %}
                                 <a class="badge badge-warning edit-icon"
                                    href="{{ url_for('update_global', test_data_id=test_data.id, core_id=core.id) }}">
@@ -379,13 +386,15 @@
                             {% endif %}
                         </div>
                         <div class="col-md-1">Global</div>
-                        <div class="col-md-9">
-                            {% if core.hex_data[0] != "" %}
-                                <kbd>{{ core.hex_data[0] }}</kbd>
-                            {% elif not core.field_data and core.is_global_record %}
-                                Global record initialized with zeroes
-                            {% endif %}
-                        </div>
+                        {% if core.hex_data[0] != "" %}
+                            {% for value in core.hex_data %}
+                                <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                            {% endfor %}
+                        {% elif not core.field_data and core.is_global_record %}
+                            <div class="col-md-9"> Global record initialized with zeroes</div>
+                        {% else %}
+                            <div class="col-md-9"></div>
+                        {% endif %}
                     </div>
                     {% for field_data in core.field_data %}
                         <div class="row">

@@ -87,8 +87,6 @@ class Server:
                 for file_item in pool_file["file_items"]:
                     for field_data in file_item["field_data"]:
                         field_data["data"] = cls._decode_data(field_data["data"])
-        test_data["pnr"].sort(key=lambda pnr_item: (pnr_item["variation"], pnr_item["locator"], pnr_item["key"]))
-        test_data["cores"].sort(key=lambda core_item: (core_item["variation"], core_item["macro_name"]))
         return test_data
 
     @classmethod
@@ -153,8 +151,9 @@ class Server:
         test_data["class_display"] = "disabled" if test_data["owner"] != current_user.email else str()
         test_data["stop_seg_string"] = ", ".join(test_data["stop_segments"]) if test_data["stop_segments"] else \
             "No Stop Segments"
-        test_data["cores"].sort(key=lambda item: (item["macro_name"], item["heap_name"], item["ecb_level"],
-                                                  item["global_name"]))
+        test_data["cores"].sort(key=lambda item: (item["variation"], item["ecb_level"], item["heap_name"],
+                                                  item["macro_name"], item["global_name"]))
+        test_data["pnr"].sort(key=lambda item: (item["variation"], item["locator"], item["key"]))
         return cls._decode_test_data(test_data)
 
     @classmethod
