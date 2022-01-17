@@ -445,7 +445,7 @@ class GlobalForm(FlaskForm):
     variation_name = StringField("New Variation Name - Leave it blank for existing variation")
     global_name = StringField("Enter Global Name - Must exists in global definition", validators=[InputRequired()])
     is_global_record = BooleanField("Check this if this global is a global record. (Unchecked indicates global field)")
-    hex_data = StringField("Global Field - Enter input data in hex format to initialize the heap. "
+    hex_data = StringField("Global Field - Enter input data in hex format to initialize the global field. "
                            "Leave it blank for global record")
     seg_name = StringField("Global Record - Segment Name. Only required if data for global record is specified.")
     field_data = TextAreaField("Global Record - Enter multiple fields and data separated by comma. "
