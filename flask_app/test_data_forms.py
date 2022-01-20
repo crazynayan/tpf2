@@ -191,7 +191,8 @@ class FieldLengthForm(FlaskForm):
         base_reg.data = base_reg.data.upper()
         if base_reg.data and base_reg.data not in tpf2_app.config["REGISTERS"]:
             raise ValidationError("Invalid Base Register - Register can be from R0 to R15")
-        if (not base_reg.data or base_reg.data == "R0") and self.macro_name not in tpf2_app.config["DEFAULT_MACROS"]:
+        default_macros = set(tpf2_app.config["DEFAULT_MACROS"]).union({"GLOBAS", "GLOBYS", "GL0BS"})
+        if (not base_reg.data or base_reg.data == "R0") and self.macro_name not in default_macros:
             raise ValidationError(f"Base Register cannot be blank or R0 for macro {self.macro_name}")
         return
 
