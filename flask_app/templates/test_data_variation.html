@@ -294,8 +294,19 @@
             <div class="row">
                 <div class="col-md">
                     <div class="list-group list-group-item list-group-item-light">
-                        Variation - Field={{ output.variation.core }} PNR={{ output.variation.pnr }}
-                        TPFDF={{ output.variation.tpfdf }} File={{ output.variation.file }}
+                        Variation -
+                        {% if output.variation_name.core and test_data_variation.core %}
+                            Field=<span class="font-weight-bold">{{ output.variation_name.core }}</span>.
+                        {% endif %}
+                        {% if output.variation_name.pnr and test_data_variation.pnr %}
+                            PNR=<span class="font-weight-bold">{{ output.variation_name.pnr }}</span>.
+                        {% endif %}
+                        {% if output.variation_name.tpfdf and test_data_variation.tpfdf %}
+                            TPFDF=<span class="font-weight-bold">{{ output.variation_name.tpfdf }}</span>.
+                        {% endif %}
+                        {% if output.variation_name.file and test_data_variation.file %}
+                            File=<span class="font-weight-bold">{{ output.variation_name.file }}</span>.
+                        {% endif %}
                     </div>
                 </div>
             </div>
