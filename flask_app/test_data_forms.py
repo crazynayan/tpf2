@@ -9,29 +9,9 @@ from wtforms.widgets import Input
 
 from config import Config
 from flask_app import tpf2_app
+from flask_app.form_prompts import OLD_FIELD_DATA_PROMPT, PNR_OUTPUT_FIELD_DATA_PROMPT, PNR_INPUT_FIELD_DATA_PROMPT, \
+    PNR_KEY_PROMPT, PNR_LOCATOR_PROMPT, PNR_TEXT_PROMPT
 from flask_app.server import Server
-
-FIELD_DATA_TEXT: str = """
-Enter multiple fields and data separated by comma. The field and data should be separated by colon. All fields should be 
- from a single macro mentioned above. Data by default is in hex characters. Odd number of digit will be considered a 
- 4 byte number. Prefix with 0 to make it odd for enforcing a number. Non hex characters are considered as text. Prefix 
- with quote to enforce text.
-"""
-
-PNR_OUTPUT_FIELD_DATA_TEXT: str = """
-Enter multiple fields with attributes separated by comma. Format of each field is FieldName:Length:ItemNumber.
- FieldName should be from PNR macros. Length should start with L followed by a number. If it is not specified
- then the length from the data macro will be automatically determined. ItemNumber should start with I followed by a
- number. If it is not specified then item number 1 is assumed. An e.g. is as follows
- PR00_G0_TYP,PR00_G0_TYP:I2,PR00_G0_TYP:L2:I3
-"""
-
-PNR_INPUT_FIELD_DATA_TEXT: str = """
-Enter multiple fields with attributes separated by comma. Leave it blank if you want to provide PNR text.
- Format of each field is FieldName:HexData:ItemNumber. FieldName should be from PNR macros. 
- ItemNumber should start with I followed by a number. All item numbers should be in sequence without gaps. 
- An e.g. is as follows PR00_G0_BAS_0_AAC:E2E2:I1,PR00_G0_TYP:02:I2
-"""
 
 
 def form_validate_field_data(data: str) -> str:
@@ -540,9 +520,9 @@ class UpdateGlobalForm(FlaskForm):
 
 
 class PnrOutputForm(FlaskForm):
-    key = SelectField("Select type of PNR element", choices=tpf2_app.config["PNR_KEYS"], default="header")
-    locator = StringField("Enter PNR Locator - 6 character alpha numeric - Leave it blank for AAA PNR")
-    field_item_len = TextAreaField(PNR_OUTPUT_FIELD_DATA_TEXT, render_kw={"rows": "5"})
+    key = SelectField(PNR_KEY_PROMPT, choices=tpf2_app.config["PNR_KEYS"], default="header")
+    locator = StringField(PNR_LOCATOR_PROMPT)
+    field_item_len = TextAreaField(PNR_OUTPUT_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
     save = SubmitField("Save & Continue - Add Further Data")
 
     def __init__(self, test_data_id: str, *args, **kwargs):
@@ -572,7 +552,7 @@ class PnrOutputForm(FlaskForm):
 
 
 class UpdatePnrOutputForm(FlaskForm):
-    field_item_len = TextAreaField(PNR_OUTPUT_FIELD_DATA_TEXT, render_kw={"rows": "5"})
+    field_item_len = TextAreaField(PNR_OUTPUT_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
     save = SubmitField("Save & Continue - Add Further Data")
 
     def __init__(self, test_data_id: str, pnr_output: dict, *args, **kwargs):
@@ -599,11 +579,10 @@ class UpdatePnrOutputForm(FlaskForm):
 class PnrInputForm(FlaskForm):
     variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
     variation_name = StringField("New Variation Name - Leave it blank for existing variation")
-    key = SelectField("Select type of PNR element", choices=tpf2_app.config["PNR_KEYS"], default="header")
-    locator = StringField("Enter PNR Locator - 6 character alpha numeric - Leave it blank for AAA PNR")
-    text = StringField("Enter text - Separate it with comma for multiple PNR elements. Leave it blank if you want to"
-                       " provide field  data in hex.")
-    field_data_item = TextAreaField(PNR_INPUT_FIELD_DATA_TEXT, render_kw={"rows": "5"})
+    key = SelectField(PNR_KEY_PROMPT, choices=tpf2_app.config["PNR_KEYS"], default="header")
+    locator = StringField(PNR_LOCATOR_PROMPT)
+    text = StringField(PNR_TEXT_PROMPT)
+    field_data_item = TextAreaField(PNR_INPUT_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
     save = SubmitField("Save & Continue - Add Further Data")
 
     def __init__(self, test_data_id: str, *args, **kwargs):
@@ -644,9 +623,8 @@ class PnrInputForm(FlaskForm):
 
 
 class UpdatePnrInputForm(FlaskForm):
-    text = StringField("Enter text - Separate it with comma for multiple PNR elements. Leave it blank if you want to"
-                       " provide field  data in hex.")
-    field_data_item = TextAreaField(PNR_INPUT_FIELD_DATA_TEXT, render_kw={"rows": "5"})
+    text = StringField(PNR_TEXT_PROMPT)
+    field_data_item = TextAreaField(PNR_INPUT_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
     save = SubmitField("Save & Continue - Add Further Data")
 
     def __init__(self, test_data_id: str, pnr_input: dict, *args, **kwargs):
@@ -705,7 +683,7 @@ class TpfdfForm(FlaskForm):
     macro_name = StringField("Enter the name of TPFDF macro", validators=[InputRequired()])
     key = StringField("Enter key as 2 hex characters",
                       validators=[InputRequired(), Length(min=2, max=2, message="Please enter 2 characters only")])
-    field_data = TextAreaField(FIELD_DATA_TEXT, render_kw={"rows": "5"}, validators=[InputRequired()])
+    field_data = TextAreaField(OLD_FIELD_DATA_PROMPT, render_kw={"rows": "5"}, validators=[InputRequired()])
     save = SubmitField("Save & Continue - Add Further Data")
 
     @staticmethod
@@ -753,28 +731,30 @@ class FixedFileForm(FlaskForm):
     fixed_fch_count = IntegerField("Fixed File - Number of Forward Chains", validators=[NumberRange(0, 100)], default=0,
                                    widget=Input(input_type="number"))
     fixed_fch_label = StringField("Fixed File - Forward Chain Label (Required only if number of forward chain is > 0")
-    fixed_field_data = TextAreaField(f"Fixed File - Field Data ({FIELD_DATA_TEXT})", render_kw={"rows": "3"})
+    fixed_field_data = TextAreaField(f"Fixed File - Field Data ({OLD_FIELD_DATA_PROMPT})", render_kw={"rows": "3"})
     fixed_item_field = StringField("Fixed File Item - Item Label")
     fixed_item_adjust = BooleanField("Fixed File Item  - Check this ON if the item field data has similar field "
                                      "names as the item field name")
     fixed_item_repeat = IntegerField("Fixed File Item - No of times you want this item to be repeated (1 to 100)",
                                      validators=[NumberRange(0, 100)], default=1, widget=Input(input_type="number"))
     fixed_item_count = StringField("Fixed File Item - Item Count Label")
-    fixed_item_field_data = TextAreaField(f"Fixed File - Item Field Data ({FIELD_DATA_TEXT})", render_kw={"rows": "3"})
+    fixed_item_field_data = TextAreaField(f"Fixed File - Item Field Data ({OLD_FIELD_DATA_PROMPT})",
+                                          render_kw={"rows": "3"})
     pool_macro_name = StringField("Pool File - Macro Name")
     pool_rec_id = StringField("Pool File - Record Id (4 hex characters or 2 alphabets)")
     pool_index_field = StringField("Pool File - Field in Fixed File where reference of this pool file will be stored")
     pool_fch_count = IntegerField("Pool File - Number of Forward Chains", validators=[NumberRange(0, 100)], default=0,
                                   widget=Input(input_type="number"))
     pool_fch_label = StringField("Pool File - Forward Chain Label (Required only if number of forward chain is > 0")
-    pool_field_data = TextAreaField(f"Pool File - Field Data ({FIELD_DATA_TEXT})", render_kw={"rows": "3"})
+    pool_field_data = TextAreaField(f"Pool File - Field Data ({OLD_FIELD_DATA_PROMPT})", render_kw={"rows": "3"})
     pool_item_field = StringField("Pool File Item - Item Label")
     pool_item_adjust = BooleanField("Pool File Item  - Check this ON if the item field data has similar field "
                                     "names as the item field name")
     pool_item_repeat = IntegerField("Pool File Item - No of times you want this item to be repeated (1 to 100)",
                                     validators=[NumberRange(0, 100)], default=1, widget=Input(input_type="number"))
     pool_item_count = StringField("Pool File Item - Item Count Label")
-    pool_item_field_data = TextAreaField(f"Pool File - Item Field Data ({FIELD_DATA_TEXT})", render_kw={"rows": "3"})
+    pool_item_field_data = TextAreaField(f"Pool File - Item Field Data ({OLD_FIELD_DATA_PROMPT})",
+                                         render_kw={"rows": "3"})
     save = SubmitField("Save & Continue - Add Further Data")
 
     @staticmethod

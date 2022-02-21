@@ -1,5 +1,5 @@
 from base64 import b64decode, b64encode
-from typing import Dict, List
+from typing import Dict, List, Union
 from urllib.parse import quote
 
 import requests
@@ -13,7 +13,7 @@ from config import Config
 class Server:
 
     @staticmethod
-    def _common_request(url: str, method: str = "GET", **kwargs) -> dict:
+    def _common_request(url: str, method: str = "GET", **kwargs) -> Union[list, dict]:
         request_url = f"{Config.SERVER_URL}{url}"
         if "auth" not in kwargs:
             if current_user.is_anonymous:
@@ -352,3 +352,39 @@ class Server:
     def get_variations(cls, test_data_id: str, variation_type: str) -> List[dict]:
         response = cls._common_request(f"/test_data/{test_data_id}/variations", params={"type": variation_type})
         return response["variations"] if response else list()
+
+    @classmethod
+    def create_new_pnr_template(cls, body: dict) -> dict:
+        return cls._common_request(f"/templates/pnr/create", method="POST", json=body)
+
+    @classmethod
+    def add_to_existing_pnr_template(cls, body: dict) -> dict:
+        return cls._common_request(f"/templates/pnr/add", method="POST", json=body)
+
+    @classmethod
+    def get_pnr_templates(cls) -> Union[list, dict]:
+        return cls._common_request(f"/templates/pnr")
+
+    @classmethod
+    def get_template_by_name(cls, name: str) -> Union[list, dict]:
+        return cls._common_request(f"/templates/name", params={"name": name})
+
+    @classmethod
+    def get_template_by_id(cls, template_id: str) -> dict:
+        return cls._common_request(f"/templates/{template_id}")
+
+    @classmethod
+    def rename_template(cls, body: dict) -> dict:
+        return cls._common_request(f"/templates/rename", method="POST", json=body)
+
+    @classmethod
+    def update_pnr_template(cls, body: dict) -> dict:
+        return cls._common_request(f"/templates/pnr/update", method="POST", json=body)
+
+    @classmethod
+    def delete_template_by_id(cls, template_id: str) -> dict:
+        return cls._common_request(f"/templates/{template_id}", method="DELETE")
+
+    @classmethod
+    def delete_template_by_name(cls, body: dict) -> dict:
+        return cls._common_request(f"/templates/name/delete", method="POST", json=body)
