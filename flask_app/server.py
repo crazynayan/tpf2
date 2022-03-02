@@ -388,3 +388,7 @@ class Server:
     @classmethod
     def delete_template_by_name(cls, body: dict) -> dict:
         return cls._common_request(f"/templates/name/delete", method="POST", json=body)
+
+    @classmethod
+    def merge_pnr_template(cls, test_data_id: str, body: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/templates/pnr/merge", method="POST", json=body)

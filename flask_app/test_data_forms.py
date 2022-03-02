@@ -10,7 +10,7 @@ from wtforms.widgets import Input
 from config import Config
 from flask_app import tpf2_app
 from flask_app.form_prompts import OLD_FIELD_DATA_PROMPT, PNR_OUTPUT_FIELD_DATA_PROMPT, PNR_INPUT_FIELD_DATA_PROMPT, \
-    PNR_KEY_PROMPT, PNR_LOCATOR_PROMPT, PNR_TEXT_PROMPT
+    PNR_KEY_PROMPT, PNR_LOCATOR_PROMPT, PNR_TEXT_PROMPT, VARIATION_PROMPT, VARIATION_NAME_PROMPT
 from flask_app.server import Server
 
 
@@ -178,8 +178,8 @@ class FieldLengthForm(FlaskForm):
 
 
 class FieldDataForm(FlaskForm):
-    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
-    variation_name = StringField("New Variation Name - Leave it blank for existing variation")
+    variation = SelectField(VARIATION_PROMPT, coerce=int)
+    variation_name = StringField(VARIATION_NAME_PROMPT)
     field_data = StringField("Enter Data - Input hex characters. Odd number of digit will be considered a number. "
                              "Prefix with 0 to make the number a digit. Non hex characters are considered as text. "
                              "Prefix with quote to enforce text.", validators=[InputRequired()])
@@ -200,16 +200,16 @@ def init_variation(variation: SelectField, variation_name: StringField, test_dat
         return dict()
     if variation.data == -1:
         variation_name.data = variation_name.data.strip()
-        variation = variations[-1]["variation"] + 1 if variations else 0
+        variation_number = variations[-1]["variation"] + 1 if variations else 0
     else:
         variation_name.data = next(variation_name for variation, variation_name in variation.choices)
-        variation = variation.data
-    return {"variation": variation, "variation_name": variation_name.data}
+        variation_number = variation.data
+    return {"variation": variation_number, "variation_name": variation_name.data}
 
 
 class HeapForm(FlaskForm):
-    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
-    variation_name = StringField("New Variation Name - Leave it blank for existing variation")
+    variation = SelectField(VARIATION_PROMPT, coerce=int)
+    variation_name = StringField(VARIATION_NAME_PROMPT)
     heap_name = StringField("Enter Heap Name - Must be alphanumeric", validators=[InputRequired()])
     hex_data = StringField("Enter input data in hex format to initialize the heap. Leave it blank to init with zeroes")
     seg_name = StringField("Segment Name. Leave it blank to either init with zeroes or with hex data")
@@ -256,8 +256,8 @@ class HeapForm(FlaskForm):
 
 
 class MacroForm(FlaskForm):
-    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
-    variation_name = StringField("New Variation Name - Leave it blank for existing variation")
+    variation = SelectField(VARIATION_PROMPT, coerce=int)
+    variation_name = StringField(VARIATION_NAME_PROMPT)
     macro_name = SelectField("Select a data macro", validators=[InputRequired()])
     field_data = TextAreaField("Enter multiple fields and data separated by comma. The field and data should be "
                                "separated by colon. Data should be in hex format. Leave it blank to either init with "
@@ -293,8 +293,8 @@ class MacroForm(FlaskForm):
 
 
 class EcbLevelForm(FlaskForm):
-    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
-    variation_name = StringField("New Variation Name - Leave it blank for existing variation")
+    variation = SelectField(VARIATION_PROMPT, coerce=int)
+    variation_name = StringField(VARIATION_NAME_PROMPT)
     ecb_level = SelectField("Select an ECB level")
     hex_data = StringField("Enter input data in hex format to initialize the block. Leave it blank to either init "
                            "with zeroes or with field data")
@@ -422,8 +422,8 @@ class UpdateMacroForm(FlaskForm):
 
 
 class GlobalForm(FlaskForm):
-    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
-    variation_name = StringField("New Variation Name - Leave it blank for existing variation")
+    variation = SelectField(VARIATION_PROMPT, coerce=int)
+    variation_name = StringField(VARIATION_NAME_PROMPT)
     global_name = StringField("Enter Global Name - Must exists in global definition", validators=[InputRequired()])
     is_global_record = BooleanField("Check this if this global is a global record. (Unchecked indicates global field)")
     hex_data = StringField("Global Field - Enter input data in hex format to initialize the global field. "
@@ -577,8 +577,8 @@ class UpdatePnrOutputForm(FlaskForm):
 
 
 class PnrInputForm(FlaskForm):
-    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
-    variation_name = StringField("New Variation Name - Leave it blank for existing variation")
+    variation = SelectField(VARIATION_PROMPT, coerce=int)
+    variation_name = StringField(VARIATION_NAME_PROMPT)
     key = SelectField(PNR_KEY_PROMPT, choices=tpf2_app.config["PNR_KEYS"], default="header")
     locator = StringField(PNR_LOCATOR_PROMPT)
     text = StringField(PNR_TEXT_PROMPT)
@@ -678,8 +678,8 @@ class RegisterFieldDataForm(FlaskForm):
 
 
 class TpfdfForm(FlaskForm):
-    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
-    variation_name = StringField("New Variation Name - Leave it blank for existing variation")
+    variation = SelectField(VARIATION_PROMPT, coerce=int)
+    variation_name = StringField(VARIATION_NAME_PROMPT)
     macro_name = StringField("Enter the name of TPFDF macro", validators=[InputRequired()])
     key = StringField("Enter key as 2 hex characters",
                       validators=[InputRequired(), Length(min=2, max=2, message="Please enter 2 characters only")])
@@ -721,8 +721,8 @@ class DebugForm(FlaskForm):
 
 
 class FixedFileForm(FlaskForm):
-    variation = SelectField("Select variation or choose 'New Variation' to create a new variation", coerce=int)
-    variation_name = StringField("New Variation Name - Leave it blank for existing variation")
+    variation = SelectField(VARIATION_PROMPT, coerce=int)
+    variation_name = StringField(VARIATION_NAME_PROMPT)
     macro_name = StringField("Fixed File - Macro Name", validators=[InputRequired()])
     rec_id = StringField("Fixed File - Record ID (4 hex characters or 2 alphabets)", validators=[InputRequired()])
     fixed_type = StringField("Fixed File - File Type (Equate name or number)", validators=[InputRequired()])

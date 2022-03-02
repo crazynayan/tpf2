@@ -1,3 +1,6 @@
+VARIATION_PROMPT: str = "Select variation or choose 'New Variation' to create a new variation"
+VARIATION_NAME_PROMPT: str = "New Variation Name - Leave it blank for existing variation"
+
 OLD_FIELD_DATA_PROMPT: str = """
 Enter multiple fields and data separated by comma. The field and data should be separated by colon. All fields should be 
  from a single macro mentioned above. Data by default is in hex characters. Odd number of digit will be considered a 

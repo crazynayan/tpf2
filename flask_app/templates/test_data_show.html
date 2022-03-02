@@ -466,16 +466,22 @@
     {% if edit_mode or test_data.pnr %}
         <br>
         <div class="row" id="input-pnr">
-            <div class="col-md">
+            <div class="col-md{% if edit_mode %}-6{% endif %}">
                 <div class="list-group list-group-item list-group-item-secondary">
                     Input - PNR
                 </div>
             </div>
             {% if edit_mode %}
-                <div class="col-md">
+                <div class="col-md-3">
                     <a class="btn btn-block btn-success "
                        href="{{ url_for('add_input_pnr', test_data_id=test_data.id) }}">
                         <span class="oi oi-plus"></span> Add PNR Elements
+                    </a>
+                </div>
+                <div class="col-md-3">
+                    <a class="btn btn-block btn-warning"
+                       href="{{ url_for('merge_pnr_template', test_data_id=test_data.id) }}">
+                        <span class="oi oi-loop"></span> Merge from Templates
                     </a>
                 </div>
             {% endif %}

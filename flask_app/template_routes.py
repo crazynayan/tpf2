@@ -6,7 +6,7 @@ from werkzeug.utils import redirect
 
 from flask_app import tpf2_app
 from flask_app.server import Server
-from flask_app.template_forms import TemplateRenameForm, PnrCreateForm, PnrAddForm, PnrUpdateForm
+from flask_app.template_forms import TemplateRenameForm, PnrCreateForm, PnrAddForm, PnrUpdateForm, TemplateMergeForm
 from flask_app.test_data_forms import DeleteForm
 from flask_app.user import cookie_login_required
 
@@ -114,3 +114,15 @@ def delete_template_by_id(template_id: str):
     if not name:
         return redirect(url_for("view_pnr_templates"))
     return redirect(url_for("view_template", name=name))
+
+
+@tpf2_app.route("/test_data/<string:test_data_id>/templates/pnr/merge", methods=["GET", "POST"])
+@cookie_login_required
+def merge_pnr_template(test_data_id: str):
+    form = TemplateMergeForm(test_data_id, template_type="pnr")
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    if not form.validate_on_submit():
+        return render_template("test_data_form.html", title="Merge PNR Template", form=form, test_data_id=test_data_id)
+    flash(form.response["message"])
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-pnr"))

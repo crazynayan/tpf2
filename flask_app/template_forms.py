@@ -1,11 +1,13 @@
 from flask import request
+from flask_login import current_user
 from flask_wtf import FlaskForm
 from wtforms import SelectField, StringField, TextAreaField, SubmitField, ValidationError
 
 from config import Config
 from flask_app.form_prompts import PNR_KEY_PROMPT, PNR_LOCATOR_PROMPT, PNR_TEXT_PROMPT, PNR_INPUT_FIELD_DATA_PROMPT, \
-    TEMPLATE_NAME_PROMPT, TEMPLATE_DESCRIPTION_PROMPT
+    TEMPLATE_NAME_PROMPT, TEMPLATE_DESCRIPTION_PROMPT, VARIATION_PROMPT, VARIATION_NAME_PROMPT
 from flask_app.server import Server
+from flask_app.test_data_forms import init_variation
 
 
 class PnrCreateForm(FlaskForm):
@@ -146,3 +148,41 @@ class TemplateRenameForm(FlaskForm):
     def validate_description(self, _):
         if "error_fields" in self.response and "description" in self.response["error_fields"]:
             raise ValidationError(self.response["error_fields"]["description"])
+
+
+class TemplateMergeForm(FlaskForm):
+    variation = SelectField(VARIATION_PROMPT, coerce=int)
+    variation_name = StringField(VARIATION_NAME_PROMPT)
+    template_name = SelectField("Select a template")
+    save = SubmitField("Merge Template with Test Data")
+
+    def __init__(self, test_data_id: str, template_type: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        body: dict = init_variation(self.variation, self.variation_name, test_data_id, template_type)
+        if not current_user.is_authenticated:
+            return
+        if request.method == "GET":
+            templates: dict = Server.get_pnr_templates()
+            if not current_user.is_authenticated:
+                return
+            self.template_name.choices = [(template["name"], template["name"]) for template in templates]
+            self.response = dict()
+        elif request.method == "POST":
+            self.template_name.choices = [(self.template_name.data, self.template_name.data)]
+            body["template_name"] = self.template_name.data
+            self.response = Server.merge_pnr_template(test_data_id, body)
+
+    def validate_variation(self, _):
+        if "error" in self.response and self.response["error"]:
+            if "message" in self.response and self.response["message"]:
+                raise ValidationError(self.response["message"])
+            if "error_fields" in self.response and "variation" in self.response["error_fields"]:
+                raise ValidationError(self.response["error_fields"]["variation"])
+
+    def validate_variation_name(self, _):
+        if "error_fields" in self.response and "variation_name" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["variation_name"])
+
+    def validate_template_name(self, _):
+        if "error_fields" in self.response and "template_name" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["template_name"])
