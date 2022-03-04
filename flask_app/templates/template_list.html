@@ -22,7 +22,8 @@
                 <th class="text-center d-none d-md-table-cell" scope="col">Description</th>
                 <th class="text-center d-none d-md-table-cell" scope="col">Owner</th>
                 <th class="text-center d-none d-md-table-cell" scope="col">Locator</th>
-                <th class="text-center d-none d-md-table-cell" scope="col">Count</th>
+                <th class="text-center d-none d-md-table-cell" scope="col">Keys</th>
+                <th class="text-center d-none d-md-table-cell" scope="col">Links</th>
                 <th class="text-center" scope="col">Open</th>
             </tr>
             </thead>
@@ -35,6 +36,7 @@
                     <td class="text-center d-none d-md-table-cell">{{ template.owner }}</td>
                     <td class="text-center d-none d-md-table-cell">{{ template.locator }}</td>
                     <td class="text-center d-none d-md-table-cell">{{ template.count }}</td>
+                    <td class="text-center d-none d-md-table-cell">{{ template.test_data_links|length }}</td>
                     <td class="text-center">
                         <a class="btn btn-primary"
                            href="{{ url_for('view_template', name=template.name) }}"

@@ -515,7 +515,7 @@ def add_input_pnr(test_data_id: str):
     if not form.validate_on_submit():
         return render_template("test_data_form.html", title="Add PNR Input", form=form, test_data_id=test_data_id)
     flash(form.response["message"])
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-pnr"))
 
 
 @tpf2_app.route("/test_data/<string:test_data_id>/input/pnr/<pnr_input_id>/e", methods=["GET", "POST"])
@@ -533,7 +533,7 @@ def update_input_pnr(test_data_id: str, pnr_input_id: str, **kwargs):
     if not form.validate_on_submit():
         return render_template("test_data_form.html", title="Update Input PNR", form=form, test_data_id=test_data_id)
     flash(form.response["message"])
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-pnr"))
 
 
 @tpf2_app.route("/test_data/<string:test_data_id>/input/pnr/<pnr_input_id>")

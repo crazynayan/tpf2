@@ -472,16 +472,22 @@
                 </div>
             </div>
             {% if edit_mode %}
-                <div class="col-md-3">
+                <div class="col-md">
                     <a class="btn btn-block btn-success "
                        href="{{ url_for('add_input_pnr', test_data_id=test_data.id) }}">
-                        <span class="oi oi-plus"></span> Add PNR Elements
+                        <span class="oi oi-plus"></span> Add
                     </a>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md">
                     <a class="btn btn-block btn-warning"
                        href="{{ url_for('merge_pnr_template', test_data_id=test_data.id) }}">
-                        <span class="oi oi-loop"></span> Merge from Templates
+                        <span class="oi oi-loop"></span> Merge
+                    </a>
+                </div>
+                <div class="col-md">
+                    <a class="btn btn-block btn-warning"
+                       href="{{ url_for('create_link_pnr_template', test_data_id=test_data.id) }}">
+                        <span class="oi oi-link-intact"></span> Link
                     </a>
                 </div>
             {% endif %}
@@ -500,57 +506,79 @@
                 </div>
             {% endif %}
             {% for pnr in variation.list %}
-                <div class="row">
-                    <div class="col-md-2 text-center font-weight-bold">
-                        {% if pnr.locator != "AAAAAA" %}
-                            {{ pnr.locator }}
-                        {% endif %}
-                    </div>
-                    <div class="col-md-2 font-weight-bold">
-                        {{ pnr.key.upper() }}
+                <div class="{% if pnr.link_status == "inactive" %}alert-secondary {% elif pnr.link_status == "active" %}alert-primary{% endif %}">
+                    <div class="row">
+                        <div class="col-md-2 text-center font-weight-bold">
+                            {% if pnr.locator != "AAAAAA" %}
+                                {{ pnr.locator }}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-2 font-weight-bold">
+                            {{ pnr.key.upper() }}
+                        </div>
                         {% if edit_mode %}
-                            <a class="badge badge-warning edit-icon"
-                               href="{{ url_for('update_input_pnr', test_data_id=test_data.id, pnr_input_id=pnr.id) }}">
-                                &#9998;
-                            </a>
-                            <a class="badge badge-danger"
-                               href="{{ url_for('delete_input_pnr', test_data_id=test_data.id, pnr_input_id=pnr.id) }}">
-                                X
-                            </a>
+                            <div class="col-md-1">
+                                {% if pnr.link %}
+                                    <a class="badge badge-warning edit-icon"
+                                       href="{{ url_for('update_link_pnr_template', test_data_id=test_data.id,
+                                           variation=pnr.variation, name=pnr.link) }}">
+                                        &#9998;
+                                    </a>
+                                    <a class="badge badge-danger"
+                                       href="{{ url_for('delete_link_pnr_template', test_data_id=test_data.id,
+                                           variation=pnr.variation, name=pnr.link) }}">
+                                        X
+                                    </a>
+                                {% else %}
+                                    <a class="badge badge-warning edit-icon"
+                                       href="{{ url_for('update_input_pnr', test_data_id=test_data.id, pnr_input_id=pnr.id) }}">
+                                        &#9998;
+                                    </a>
+                                    <a class="badge badge-danger"
+                                       href="{{ url_for('delete_input_pnr', test_data_id=test_data.id, pnr_input_id=pnr.id) }}">
+                                        X
+                                    </a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        {% if pnr.data %}
+                            <div class="col-md-7">
+                                <kbd>{{ pnr.data }}</kbd>
+                            </div>
+                        {% endif %}
+                        {% if pnr.link %}
+                            <div class="col-md-7">
+                                {{ pnr.link_status|title }} link from {{ pnr.link }}
+                            </div>
                         {% endif %}
                     </div>
-                    {% if pnr.data %}
-                        <div class="col-md-8">
-                            <kbd>{{ pnr.data }}</kbd>
+                    {% for field_data in pnr.field_data %}
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                {{ field_data.field }}
+                            </div>
+                            {% for value in field_data.data %}
+                                <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                            {% endfor %}
                         </div>
-                    {% endif %}
+                    {% endfor %}
+                    {% for pnr_text in pnr.text %}
+                        <div class="row">
+                            <div class="col-md-3">Item Number #{{ loop.index }}</div>
+                            <div class="col-md-9">{{ pnr_text }}</div>
+                        </div>
+                    {% endfor %}
+                    {% for field_data_item in pnr.field_data_item %}
+                        <div class="row">
+                            <div class="col-md-3">
+                                {{ field_data_item.field }} #{{ field_data_item.item_number }}
+                            </div>
+                            {% for value in field_data_item.data %}
+                                <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
                 </div>
-                {% for field_data in pnr.field_data %}
-                    <div class="row">
-                        <div class="col-md-3 text-center">
-                            {{ field_data.field }}
-                        </div>
-                        {% for value in field_data.data %}
-                            <div class="col-md-3"><kbd>{{ value }}</kbd></div>
-                        {% endfor %}
-                    </div>
-                {% endfor %}
-                {% for pnr_text in pnr.text %}
-                    <div class="row">
-                        <div class="col-md-3">Item Number #{{ loop.index }}</div>
-                        <div class="col-md-9">{{ pnr_text }}</div>
-                    </div>
-                {% endfor %}
-                {% for field_data_item in pnr.field_data_item %}
-                    <div class="row">
-                        <div class="col-md-3">
-                            {{ field_data_item.field }} #{{ field_data_item.item_number }}
-                        </div>
-                        {% for value in field_data_item.data %}
-                            <div class="col-md-3"><kbd>{{ value }}</kbd></div>
-                        {% endfor %}
-                    </div>
-                {% endfor %}
             {% endfor %}
         {% endfor %}
     {% elif edit_mode %}

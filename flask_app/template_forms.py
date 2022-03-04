@@ -150,27 +150,29 @@ class TemplateRenameForm(FlaskForm):
             raise ValidationError(self.response["error_fields"]["description"])
 
 
-class TemplateMergeForm(FlaskForm):
+class TemplateLinkMergeForm(FlaskForm):
     variation = SelectField(VARIATION_PROMPT, coerce=int)
     variation_name = StringField(VARIATION_NAME_PROMPT)
     template_name = SelectField("Select a template")
-    save = SubmitField("Merge Template with Test Data")
+    save = SubmitField("Template with Test Data")
 
-    def __init__(self, test_data_id: str, template_type: str, *args, **kwargs):
+    def __init__(self, test_data_id: str, template_type: str, action_type: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         body: dict = init_variation(self.variation, self.variation_name, test_data_id, template_type)
         if not current_user.is_authenticated:
             return
-        if request.method == "GET":
-            templates: dict = Server.get_pnr_templates()
-            if not current_user.is_authenticated:
-                return
-            self.template_name.choices = [(template["name"], template["name"]) for template in templates]
-            self.response = dict()
-        elif request.method == "POST":
-            self.template_name.choices = [(self.template_name.data, self.template_name.data)]
+        templates: dict = Server.get_pnr_templates()
+        if not current_user.is_authenticated:
+            return
+        self.template_name.choices = [(template["name"], template["name"]) for template in templates]
+        self.response = dict()
+        self.save.label.text = f"{action_type.title()} {self.save.label.text}"
+        if request.method == "POST":
             body["template_name"] = self.template_name.data
-            self.response = Server.merge_pnr_template(test_data_id, body)
+            if action_type == "merge":
+                self.response = Server.merge_pnr_template(test_data_id, body)
+            else:
+                self.response = Server.create_link_pnr_template(test_data_id, body)
 
     def validate_variation(self, _):
         if "error" in self.response and self.response["error"]:
@@ -186,3 +188,34 @@ class TemplateMergeForm(FlaskForm):
     def validate_template_name(self, _):
         if "error_fields" in self.response and "template_name" in self.response["error_fields"]:
             raise ValidationError(self.response["error_fields"]["template_name"])
+
+
+class TemplateLinkUpdateForm(FlaskForm):
+    template_name = SelectField("Select a template")
+    save = SubmitField("Update links")
+
+    def __init__(self, test_data_id: str, td_element: dict, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.display_fields = list()
+        variation_name = f" ({td_element['variation_name']})" if td_element["variation_name"] else str()
+        self.display_fields.append(("Variation", f"{td_element['variation']}{variation_name}"))
+        self.display_fields.append(("Template Name", td_element["link"]))
+        templates: dict = Server.get_pnr_templates()
+        if not current_user.is_authenticated:
+            return
+        self.template_name.choices = [(template["name"], template["name"]) for template in templates]
+        self.response = dict()
+        if request.method == "POST":
+            body = {"variation_name": self.template_name.data, "template_name": td_element["link"],
+                    "variation": td_element["variation"]}
+            self.response = Server.update_link_pnr_template(test_data_id, body)
+        else:
+            self.template_name.data = td_element["link"]
+
+    def validate_template_name(self, _):
+        if "error" in self.response and self.response["error"]:
+            if "message" in self.response and self.response["message"]:
+                raise ValidationError(self.response["message"])
+            if "error_fields" in self.response:
+                for error_label in self.response["error_fields"]:
+                    raise ValidationError(self.response["error_fields"][error_label])
