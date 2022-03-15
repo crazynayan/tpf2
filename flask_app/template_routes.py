@@ -7,8 +7,7 @@ from werkzeug.utils import redirect
 from flask_app import tpf2_app
 from flask_app.server import Server
 from flask_app.template_forms import TemplateRenameCopyForm, PnrCreateForm, PnrAddForm, PnrUpdateForm, \
-    TemplateLinkMergeForm, TemplateLinkUpdateForm
-from flask_app.test_data_forms import DeleteForm
+    TemplateLinkMergeForm, TemplateLinkUpdateForm, TemplateDeleteForm
 from flask_app.test_data_routes import test_data_required
 from flask_app.user import cookie_login_required
 
@@ -29,15 +28,15 @@ def view_template():
     templates = Server.get_template_by_name(name)
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
-    form = DeleteForm()
+    form = TemplateDeleteForm(name)
     if not form.validate_on_submit():
         return render_template("template_view.html", title="Template", templates=templates, form=form, name=name)
-    response = Server.delete_template_by_name({"name": name})
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
-    if "error" in response and response["error"]:
-        flash(response["message"])
-    return redirect(url_for("view_pnr_templates"))
+    if "message" in form.response:
+        flash(form.response["message"])
+    return redirect(url_for("view_template", name=name)) if form.template_id.data \
+        else redirect(url_for("view_pnr_templates"))
 
 
 @tpf2_app.route("/templates/rename", methods=["GET", "POST"])
@@ -120,20 +119,6 @@ def update_pnr_template(template_id: str):
         return render_template("template_form.html", title="Update PNR Template", form=form, name=name)
     if "message" in form.response:
         flash(form.response["message"])
-    return redirect(url_for("view_template", name=name))
-
-
-@tpf2_app.route("/templates/delete/<string:template_id>", methods=["GET"])
-@cookie_login_required
-def delete_template_by_id(template_id: str):
-    response: dict = Server.delete_template_by_id(template_id)
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    if "message" in response:
-        flash(response["message"])
-    name = unquote(request.args.get("name", str()))
-    if not name:
-        return redirect(url_for("view_pnr_templates"))
     return redirect(url_for("view_template", name=name))
 
 

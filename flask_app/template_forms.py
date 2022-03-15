@@ -1,7 +1,7 @@
 from flask import request
 from flask_login import current_user
 from flask_wtf import FlaskForm
-from wtforms import SelectField, StringField, TextAreaField, SubmitField, ValidationError
+from wtforms import SelectField, StringField, TextAreaField, SubmitField, ValidationError, HiddenField
 
 from config import Config
 from flask_app.form_prompts import PNR_KEY_PROMPT, PNR_LOCATOR_PROMPT, PNR_TEXT_PROMPT, PNR_INPUT_FIELD_DATA_PROMPT, \
@@ -149,6 +149,20 @@ class TemplateRenameCopyForm(FlaskForm):
     def validate_description(self, _):
         if "error_fields" in self.response and "description" in self.response["error_fields"]:
             raise ValidationError(self.response["error_fields"]["description"])
+
+
+class TemplateDeleteForm(FlaskForm):
+    template_id = HiddenField()
+    submit = SubmitField("Yes - Delete")
+
+    def __init__(self, name: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.response: dict = dict()
+        if request.method == "POST":
+            if self.template_id.data:
+                self.response = Server.delete_template_by_id(self.template_id.data)
+            else:
+                self.response = Server.delete_template_by_name({"name": name})
 
 
 class TemplateLinkMergeForm(FlaskForm):

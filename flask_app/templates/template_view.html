@@ -40,7 +40,7 @@
         </div>
         <div class="col-md-3">
             <button type="button" id="deleteTestDataButton" class="btn btn-block btn-danger"
-                    data-toggle="modal" data-target="#deleteConfirmation">
+                    data-toggle="modal" data-target="#deleteConfirmation" data-id="all">
                 <span class="oi oi-trash"></span> Delete Template
             </button>
         </div>
@@ -82,11 +82,11 @@
                     </td>
                     <td class="text-center">
                         {% if templates|length > 1 %}
-                            <a class="btn btn-danger"
-                               href="{{ url_for('delete_template_by_id', template_id=template.id, name=name) }}"
-                               title="Delete Template">
+                            <button type="button" class="btn btn-danger"
+                                    data-toggle="modal" data-target="#deleteConfirmation" data-id="{{ template.id }}"
+                                    data-key="{{ template.key|upper }}">
                                 <span class="oi oi-trash"></span>
-                            </a>
+                            </button>
                         {% endif %}
                     </td>
                 </tr>
@@ -104,12 +104,13 @@
                     <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                 </div>
                 <div class="modal-body">
-                    <p>Are you sure you want to delete the templates?</p>
-                    <p> This action cannot be undone.</p>
+                    <p id="deleteComment"></p>
+                    <p>This action cannot be undone.</p>
                 </div>
                 <div class="modal-footer">
                     <form id="deleteTestDataForm" action="" method="POST" novalidate>
                         {{ form.hidden_tag() }}
+                        {{ form.template_id() }}
                         {{ form.submit(class_="btn btn-danger") }}
                     </form>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">No - Cancel</button>
@@ -128,6 +129,17 @@
             $("#template-list").DataTable({
                 paging: false
             });
+        });
+        $("#deleteConfirmation").on("show.bs.modal", function (event) {
+            const templateId = $(event.relatedTarget).data("id");
+            if (templateId !== "all") {
+                const key = $(event.relatedTarget).data("key");
+                $(this).find("#deleteComment").text("Are you sure you want to delete " + key + " key from this template?");
+                $(this).find("#template_id").val(templateId);
+            } else {
+                $(this).find("#deleteComment").text("Are you sure you want to delete the whole template?");
+                $(this).find("#template_id").val("");
+            }
         });
     </script>
 {% endblock %}
