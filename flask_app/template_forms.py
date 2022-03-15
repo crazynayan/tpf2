@@ -118,21 +118,22 @@ class PnrUpdateForm(FlaskForm):
             raise ValidationError(self.response["error_fields"]["field_data"])
 
 
-class TemplateRenameForm(FlaskForm):
+class TemplateRenameCopyForm(FlaskForm):
     name = StringField(TEMPLATE_NAME_PROMPT)
     description = TextAreaField(TEMPLATE_DESCRIPTION_PROMPT, render_kw={"rows": "5"})
-    save = SubmitField("Rename Template")
+    save = SubmitField("Template")
 
-    def __init__(self, template: dict, *args, **kwargs):
+    def __init__(self, template: dict, action: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.display_fields = [("Existing Name", template["name"])]
         self.response: dict = dict()
-        if request.method == "GET":
+        self.save.label.text = "Rename Template" if action == "rename" else "Copy Template"
+        if request.method == "GET" and action == "rename":
             self.name.data = template["name"]
             self.description.data = template["description"]
         if request.method == "POST":
             body = {"old_name": template["name"], "new_name": self.name.data, "description": self.description.data}
-            self.response = Server.rename_template(body)
+            self.response = Server.rename_template(body) if action == "rename" else Server.copy_template(body)
 
     def validate_name(self, _):
         if "error" in self.response and self.response["error"]:

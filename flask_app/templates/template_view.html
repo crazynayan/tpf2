@@ -20,19 +20,25 @@
     {% endif %}
     <br>
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <a class="btn btn-success btn-block text-center"
                href="{{ url_for('add_pnr_template', name=name) }}">
                 <span class="oi oi-plus"></span> Add to Template
             </a>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
+            <a class="btn btn-success btn-block text-center"
+               href="{{ url_for('copy_template', name=name) }}">
+                <span class="oi oi-clipboard"></span> Copy Template
+            </a>
+        </div>
+        <div class="col-md-3">
             <a class="btn btn-warning btn-block text-center"
                href="{{ url_for('rename_template', name=name) }}">
                 <span class="oi oi-pencil"></span> Rename Template
             </a>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <button type="button" id="deleteTestDataButton" class="btn btn-block btn-danger"
                     data-toggle="modal" data-target="#deleteConfirmation">
                 <span class="oi oi-trash"></span> Delete Template

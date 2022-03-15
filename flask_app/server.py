@@ -378,6 +378,10 @@ class Server:
         return cls._common_request(f"/templates/rename", method="POST", json=body)
 
     @classmethod
+    def copy_template(cls, body: dict) -> dict:
+        return cls._common_request(f"/templates/copy", method="POST", json=body)
+
+    @classmethod
     def update_pnr_template(cls, body: dict) -> dict:
         return cls._common_request(f"/templates/pnr/update", method="POST", json=body)
 

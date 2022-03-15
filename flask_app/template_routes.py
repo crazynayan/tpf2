@@ -6,7 +6,7 @@ from werkzeug.utils import redirect
 
 from flask_app import tpf2_app
 from flask_app.server import Server
-from flask_app.template_forms import TemplateRenameForm, PnrCreateForm, PnrAddForm, PnrUpdateForm, \
+from flask_app.template_forms import TemplateRenameCopyForm, PnrCreateForm, PnrAddForm, PnrUpdateForm, \
     TemplateLinkMergeForm, TemplateLinkUpdateForm
 from flask_app.test_data_forms import DeleteForm
 from flask_app.test_data_routes import test_data_required
@@ -49,11 +49,30 @@ def rename_template():
         return redirect(url_for("logout"))
     if not templates:
         return redirect(url_for("view_template", name=name))
-    form = TemplateRenameForm(templates[0])
+    form = TemplateRenameCopyForm(templates[0], action="rename")
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     if not form.validate_on_submit():
         return render_template("template_form.html", title="Rename Template", form=form, name=name)
+    if "message" in form.response:
+        flash(form.response["message"])
+    return redirect(url_for("view_template", name=form.name.data))
+
+
+@tpf2_app.route("/templates/copy", methods=["GET", "POST"])
+@cookie_login_required
+def copy_template():
+    name = unquote(request.args.get("name", str()))
+    templates = Server.get_template_by_name(name)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    if not templates:
+        return redirect(url_for("view_template", name=name))
+    form = TemplateRenameCopyForm(templates[0], action="copy")
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    if not form.validate_on_submit():
+        return render_template("template_form.html", title="Copy Template", form=form, name=name)
     if "message" in form.response:
         flash(form.response["message"])
     return redirect(url_for("view_template", name=form.name.data))
