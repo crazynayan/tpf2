@@ -38,9 +38,19 @@
                     <a class="nav-item nav-link active" href="{{ url_for('get_all_test_data') }}">
                         <span class="oi oi-tablet"></span> All Test Data
                     </a>
-                    <a class="nav-item nav-link active" href="{{ url_for('view_pnr_templates') }}">
-                        <span class="oi oi-aperture"></span> Templates
-                    </a>
+                    <div class="nav-item dropdown">
+                        <a class="nav-link active dropdown-toggle" href="#" role="button" data-toggle="dropdown">
+                            <span class="oi oi-aperture"></span> Templates
+                        </a>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{{ url_for('view_templates', template_type='PNR') }}">
+                                PNR Templates
+                            </a>
+                            <a class="dropdown-item" href="{{ url_for('view_templates', template_type='Global') }}">
+                                Global Templates
+                            </a>
+                        </div>
+                    </div>
                     <a class="nav-item nav-link active" href="{{ url_for('segments') }}">
                         <span class="oi oi-list"></span> Segments
                     </a>

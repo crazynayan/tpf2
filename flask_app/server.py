@@ -362,8 +362,8 @@ class Server:
         return cls._common_request(f"/templates/pnr/add", method="POST", json=body)
 
     @classmethod
-    def get_pnr_templates(cls) -> Union[list, dict]:
-        return cls._common_request(f"/templates/pnr")
+    def get_templates(cls, template_type) -> Union[list, dict]:
+        return cls._common_request(f"/templates/{template_type.lower()}")
 
     @classmethod
     def get_template_by_name(cls, name: str) -> Union[list, dict]:
@@ -408,3 +408,15 @@ class Server:
     @classmethod
     def delete_link_pnr_template(cls, test_data_id: str, body: dict) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/templates/pnr/link/delete", method="POST", json=body)
+
+    @classmethod
+    def create_new_global_template(cls, body: dict) -> dict:
+        return cls._common_request(f"/templates/global/create", method="POST", json=body)
+
+    @classmethod
+    def add_to_existing_global_template(cls, body: dict) -> dict:
+        return cls._common_request(f"/templates/global/add", method="POST", json=body)
+
+    @classmethod
+    def update_global_template(cls, body: dict) -> dict:
+        return cls._common_request(f"/templates/global/update", method="POST", json=body)

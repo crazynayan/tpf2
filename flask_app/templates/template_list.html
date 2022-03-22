@@ -6,9 +6,8 @@
             <h1>{{ title }}</h1>
         </div>
         <div class="col-md text-right">
-            <a class="btn btn-success text-right"
-               href="{{ url_for('create_pnr_template') }}">
-                <span class="oi oi-plus"> </span> Create PNR Template
+            <a class="btn btn-success text-right" href="{{ url_for(tc.create) }}">
+                <span class="oi oi-plus"> </span> Create {{ tc.type }} Template
             </a>
         </div>
     </div>
@@ -21,8 +20,7 @@
                 <th class="" scope="col">Name</th>
                 <th class="text-center d-none d-md-table-cell" scope="col">Description</th>
                 <th class="text-center d-none d-md-table-cell" scope="col">Owner</th>
-                <th class="text-center d-none d-md-table-cell" scope="col">Locator</th>
-                <th class="text-center d-none d-md-table-cell" scope="col">Keys</th>
+                <th class="text-center d-none d-md-table-cell" scope="col">Items</th>
                 <th class="text-center d-none d-md-table-cell" scope="col">Links</th>
                 <th class="text-center" scope="col">Open</th>
             </tr>
@@ -34,7 +32,6 @@
                     <td class="">{{ template.name }}</td>
                     <td class="text-center d-none d-md-table-cell">{{ template.description }}</td>
                     <td class="text-center d-none d-md-table-cell">{{ template.owner }}</td>
-                    <td class="text-center d-none d-md-table-cell">{{ template.locator }}</td>
                     <td class="text-center d-none d-md-table-cell">{{ template.count }}</td>
                     <td class="text-center d-none d-md-table-cell">{{ template.test_data_links|length }}</td>
                     <td class="text-center">
@@ -50,7 +47,7 @@
         </table>
     {% else %}
         <br>
-        <p>There are no PNR templates.</p>
+        <p>There are no {{ tc.type }} templates.</p>
     {% endif %}
 {% endblock %}
 

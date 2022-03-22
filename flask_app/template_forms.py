@@ -1,16 +1,19 @@
 from flask import request
 from flask_login import current_user
 from flask_wtf import FlaskForm
-from wtforms import SelectField, StringField, TextAreaField, SubmitField, ValidationError, HiddenField
+from wtforms import SelectField, StringField, TextAreaField, SubmitField, ValidationError, HiddenField, BooleanField
 
 from config import Config
 from flask_app.form_prompts import PNR_KEY_PROMPT, PNR_LOCATOR_PROMPT, PNR_TEXT_PROMPT, PNR_INPUT_FIELD_DATA_PROMPT, \
-    TEMPLATE_NAME_PROMPT, TEMPLATE_DESCRIPTION_PROMPT, VARIATION_PROMPT, VARIATION_NAME_PROMPT
+    TEMPLATE_NAME_PROMPT, TEMPLATE_DESCRIPTION_PROMPT, VARIATION_PROMPT, VARIATION_NAME_PROMPT, GLOBAL_NAME_PROMPT, \
+    IS_GLOBAL_RECORD_PROMPT, GLOBAL_HEX_DATA_PROMPT, GLOBAL_SEG_NAME_PROMPT, GLOBAL_FIELD_DATA_PROMPT
 from flask_app.server import Server
 from flask_app.test_data_forms import init_variation
+from template_constants import PNR, GLOBAL
 
 
 class PnrCreateForm(FlaskForm):
+    template_type = PNR
     name = StringField(TEMPLATE_NAME_PROMPT)
     description = TextAreaField(TEMPLATE_DESCRIPTION_PROMPT, render_kw={"rows": "5"})
     key = SelectField(PNR_KEY_PROMPT, choices=Config.PNR_KEYS, default="header")
@@ -55,6 +58,59 @@ class PnrCreateForm(FlaskForm):
             raise ValidationError(self.response["error_fields"]["field_data"])
 
 
+class GlobalCreateForm(FlaskForm):
+    template_type = GLOBAL
+    name = StringField(TEMPLATE_NAME_PROMPT)
+    description = TextAreaField(TEMPLATE_DESCRIPTION_PROMPT, render_kw={"rows": "5"})
+    global_name = StringField(GLOBAL_NAME_PROMPT)
+    is_global_record = BooleanField(IS_GLOBAL_RECORD_PROMPT)
+    hex_data = StringField(GLOBAL_HEX_DATA_PROMPT)
+    seg_name = StringField(GLOBAL_SEG_NAME_PROMPT)
+    field_data = TextAreaField(GLOBAL_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
+    save = SubmitField("Create New Global Template")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.response: dict = dict()
+        if request.method == "POST":
+            body = {"global_name": self.global_name.data, "is_global_record": self.is_global_record.data,
+                    "field_data": self.field_data.data, "hex_data": self.hex_data.data,
+                    "seg_name": self.seg_name.data.upper(), "name": self.name.data,
+                    "description": self.description.data}
+            self.response = Server.create_new_global_template(body)
+
+    def validate_name(self, _):
+        if "error" in self.response and self.response["error"]:
+            if "message" in self.response and self.response["message"]:
+                raise ValidationError(self.response["message"])
+            if "error_fields" in self.response and "name" in self.response["error_fields"]:
+                raise ValidationError(self.response["error_fields"]["name"])
+
+    def validate_description(self, _):
+        if "error_fields" in self.response and "description" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["description"])
+
+    def validate_global_name(self, _):
+        if "error_fields" in self.response and "global_name" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["global_name"])
+
+    def validate_is_global_record(self, _):
+        if "error_fields" in self.response and "is_global_record" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["is_global_record"])
+
+    def validate_hex_data(self, _):
+        if "error_fields" in self.response and "hex_data" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["hex_data"])
+
+    def validate_field_data(self, _):
+        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["field_data"])
+
+    def validate_seg_name(self, _):
+        if "error_fields" in self.response and "seg_name" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["seg_name"])
+
+
 class PnrAddForm(FlaskForm):
     key = SelectField(f"{PNR_KEY_PROMPT} (Only select a key that is not already added)", choices=Config.PNR_KEYS,
                       default="header")
@@ -84,6 +140,48 @@ class PnrAddForm(FlaskForm):
     def validate_field_data(self, _):
         if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
             raise ValidationError(self.response["error_fields"]["field_data"])
+
+
+class GlobalAddForm(FlaskForm):
+    global_name = StringField(GLOBAL_NAME_PROMPT)
+    is_global_record = BooleanField(IS_GLOBAL_RECORD_PROMPT)
+    hex_data = StringField(GLOBAL_HEX_DATA_PROMPT)
+    seg_name = StringField(GLOBAL_SEG_NAME_PROMPT)
+    field_data = TextAreaField(GLOBAL_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
+    save = SubmitField("Add Global To Template")
+
+    def __init__(self, name: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.response: dict = dict()
+        self.display_fields = [("Name", name)]
+        if request.method == "POST":
+            body = {"name": name, "is_global_record": self.is_global_record.data,
+                    "seg_name": self.seg_name.data.upper(), "field_data": self.field_data.data,
+                    "hex_data": self.hex_data.data, "global_name": self.global_name.data}
+            self.response = Server.add_to_existing_global_template(body)
+
+    def validate_global_name(self, _):
+        if "error" in self.response and self.response["error"]:
+            if "message" in self.response and self.response["message"]:
+                raise ValidationError(self.response["message"])
+            if "error_fields" in self.response and "global_name" in self.response["error_fields"]:
+                raise ValidationError(self.response["error_fields"]["global_name"])
+
+    def validate_is_global_record(self, _):
+        if "error_fields" in self.response and "is_global_record" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["is_global_record"])
+
+    def validate_hex_data(self, _):
+        if "error_fields" in self.response and "hex_data" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["hex_data"])
+
+    def validate_field_data(self, _):
+        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["field_data"])
+
+    def validate_seg_name(self, _):
+        if "error_fields" in self.response and "seg_name" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["seg_name"])
 
 
 class PnrUpdateForm(FlaskForm):
@@ -116,6 +214,50 @@ class PnrUpdateForm(FlaskForm):
     def validate_field_data(self, _):
         if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
             raise ValidationError(self.response["error_fields"]["field_data"])
+
+
+class GlobalUpdateForm(FlaskForm):
+    is_global_record = BooleanField(IS_GLOBAL_RECORD_PROMPT)
+    hex_data = StringField(GLOBAL_HEX_DATA_PROMPT)
+    seg_name = StringField(GLOBAL_SEG_NAME_PROMPT)
+    field_data = TextAreaField(GLOBAL_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
+    save = SubmitField("Update PNR Key")
+
+    def __init__(self, global_template: dict, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.display_fields = list()
+        self.display_fields.append(("Template Name", global_template["name"]))
+        self.display_fields.append(("Global Name", global_template["global_name"]))
+        self.response: dict = dict()
+        if request.method == "GET":
+            self.is_global_record.data = global_template["is_global_record"]
+            self.hex_data.data = global_template["hex_data"]
+            self.field_data.data = global_template["field_data"]
+            self.seg_name.data = global_template["seg_name"]
+        if request.method == "POST":
+            body = {"id": global_template["id"], "seg_name": self.seg_name.data.upper(),
+                    "field_data": self.field_data.data, "hex_data": self.hex_data.data,
+                    "is_global_record": self.is_global_record.data}
+            self.response = Server.update_global_template(body)
+
+    def validate_is_global_record(self, _):
+        if "error" in self.response and self.response["error"]:
+            if "message" in self.response and self.response["message"]:
+                raise ValidationError(self.response["message"])
+            if "error_fields" in self.response and "is_global_record" in self.response["error_fields"]:
+                raise ValidationError(self.response["error_fields"]["is_global_record"])
+
+    def validate_hex_data(self, _):
+        if "error_fields" in self.response and "hex_data" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["hex_data"])
+
+    def validate_field_data(self, _):
+        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["field_data"])
+
+    def validate_seg_name(self, _):
+        if "error_fields" in self.response and "seg_name" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["seg_name"])
 
 
 class TemplateRenameCopyForm(FlaskForm):
@@ -176,7 +318,7 @@ class TemplateLinkMergeForm(FlaskForm):
         body: dict = init_variation(self.variation, self.variation_name, test_data_id, template_type)
         if not current_user.is_authenticated:
             return
-        templates: dict = Server.get_pnr_templates()
+        templates: dict = Server.get_templates(template_type=PNR)
         if not current_user.is_authenticated:
             return
         self.template_name.choices = [(template["name"], template["name"]) for template in templates]
@@ -215,7 +357,7 @@ class TemplateLinkUpdateForm(FlaskForm):
         variation_name = f" ({td_element['variation_name']})" if td_element["variation_name"] else str()
         self.display_fields.append(("Variation", f"{td_element['variation']}{variation_name}"))
         self.display_fields.append(("Template Name", td_element["link"]))
-        templates: dict = Server.get_pnr_templates()
+        templates: dict = Server.get_templates(template_type=PNR)
         if not current_user.is_authenticated:
             return
         self.template_name.choices = [(template["name"], template["name"]) for template in templates]

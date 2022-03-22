@@ -10,7 +10,8 @@ from wtforms.widgets import Input
 from config import Config
 from flask_app import tpf2_app
 from flask_app.form_prompts import OLD_FIELD_DATA_PROMPT, PNR_OUTPUT_FIELD_DATA_PROMPT, PNR_INPUT_FIELD_DATA_PROMPT, \
-    PNR_KEY_PROMPT, PNR_LOCATOR_PROMPT, PNR_TEXT_PROMPT, VARIATION_PROMPT, VARIATION_NAME_PROMPT
+    PNR_KEY_PROMPT, PNR_LOCATOR_PROMPT, PNR_TEXT_PROMPT, VARIATION_PROMPT, VARIATION_NAME_PROMPT, GLOBAL_NAME_PROMPT, \
+    IS_GLOBAL_RECORD_PROMPT, GLOBAL_HEX_DATA_PROMPT, GLOBAL_SEG_NAME_PROMPT, GLOBAL_FIELD_DATA_PROMPT
 from flask_app.server import Server
 
 
@@ -424,14 +425,11 @@ class UpdateMacroForm(FlaskForm):
 class GlobalForm(FlaskForm):
     variation = SelectField(VARIATION_PROMPT, coerce=int)
     variation_name = StringField(VARIATION_NAME_PROMPT)
-    global_name = StringField("Enter Global Name - Must exists in global definition", validators=[InputRequired()])
-    is_global_record = BooleanField("Check this if this global is a global record. (Unchecked indicates global field)")
-    hex_data = StringField("Global Field - Enter input data in hex format to initialize the global field. "
-                           "Leave it blank for global record")
-    seg_name = StringField("Global Record - Segment Name. Only required if data for global record is specified.")
-    field_data = TextAreaField("Global Record - Enter multiple fields and data separated by comma. "
-                               "The field and data should be separated by colon. Data should be in hex format. "
-                               "Leave it blank to init with zeroes.", render_kw={"rows": "5"})
+    global_name = StringField(GLOBAL_NAME_PROMPT, validators=[InputRequired()])
+    is_global_record = BooleanField(IS_GLOBAL_RECORD_PROMPT)
+    hex_data = StringField(GLOBAL_HEX_DATA_PROMPT)
+    seg_name = StringField(GLOBAL_SEG_NAME_PROMPT)
+    field_data = TextAreaField(GLOBAL_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
     save = SubmitField("Save & Continue - Add Further Data")
 
     def __init__(self, test_data_id: str, *args, **kwargs):
@@ -473,13 +471,10 @@ class GlobalForm(FlaskForm):
 
 
 class UpdateGlobalForm(FlaskForm):
-    is_global_record = BooleanField("Check this if this global is a global record. (Unchecked indicates global field)")
-    hex_data = StringField("Global Field - Enter input data in hex format to initialize the heap. "
-                           "Leave it blank for global record")
-    seg_name = StringField("Global Record - Segment Name. Only required if data for global record is specified.")
-    field_data = TextAreaField("Global Record - Enter multiple fields and data separated by comma. "
-                               "The field and data should be separated by colon. Data should be in hex format. "
-                               "Leave it blank to init with zeroes.", render_kw={"rows": "5"})
+    is_global_record = BooleanField(IS_GLOBAL_RECORD_PROMPT)
+    hex_data = StringField(GLOBAL_HEX_DATA_PROMPT)
+    seg_name = StringField(GLOBAL_SEG_NAME_PROMPT)
+    field_data = TextAreaField(GLOBAL_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
     save = SubmitField("Save & Continue - Add Further Data")
 
     def __init__(self, test_data_id: str, core: dict, *args, **kwargs):

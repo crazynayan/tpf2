@@ -7,18 +7,23 @@ from werkzeug.utils import redirect
 from flask_app import tpf2_app
 from flask_app.server import Server
 from flask_app.template_forms import TemplateRenameCopyForm, PnrCreateForm, PnrAddForm, PnrUpdateForm, \
-    TemplateLinkMergeForm, TemplateLinkUpdateForm, TemplateDeleteForm
+    TemplateLinkMergeForm, TemplateLinkUpdateForm, TemplateDeleteForm, GlobalCreateForm, GlobalAddForm, GlobalUpdateForm
 from flask_app.test_data_routes import test_data_required
 from flask_app.user import cookie_login_required
+from template_constants import TemplateConstant
 
 
-@tpf2_app.route("/templates/pnr")
+@tpf2_app.route("/templates/<string:template_type>")
 @cookie_login_required
-def view_pnr_templates():
-    templates = Server.get_pnr_templates()
+def view_templates(template_type: str):
+    tc = TemplateConstant(template_type)
+    if not tc.is_type_valid:
+        flash("Invalid Template Type")
+        return redirect(url_for("home"))
+    templates = Server.get_templates(tc.type.lower())
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
-    return render_template("template_list.html", title="PNR templates", templates=templates)
+    return render_template("template_list.html", title=f"{tc.type} templates", templates=templates, tc=tc)
 
 
 @tpf2_app.route("/templates/name", methods=["GET", "POST"])
@@ -28,15 +33,23 @@ def view_template():
     templates = Server.get_template_by_name(name)
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
+    if not templates:
+        flash("Template not found.")
+        return redirect(url_for("home"))
+    tc = TemplateConstant(templates[0]["type"])
+    if not tc.is_type_valid:
+        flash("Invalid Template Type")
+        return redirect(url_for("home"))
     form = TemplateDeleteForm(name)
     if not form.validate_on_submit():
-        return render_template("template_view.html", title="Template", templates=templates, form=form, name=name)
+        return render_template("template_view.html", title="Template", templates=templates, form=form, name=name,
+                               tc=tc)
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     if "message" in form.response:
         flash(form.response["message"])
     return redirect(url_for("view_template", name=name)) if form.template_id.data \
-        else redirect(url_for("view_pnr_templates"))
+        else redirect(url_for("view_templates", template_type=tc.type))
 
 
 @tpf2_app.route("/templates/rename", methods=["GET", "POST"])
@@ -117,6 +130,51 @@ def update_pnr_template(template_id: str):
         return redirect(url_for("logout"))
     if not form.validate_on_submit():
         return render_template("template_form.html", title="Update PNR Template", form=form, name=name)
+    if "message" in form.response:
+        flash(form.response["message"])
+    return redirect(url_for("view_template", name=name))
+
+
+@tpf2_app.route("/templates/global/create", methods=["GET", "POST"])
+@cookie_login_required
+def create_global_template():
+    form = GlobalCreateForm()
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    if not form.validate_on_submit():
+        return render_template("template_form.html", title="Create Global Template", form=form, name=str())
+    if "message" in form.response:
+        flash(form.response["message"])
+    return redirect(url_for("view_template", name=form.name.data))
+
+
+@tpf2_app.route("/templates/global/add", methods=["GET", "POST"])
+@cookie_login_required
+def add_global_template():
+    name = unquote(request.args.get("name", str()))
+    form = GlobalAddForm(name)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    if not form.validate_on_submit():
+        return render_template("template_form.html", title="Add to Global Template", form=form, name=name)
+    if "message" in form.response:
+        flash(form.response["message"])
+    return redirect(url_for("view_template", name=name))
+
+
+@tpf2_app.route("/templates/global/update/<string:template_id>", methods=["GET", "POST"])
+@cookie_login_required
+def update_global_template(template_id: str):
+    template: dict = Server.get_template_by_id(template_id)
+    if not template:
+        flash("Error in updating. Template not found")
+        return redirect(url_for("view_pnr_templates"))
+    form = GlobalUpdateForm(template)
+    name = template["name"]
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    if not form.validate_on_submit():
+        return render_template("template_form.html", title="Update Global Template", form=form, name=name)
     if "message" in form.response:
         flash(form.response["message"])
     return redirect(url_for("view_template", name=name))

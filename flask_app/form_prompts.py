@@ -28,5 +28,16 @@ PNR_TEXT_PROMPT: str = """
     Leave it blank if you want to provide field data in hex.
 """
 
+GLOBAL_NAME_PROMPT: str = "Enter Global Name - Must exists in global definition"
+IS_GLOBAL_RECORD_PROMPT: str = "Check this if this global is a global record. (Unchecked indicates global field)"
+GLOBAL_HEX_DATA_PROMPT: str = """
+    Global Field - Enter input data in hex format to initialize the global field. \nLeave it blank for global record.
+"""
+GLOBAL_SEG_NAME_PROMPT: str = "Global Record - Segment Name. Only required if data for global record is specified."
+GLOBAL_FIELD_DATA_PROMPT: str = """
+    Global Record - Enter multiple fields and data separated by comma.\n 
+    The field and data should be separated by colon. Data should be in hex format.\n Leave it blank to init with zeroes.
+"""
+
 TEMPLATE_NAME_PROMPT: str = "Enter a name that uniquely identifies your template"
 TEMPLATE_DESCRIPTION_PROMPT: str = "Enter the purpose of the template"
