@@ -420,3 +420,19 @@ class Server:
     @classmethod
     def update_global_template(cls, body: dict) -> dict:
         return cls._common_request(f"/templates/global/update", method="POST", json=body)
+
+    @classmethod
+    def merge_global_template(cls, test_data_id: str, body: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/templates/global/merge", method="POST", json=body)
+
+    @classmethod
+    def create_link_global_template(cls, test_data_id: str, body: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/templates/global/link/create", method="POST", json=body)
+
+    @classmethod
+    def update_link_global_template(cls, test_data_id: str, body: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/templates/global/link/update", method="POST", json=body)
+
+    @classmethod
+    def delete_link_global_template(cls, test_data_id: str, body: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/templates/global/link/delete", method="POST", json=body)

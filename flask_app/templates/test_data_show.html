@@ -232,35 +232,88 @@
     {% if edit_mode or test_data.cores %}
         <br>
         <div class="row" id="input-core">
-            <div class="col-md{% if edit_mode %}-6{% endif %}">
-                <div class="list-group list-group-item list-group-item-secondary">
-                    Input - Global, Default, Heap and ECB levels
-                </div>
-            </div>
             {% if edit_mode %}
-                <div class="col-md">
-                    <a class="btn btn-block btn-success "
-                       href="{{ url_for('add_global', test_data_id=test_data.id) }}">
-                        <span class="oi oi-plus"></span> Global
-                    </a>
+                <div class="col-md-4 list-group list-group-item list-group-item-secondary">
+                    <div class="row ">
+                        <div class="col-md">
+                            Globals
+                        </div>
+                        <div class="col-md">
+                            <a class="btn btn-success "
+                               href="{{ url_for('add_global', test_data_id=test_data.id) }}">
+                                <span class="oi oi-plus"></span>
+                            </a>
+                        </div>
+                        <div class="col-md">
+                            <a class="btn btn-warning"
+                               href="{{ url_for('merge_global_template', test_data_id=test_data.id) }}">
+                                <span class="oi oi-loop"></span>
+                            </a>
+                        </div>
+                        <div class="col-md">
+                            <a class="btn btn-warning"
+                               href="{{ url_for('create_link_global_template', test_data_id=test_data.id) }}">
+                                <span class="oi oi-link-intact"></span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md">
-                    <a class="btn btn-block btn-warning"
-                       href="{{ url_for('add_macro', test_data_id=test_data.id) }}">
-                        <span class="oi oi-pencil"></span> Default
-                    </a>
+                <div class="col-md-4 list-group list-group-item list-group-item-secondary">
+                    <div class="row">
+                        <div class="col-md">
+                            AAA
+                        </div>
+                        <div class="col-md">
+                            <a class="btn btn-success"
+                               href="{{ url_for('add_macro', test_data_id=test_data.id) }}">
+                                <span class="oi oi-plus"></span>
+                            </a>
+                        </div>
+                        <div class="col-md">
+                            <a class="btn btn-warning disabled"
+                               href="{{ url_for('merge_global_template', test_data_id=test_data.id) }}">
+                                <span class="oi oi-loop"></span>
+                            </a>
+                        </div>
+                        <div class="col-md">
+                            <a class="btn btn-warning disabled"
+                               href="{{ url_for('create_link_global_template', test_data_id=test_data.id) }}">
+                                <span class="oi oi-link-intact"></span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md">
-                    <a class="btn btn-block btn-success "
-                       href="{{ url_for('add_heap', test_data_id=test_data.id) }}">
-                        <span class="oi oi-plus"></span> Heap
-                    </a>
+                <div class="col-md-2 list-group list-group-item list-group-item-secondary">
+                    <div class="row">
+                        <div class="col-md">
+                            Heap
+                        </div>
+                        <div class="col-md">
+                            <a class="btn btn-success "
+                               href="{{ url_for('add_heap', test_data_id=test_data.id) }}">
+                                <span class="oi oi-plus"></span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
+                <div class="col-md-2 list-group list-group-item list-group-item-secondary">
+                    <div class="row">
+                        <div class="col-md">
+                            ECB
+                        </div>
+                        <div class="col-md">
+                            <a class="btn btn-success"
+                               href="{{ url_for('add_ecb_level', test_data_id=test_data.id) }}">
+                                <span class="oi oi-plus"></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
                 <div class="col-md">
-                    <a class="btn btn-block btn-success "
-                       href="{{ url_for('add_ecb_level', test_data_id=test_data.id) }}">
-                        <span class="oi oi-plus"></span> ECB
-                    </a>
+                    <div class="list-group list-group-item list-group-item-secondary">
+                        Input - Global, Default, Heap and ECB levels
+                    </div>
                 </div>
             {% endif %}
         </div>
@@ -371,41 +424,70 @@
                         </div>
                     {% endfor %}
                 {% elif core.global_name %}
-                    <div class="row">
-                        <div class="col-md-1 font-weight-bold">
-                            {{ core.global_name }}
-                        </div>
-                        <div class="col-md-1">
-                            {% if edit_mode %}
-                                <a class="badge badge-warning edit-icon"
-                                   href="{{ url_for('update_global', test_data_id=test_data.id, core_id=core.id) }}">
-                                    &#9998;</a>
-                                <a class="badge badge-danger"
-                                   href="{{ url_for('delete_global', test_data_id=test_data.id, core_id=core.id) }}">
-                                    X</a>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-1">Global</div>
-                        {% if core.hex_data[0] != "" %}
-                            {% for value in core.hex_data %}
-                                <div class="col-md-3"><kbd>{{ value }}</kbd></div>
-                            {% endfor %}
-                        {% elif not core.field_data and core.is_global_record %}
-                            <div class="col-md-9"> Global record initialized with zeroes</div>
-                        {% else %}
-                            <div class="col-md-9"></div>
-                        {% endif %}
-                    </div>
-                    {% for field_data in core.field_data %}
+                    <div class="{% if core.link_status == "inactive" %}alert-secondary {% elif core.link_status == "active" %}alert-primary{% endif %}">
                         <div class="row">
-                            <div class="col-md-3 text-center">
-                                {{ field_data.field }}
+                            <div class="col-md-1 font-weight-bold">
+                                {{ core.global_name }}
                             </div>
-                            {% for value in field_data.data %}
-                                <div class="col-md-3"><kbd>{{ value }}</kbd></div>
-                            {% endfor %}
+                            <div class="col-md-1">
+                                {% if edit_mode %}
+                                    {% if core.link %}
+                                        <a class="badge badge-warning edit-icon"
+                                           href="{{ url_for('update_link_global_template', test_data_id=test_data.id,
+                                           variation=core.variation, name=core.link) }}">
+                                            &#9998;
+                                        </a>
+                                        <a class="badge badge-danger"
+                                           href="{{ url_for('delete_link_global_template', test_data_id=test_data.id,
+                                           variation=core.variation, name=core.link) }}">
+                                            X
+                                        </a>
+                                    {% else %}
+                                        <a class="badge badge-warning edit-icon"
+                                           href="{{ url_for('update_global', test_data_id=test_data.id, core_id=core.id) }}">
+                                            &#9998;</a>
+                                        <a class="badge badge-danger"
+                                           href="{{ url_for('delete_global', test_data_id=test_data.id, core_id=core.id) }}">
+                                            X</a>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <div class="col-md-1">Global</div>
+                            <div class="col-md-9">
+                                {% if core.link %}
+                                    {{ core.link_status|title }} link from {{ core.link }}
+                                {% endif %}
+                            </div>
                         </div>
-                    {% endfor %}
+                        {% if core.hex_data[0] != "" %}
+                            <div class="row">
+                                <div class="col-md-3 text-center">
+                                    Global Field Data
+                                </div>
+                                {% for value in core.hex_data %}
+                                    <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                                {% endfor %}
+                            </div>
+                        {% elif not core.field_data and core.is_global_record %}
+                            <div class="row">
+                                <div class="col-md-3 text-center">
+                                    Global Record Data
+                                </div>
+                                <div class="col-md-9">Initialized to zeroes</div>
+                            </div>
+
+                        {% endif %}
+                        {% for field_data in core.field_data %}
+                            <div class="row">
+                                <div class="col-md-3 text-center">
+                                    {{ field_data.field }}
+                                </div>
+                                {% for value in field_data.data %}
+                                    <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
                 {% endif %}
             {% endfor %}
         {% endfor %}
