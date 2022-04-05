@@ -270,14 +270,14 @@
                             </a>
                         </div>
                         <div class="col-md">
-                            <a class="btn btn-warning disabled"
-                               href="{{ url_for('merge_global_template', test_data_id=test_data.id) }}">
+                            <a class="btn btn-warning"
+                               href="{{ url_for('merge_aaa_template', test_data_id=test_data.id) }}">
                                 <span class="oi oi-loop"></span>
                             </a>
                         </div>
                         <div class="col-md">
-                            <a class="btn btn-warning disabled"
-                               href="{{ url_for('create_link_global_template', test_data_id=test_data.id) }}">
+                            <a class="btn btn-warning"
+                               href="{{ url_for('create_link_aaa_template', test_data_id=test_data.id) }}">
                                 <span class="oi oi-link-intact"></span>
                             </a>
                         </div>
@@ -332,31 +332,52 @@
             {% endif %}
             {% for core in variation.list %}
                 {% if core.macro_name %}
-                    <div class="row">
-                        <div class="col-md-1 font-weight-bold">
-                            {{ core.macro_name }}
-                        </div>
-                        <div class="col-md-1">
-                            {% if edit_mode %}
-                                <a class="badge badge-warning edit-icon"
-                                   href="{{ url_for('update_macro', test_data_id=test_data.id, macro_name=core.macro_name,
-                                   variation=core.variation) }}">&#9998;</a>
-                                <a class="badge badge-danger" href="{{ url_for('delete_macro', test_data_id=test_data.id,
-                                macro_name=core.macro_name, variation=core.variation) }}">X</a>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-1">Default</div>
-                    </div>
-                    {% for field_data in core.field_data %}
+                    <div class="{% if core.link_status == "inactive" %}alert-secondary {% elif core.link_status == "active" %}alert-primary{% endif %}">
                         <div class="row">
-                            <div class="col-md-3 text-center">
-                                {{ field_data.field }}
+                            <div class="col-md-1 font-weight-bold">
+                                {{ core.macro_name }}
                             </div>
-                            {% for value in field_data.data %}
-                                <div class="col-md-3"><kbd>{{ value }}</kbd></div>
-                            {% endfor %}
+                            <div class="col-md-1">
+                                {% if edit_mode %}
+                                    {% if core.link %}
+                                        <a class="badge badge-warning edit-icon"
+                                           href="{{ url_for('update_link_aaa_template', test_data_id=test_data.id,
+                                           variation=core.variation, name=core.link) }}">
+                                            &#9998;
+                                        </a>
+                                        <a class="badge badge-danger"
+                                           href="{{ url_for('delete_link_aaa_template', test_data_id=test_data.id,
+                                           variation=core.variation, name=core.link) }}">
+                                            X
+                                        </a>
+                                    {% else %}
+                                        <a class="badge badge-warning edit-icon"
+                                           href="{{ url_for('update_macro', test_data_id=test_data.id, macro_name=core.macro_name, variation=core.variation) }}">
+                                            &#9998;</a>
+                                        <a class="badge badge-danger"
+                                           href="{{ url_for('delete_macro', test_data_id=test_data.id, macro_name=core.macro_name, variation=core.variation) }}">
+                                            X</a>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            <div class="col-md-1">Default</div>
+                            <div class="col-md-9">
+                                {% if core.link %}
+                                    {{ core.link_status|title }} link from {{ core.link }}
+                                {% endif %}
+                            </div>
                         </div>
-                    {% endfor %}
+                        {% for field_data in core.field_data %}
+                            <div class="row">
+                                <div class="col-md-3 text-center">
+                                    {{ field_data.field }}
+                                </div>
+                                {% for value in field_data.data %}
+                                    <div class="col-md-3"><kbd>{{ value }}</kbd></div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
                 {% elif core.ecb_level %}
                     <div class="row">
                         <div class="col-md-1 font-weight-bold">

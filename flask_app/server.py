@@ -444,3 +444,19 @@ class Server:
     @classmethod
     def update_aaa_template(cls, body: dict) -> dict:
         return cls._common_request(f"/templates/aaa/update", method="POST", json=body)
+
+    @classmethod
+    def merge_aaa_template(cls, test_data_id: str, body: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/templates/aaa/merge", method="POST", json=body)
+
+    @classmethod
+    def create_link_aaa_template(cls, test_data_id: str, body: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/templates/aaa/link/create", method="POST", json=body)
+
+    @classmethod
+    def update_link_aaa_template(cls, test_data_id: str, body: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/templates/aaa/link/update", method="POST", json=body)
+
+    @classmethod
+    def delete_link_aaa_template(cls, test_data_id: str, body: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/templates/aaa/link/delete", method="POST", json=body)

@@ -387,13 +387,17 @@ class TemplateLinkMergeForm(FlaskForm):
             if action_type == "merge":
                 if template_type == PNR:
                     self.response = Server.merge_pnr_template(test_data_id, body)
-                else:
+                elif template_type == GLOBAL:
                     self.response = Server.merge_global_template(test_data_id, body)
+                elif template_type == AAA:
+                    self.response = Server.merge_aaa_template(test_data_id, body)
             else:
                 if template_type == PNR:
                     self.response = Server.create_link_pnr_template(test_data_id, body)
-                else:
+                elif template_type == GLOBAL:
                     self.response = Server.create_link_global_template(test_data_id, body)
+                elif template_type == AAA:
+                    self.response = Server.create_link_aaa_template(test_data_id, body)
 
     def validate_variation(self, _):
         if "error" in self.response and self.response["error"]:
@@ -429,10 +433,12 @@ class TemplateLinkUpdateForm(FlaskForm):
         if request.method == "POST":
             body = {"variation_name": self.template_name.data, "template_name": td_element["link"],
                     "variation": td_element["variation"]}
-            if template_type == "PNR":
+            if template_type == PNR:
                 self.response = Server.update_link_pnr_template(test_data_id, body)
-            else:
+            elif template_type == GLOBAL:
                 self.response = Server.update_link_global_template(test_data_id, body)
+            elif template_type == AAA:
+                self.response = Server.update_link_aaa_template(test_data_id, body)
         else:
             self.template_name.data = td_element["link"]
 
