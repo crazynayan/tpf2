@@ -6,10 +6,11 @@ from wtforms import SelectField, StringField, TextAreaField, SubmitField, Valida
 from config import Config
 from flask_app.form_prompts import PNR_KEY_PROMPT, PNR_LOCATOR_PROMPT, PNR_TEXT_PROMPT, PNR_INPUT_FIELD_DATA_PROMPT, \
     TEMPLATE_NAME_PROMPT, TEMPLATE_DESCRIPTION_PROMPT, VARIATION_PROMPT, VARIATION_NAME_PROMPT, GLOBAL_NAME_PROMPT, \
-    IS_GLOBAL_RECORD_PROMPT, GLOBAL_HEX_DATA_PROMPT, GLOBAL_SEG_NAME_PROMPT, GLOBAL_FIELD_DATA_PROMPT
+    IS_GLOBAL_RECORD_PROMPT, GLOBAL_HEX_DATA_PROMPT, GLOBAL_SEG_NAME_PROMPT, GLOBAL_FIELD_DATA_PROMPT, \
+    MACRO_FIELD_DATA_PROMPT
 from flask_app.server import Server
+from flask_app.template_constants import PNR, GLOBAL, AAA
 from flask_app.test_data_forms import init_variation
-from template_constants import PNR, GLOBAL
 
 
 class PnrCreateForm(FlaskForm):
@@ -111,6 +112,36 @@ class GlobalCreateForm(FlaskForm):
             raise ValidationError(self.response["error_fields"]["seg_name"])
 
 
+class AaaCreateForm(FlaskForm):
+    template_type = AAA
+    name = StringField(TEMPLATE_NAME_PROMPT)
+    description = TextAreaField(TEMPLATE_DESCRIPTION_PROMPT, render_kw={"rows": "5"})
+    field_data = TextAreaField(MACRO_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
+    save = SubmitField("Create New AAA Template")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.response: dict = dict()
+        if request.method == "POST":
+            body = {"field_data": self.field_data.data, "name": self.name.data, "description": self.description.data}
+            self.response = Server.create_new_aaa_template(body)
+
+    def validate_name(self, _):
+        if "error" in self.response and self.response["error"]:
+            if "message" in self.response and self.response["message"]:
+                raise ValidationError(self.response["message"])
+            if "error_fields" in self.response and "name" in self.response["error_fields"]:
+                raise ValidationError(self.response["error_fields"]["name"])
+
+    def validate_description(self, _):
+        if "error_fields" in self.response and "description" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["description"])
+
+    def validate_field_data(self, _):
+        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
+            raise ValidationError(self.response["error_fields"]["field_data"])
+
+
 class PnrAddForm(FlaskForm):
     key = SelectField(f"{PNR_KEY_PROMPT} (Only select a key that is not already added)", choices=Config.PNR_KEYS,
                       default="header")
@@ -187,7 +218,7 @@ class GlobalAddForm(FlaskForm):
 class PnrUpdateForm(FlaskForm):
     text = StringField(PNR_TEXT_PROMPT)
     field_data = TextAreaField(PNR_INPUT_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
-    save = SubmitField("Update PNR Key")
+    save = SubmitField("Update PNR")
 
     def __init__(self, pnr_template: dict, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -221,7 +252,7 @@ class GlobalUpdateForm(FlaskForm):
     hex_data = StringField(GLOBAL_HEX_DATA_PROMPT)
     seg_name = StringField(GLOBAL_SEG_NAME_PROMPT)
     field_data = TextAreaField(GLOBAL_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
-    save = SubmitField("Update PNR Key")
+    save = SubmitField("Update Global")
 
     def __init__(self, global_template: dict, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -258,6 +289,32 @@ class GlobalUpdateForm(FlaskForm):
     def validate_seg_name(self, _):
         if "error_fields" in self.response and "seg_name" in self.response["error_fields"]:
             raise ValidationError(self.response["error_fields"]["seg_name"])
+
+
+class AaaUpdateForm(FlaskForm):
+    is_global_record = BooleanField(IS_GLOBAL_RECORD_PROMPT)
+    hex_data = StringField(GLOBAL_HEX_DATA_PROMPT)
+    seg_name = StringField(GLOBAL_SEG_NAME_PROMPT)
+    field_data = TextAreaField(GLOBAL_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
+    save = SubmitField("Update AAA")
+
+    def __init__(self, global_template: dict, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.display_fields = list()
+        self.display_fields.append(("Template Name", global_template["name"]))
+        self.response: dict = dict()
+        if request.method == "GET":
+            self.field_data.data = global_template["field_data"]
+        if request.method == "POST":
+            body = {"id": global_template["id"], "field_data": self.field_data.data}
+            self.response = Server.update_aaa_template(body)
+
+    def validate_field_data(self, _):
+        if "error" in self.response and self.response["error"]:
+            if "message" in self.response and self.response["message"]:
+                raise ValidationError(self.response["message"])
+            if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
+                raise ValidationError(self.response["error_fields"]["field_data"])
 
 
 class TemplateRenameCopyForm(FlaskForm):

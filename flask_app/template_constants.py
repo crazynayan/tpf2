@@ -1,6 +1,6 @@
 PNR, GLOBAL, AAA = "PNR", "Global", "AAA"
 CREATE, ADD, UPDATE, UNIQUE_TAG = "create", "add", "update", "unique_tag"
-TEMPLATE_TYPES = (PNR, GLOBAL)
+TEMPLATE_TYPES = (PNR, GLOBAL, AAA)
 
 URL: dict = {
     PNR: {
@@ -15,6 +15,13 @@ URL: dict = {
         UPDATE: "update_global_template",
         UNIQUE_TAG: "Global Name",
     },
+    AAA: {
+        CREATE: "create_aaa_template",
+        ADD: "home",
+        UPDATE: "update_aaa_template",
+        UNIQUE_TAG: "Macro Name",
+    },
+
 }
 
 
@@ -48,12 +55,16 @@ class TemplateConstant:
             return template["key"].upper()
         elif self.type == GLOBAL:
             return template["global_name"]
+        elif self.type == AAA:
+            return "WA0AA"
 
     def get_data_type(self, template: dict):
         if self.type == PNR:
             return "Text" if template["text"] else "Field Data"
         elif self.type == GLOBAL:
             return "Global Record" if template["is_global_record"] else "Global Field"
+        elif self.type == AAA:
+            return "Field Data"
 
     def get_data(self, template: dict):
         if self.type == PNR:
@@ -62,3 +73,9 @@ class TemplateConstant:
             if not template["field_data"] and template["is_global_record"]:
                 return "Initialized to zeroes"
             return template["field_data"] if template["is_global_record"] else template["hex_data"]
+        elif self.type == AAA:
+            return template["field_data"]
+
+    @property
+    def is_add_button_disabled(self) -> str:
+        return "disabled" if self.type == AAA else str()

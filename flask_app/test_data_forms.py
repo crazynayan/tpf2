@@ -11,7 +11,8 @@ from config import Config
 from flask_app import tpf2_app
 from flask_app.form_prompts import OLD_FIELD_DATA_PROMPT, PNR_OUTPUT_FIELD_DATA_PROMPT, PNR_INPUT_FIELD_DATA_PROMPT, \
     PNR_KEY_PROMPT, PNR_LOCATOR_PROMPT, PNR_TEXT_PROMPT, VARIATION_PROMPT, VARIATION_NAME_PROMPT, GLOBAL_NAME_PROMPT, \
-    IS_GLOBAL_RECORD_PROMPT, GLOBAL_HEX_DATA_PROMPT, GLOBAL_SEG_NAME_PROMPT, GLOBAL_FIELD_DATA_PROMPT
+    IS_GLOBAL_RECORD_PROMPT, GLOBAL_HEX_DATA_PROMPT, GLOBAL_SEG_NAME_PROMPT, GLOBAL_FIELD_DATA_PROMPT, \
+    MACRO_FIELD_DATA_PROMPT
 from flask_app.server import Server
 
 
@@ -260,9 +261,7 @@ class MacroForm(FlaskForm):
     variation = SelectField(VARIATION_PROMPT, coerce=int)
     variation_name = StringField(VARIATION_NAME_PROMPT)
     macro_name = SelectField("Select a data macro", validators=[InputRequired()])
-    field_data = TextAreaField("Enter multiple fields and data separated by comma. The field and data should be "
-                               "separated by colon. Data should be in hex format. Leave it blank to either init with "
-                               "zeroes or with hex data", render_kw={"rows": "5"})
+    field_data = TextAreaField(MACRO_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
     save = SubmitField("Save & Continue - Add Further Data")
 
     def __init__(self, test_data_id: str, *args, **kwargs):

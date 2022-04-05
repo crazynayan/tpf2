@@ -436,3 +436,11 @@ class Server:
     @classmethod
     def delete_link_global_template(cls, test_data_id: str, body: dict) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/templates/global/link/delete", method="POST", json=body)
+
+    @classmethod
+    def create_new_aaa_template(cls, body: dict) -> dict:
+        return cls._common_request(f"/templates/aaa/create", method="POST", json=body)
+
+    @classmethod
+    def update_aaa_template(cls, body: dict) -> dict:
+        return cls._common_request(f"/templates/aaa/update", method="POST", json=body)

@@ -6,11 +6,12 @@ from werkzeug.utils import redirect
 
 from flask_app import tpf2_app
 from flask_app.server import Server
+from flask_app.template_constants import TemplateConstant, PNR, GLOBAL
 from flask_app.template_forms import TemplateRenameCopyForm, PnrCreateForm, PnrAddForm, PnrUpdateForm, \
-    TemplateLinkMergeForm, TemplateLinkUpdateForm, TemplateDeleteForm, GlobalCreateForm, GlobalAddForm, GlobalUpdateForm
+    TemplateLinkMergeForm, TemplateLinkUpdateForm, TemplateDeleteForm, GlobalCreateForm, GlobalAddForm, \
+    GlobalUpdateForm, AaaCreateForm, AaaUpdateForm
 from flask_app.test_data_routes import test_data_required
 from flask_app.user import cookie_login_required
-from template_constants import TemplateConstant, PNR, GLOBAL
 
 
 @tpf2_app.route("/templates/<string:template_type>")
@@ -175,6 +176,37 @@ def update_global_template(template_id: str):
         return redirect(url_for("logout"))
     if not form.validate_on_submit():
         return render_template("template_form.html", title="Update Global Template", form=form, name=name)
+    if "message" in form.response:
+        flash(form.response["message"])
+    return redirect(url_for("view_template", name=name))
+
+
+@tpf2_app.route("/templates/aaa/create", methods=["GET", "POST"])
+@cookie_login_required
+def create_aaa_template():
+    form = AaaCreateForm()
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    if not form.validate_on_submit():
+        return render_template("template_form.html", title="Create AAA Template", form=form, name=str())
+    if "message" in form.response:
+        flash(form.response["message"])
+    return redirect(url_for("view_template", name=form.name.data))
+
+
+@tpf2_app.route("/templates/aaa/update/<string:template_id>", methods=["GET", "POST"])
+@cookie_login_required
+def update_aaa_template(template_id: str):
+    template: dict = Server.get_template_by_id(template_id)
+    if not template:
+        flash("Error in updating. Template not found")
+        return redirect(url_for("view_pnr_templates"))
+    form = AaaUpdateForm(template)
+    name = template["name"]
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    if not form.validate_on_submit():
+        return render_template("template_form.html", title="Update AAA Template", form=form, name=name)
     if "message" in form.response:
         flash(form.response["message"])
     return redirect(url_for("view_template", name=name))

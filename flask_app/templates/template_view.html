@@ -21,7 +21,7 @@
     <br>
     <div class="row">
         <div class="col-md-3">
-            <a class="btn btn-success btn-block text-center"
+            <a class="btn btn-success btn-block text-center {{ tc.is_add_button_disabled }}"
                href="{{ url_for(tc.add, name=name) }}">
                 <span class="oi oi-plus"></span> Add to Template
             </a>
