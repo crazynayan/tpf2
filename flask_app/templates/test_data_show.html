@@ -321,15 +321,20 @@
     {% if test_data.cores %}
         <br>
         {% for variation in test_data.cores|groupby('variation') %}
-            {% if loop.length > 1 %}
-                <div class="row">
-                    <div class="col-md">
-                        <div class="list-group list-group-item list-group-item-light">
-                            {{ variation.list[0].variation_name }} (Variation {{ variation.grouper }})
-                        </div>
+            <div class="row">
+                <div class="col-md">
+                    <div class="list-group list-group-item list-group-item-light">
+                        {{ variation.list[0].variation_name }}
+                        {% if edit_mode %}
+                            <a class="badge badge-warning edit-icon"
+                               href="{{ url_for('rename_variation', test_data_id=test_data.id,
+                                           variation=variation.grouper, v_type='core') }}">
+                                &#9998;
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
-            {% endif %}
+            </div>
             {% for core in variation.list %}
                 {% if core.macro_name %}
                     <div class="{% if core.link_status == "inactive" %}alert-secondary {% elif core.link_status == "active" %}alert-primary{% endif %}">
@@ -388,8 +393,11 @@
                                 <a class="badge badge-warning edit-icon"
                                    href="{{ url_for('update_ecb_level', test_data_id=test_data.id, ecb_level=core.ecb_level,
                                    variation=core.variation) }}">&#9998;</a>
-                                <a class="badge badge-danger" href="{{ url_for('delete_ecb_level', test_data_id=test_data.id,
-                                ecb_level=core.ecb_level, variation=core.variation) }}">X</a>
+                                {% if loop.length > 1 %}
+                                    <a class="badge badge-danger"
+                                       href="{{ url_for('delete_ecb_level', test_data_id=test_data.id, ecb_level=core.ecb_level, variation=core.variation) }}">
+                                        X</a>
+                                {% endif %}
                             {% endif %}
                         </div>
                         <div class="col-md-1">ECB-L</div>
@@ -599,15 +607,20 @@
     {% if test_data.pnr %}
         <br>
         {% for variation in test_data.pnr|groupby('variation') %}
-            {% if loop.length > 1 %}
-                <div class="row">
-                    <div class="col-md">
-                        <div class="list-group list-group-item list-group-item-light">
-                            {{ variation.list[0].variation_name }} (Variation {{ variation.grouper }})
-                        </div>
+            <div class="row">
+                <div class="col-md">
+                    <div class="list-group list-group-item list-group-item-light">
+                        {{ variation.list[0].variation_name }}
+                        {% if edit_mode %}
+                            <a class="badge badge-warning edit-icon"
+                               href="{{ url_for('rename_variation', test_data_id=test_data.id,
+                                           variation=variation.grouper, v_type='pnr') }}">
+                                &#9998;
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
-            {% endif %}
+            </div>
             {% for pnr in variation.list %}
                 <div class="{% if pnr.link_status == "inactive" %}alert-secondary {% elif pnr.link_status == "active" %}alert-primary{% endif %}">
                     <div class="row">

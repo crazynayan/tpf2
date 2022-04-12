@@ -460,3 +460,8 @@ class Server:
     @classmethod
     def delete_link_aaa_template(cls, test_data_id: str, body: dict) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/templates/aaa/link/delete", method="POST", json=body)
+
+    @classmethod
+    def rename_variation(cls, test_data_id: str, v_type: str, variation: int, body: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/types/{v_type}/variations/{variation}",
+                                   method="POST", json=body)

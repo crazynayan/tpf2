@@ -196,7 +196,7 @@ def init_variation(variation: SelectField, variation_name: StringField, test_dat
     variations = Server.get_variations(test_data_id, v_type)
     if not current_user.is_authenticated:
         return dict()
-    variation.choices = [(item["variation"], f"{item['variation_name']} ({item['variation']})") for item in variations]
+    variation.choices = [(item["variation"], f"{item['variation_name']}") for item in variations]
     variation.choices.append((-1, "New Variation"))
     if request.method != "POST":
         return dict()
@@ -894,3 +894,26 @@ class FixedFileForm(FlaskForm):
             raise ValidationError("Specify Pool Macro Name before specifying this field")
         pool_item_field_data.data = form_validate_multiple_field_data(pool_item_field_data.data,
                                                                       self.pool_macro_name.data)
+
+
+class RenameVariation(FlaskForm):
+    new_name = StringField("New Variation Name")
+    save = SubmitField("Rename Variation")
+
+    def __init__(self, test_data_id: str, td_element: dict, v_type: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.display_fields = [("Existing Name", td_element["variation_name"])]
+        self.response: dict = dict()
+        if request.method == "GET":
+            self.new_name.data = td_element["variation_name"]
+        if request.method == "POST":
+            body = {"new_name": self.new_name.data}
+            self.response = Server.rename_variation(test_data_id, v_type, td_element["variation"], body)
+
+    def validate_new_name(self, _):
+        if "error" in self.response and self.response["error"]:
+            if "message" in self.response and self.response["message"]:
+                raise ValidationError(self.response["message"])
+            if "new_name" in self.response["error_fields"]:
+                raise ValidationError(self.response["error_fields"]["new_name"])
+        return
