@@ -393,11 +393,9 @@
                                 <a class="badge badge-warning edit-icon"
                                    href="{{ url_for('update_ecb_level', test_data_id=test_data.id, ecb_level=core.ecb_level,
                                    variation=core.variation) }}">&#9998;</a>
-                                {% if loop.length > 1 %}
-                                    <a class="badge badge-danger"
-                                       href="{{ url_for('delete_ecb_level', test_data_id=test_data.id, ecb_level=core.ecb_level, variation=core.variation) }}">
-                                        X</a>
-                                {% endif %}
+                                <a class="badge badge-danger"
+                                   href="{{ url_for('delete_ecb_level', test_data_id=test_data.id, ecb_level=core.ecb_level, variation=core.variation) }}">
+                                    X</a>
                             {% endif %}
                         </div>
                         <div class="col-md-1">ECB-L</div>
