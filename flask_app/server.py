@@ -463,5 +463,15 @@ class Server:
 
     @classmethod
     def rename_variation(cls, test_data_id: str, v_type: str, variation: int, body: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/input/types/{v_type}/variations/{variation}",
+        return cls._common_request(f"/test_data/{test_data_id}/input/types/{v_type}/variations/{variation}/rename",
                                    method="POST", json=body)
+
+    @classmethod
+    def copy_variation(cls, test_data_id: str, v_type: str, variation: int, body: dict) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/types/{v_type}/variations/{variation}/copy",
+                                   method="POST", json=body)
+
+    @classmethod
+    def delete_variation(cls, test_data_id: str, v_type: str, variation: int) -> dict:
+        return cls._common_request(f"/test_data/{test_data_id}/input/types/{v_type}/variations/{variation}/delete",
+                                   method="DELETE")

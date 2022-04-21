@@ -324,14 +324,34 @@
             <div class="row">
                 <div class="col-md">
                     <div class="list-group list-group-item list-group-item-light">
-                        {{ variation.list[0].variation_name }}
-                        {% if edit_mode %}
-                            <a class="badge badge-warning edit-icon"
-                               href="{{ url_for('rename_variation', test_data_id=test_data.id,
+                        <div class="row">
+                            <div class="col-md-9">
+                                {{ variation.list[0].variation_name }}
+                            </div>
+                            {% if edit_mode %}
+                                <div class="col-md-1">
+                                    <a class="badge badge-warning badge-pill"
+                                       href="{{ url_for('rename_variation', test_data_id=test_data.id,
                                            variation=variation.grouper, v_type='core') }}">
-                                &#9998;
-                            </a>
-                        {% endif %}
+                                        <span class="oi oi-pencil"></span> Rename
+                                    </a>
+                                </div>
+                                <div class="col-md-1">
+                                    <a class="badge badge-success badge-pill"
+                                       href="{{ url_for('copy_variation', test_data_id=test_data.id,
+                                           variation=variation.grouper, v_type='core') }}">
+                                        <span class="oi oi-clipboard"></span> Copy
+                                    </a>
+                                </div>
+                                <div class="col-md-1">
+                                    <a class="badge badge-danger badge-pill"
+                                       href="{{ url_for('delete_variation', test_data_id=test_data.id,
+                                           variation=variation.grouper, v_type='core') }}">
+                                        <span class="oi oi-x"></span> Delete
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -608,14 +628,34 @@
             <div class="row">
                 <div class="col-md">
                     <div class="list-group list-group-item list-group-item-light">
-                        {{ variation.list[0].variation_name }}
-                        {% if edit_mode %}
-                            <a class="badge badge-warning edit-icon"
-                               href="{{ url_for('rename_variation', test_data_id=test_data.id,
+                        <div class="row">
+                            <div class="col-md-9">
+                                {{ variation.list[0].variation_name }}
+                            </div>
+                            {% if edit_mode %}
+                                <div class="col-md-1">
+                                    <a class="badge badge-warning badge-pill"
+                                       href="{{ url_for('rename_variation', test_data_id=test_data.id,
                                            variation=variation.grouper, v_type='pnr') }}">
-                                &#9998;
-                            </a>
-                        {% endif %}
+                                        <span class="oi oi-pencil"></span> Rename
+                                    </a>
+                                </div>
+                                <div class="col-md-1">
+                                    <a class="badge badge-success badge-pill"
+                                       href="{{ url_for('copy_variation', test_data_id=test_data.id,
+                                           variation=variation.grouper, v_type='pnr') }}">
+                                        <span class="oi oi-clipboard"></span> Copy
+                                    </a>
+                                </div>
+                                <div class="col-md-1">
+                                    <a class="badge badge-danger badge-pill"
+                                       href="{{ url_for('delete_variation', test_data_id=test_data.id,
+                                           variation=variation.grouper, v_type='pnr') }}">
+                                        <span class="oi oi-x"></span> Delete
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>

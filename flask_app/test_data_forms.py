@@ -896,19 +896,25 @@ class FixedFileForm(FlaskForm):
                                                                       self.pool_macro_name.data)
 
 
-class RenameVariation(FlaskForm):
+class RenameCopyVariation(FlaskForm):
     new_name = StringField("New Variation Name")
-    save = SubmitField("Rename Variation")
+    save = SubmitField("___ Variation")
 
-    def __init__(self, test_data_id: str, td_element: dict, v_type: str, *args, **kwargs):
+    def __init__(self, test_data_id: str, td_element: dict, v_type: str, action: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.display_fields = [("Existing Name", td_element["variation_name"])]
+        self.display_fields = [("Variation Name", td_element["variation_name"])]
         self.response: dict = dict()
+        self.save.label.text = "Rename Variation" if action == "rename" else "Copy Variation"
         if request.method == "GET":
             self.new_name.data = td_element["variation_name"]
+            if action == "copy":
+                self.new_name.data = f"{self.new_name.data} - Copy"
         if request.method == "POST":
             body = {"new_name": self.new_name.data}
-            self.response = Server.rename_variation(test_data_id, v_type, td_element["variation"], body)
+            if action == "rename":
+                self.response = Server.rename_variation(test_data_id, v_type, td_element["variation"], body)
+            else:
+                self.response = Server.copy_variation(test_data_id, v_type, td_element["variation"], body)
 
     def validate_new_name(self, _):
         if "error" in self.response and self.response["error"]:

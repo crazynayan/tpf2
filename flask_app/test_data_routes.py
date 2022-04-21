@@ -12,7 +12,7 @@ from flask_app.server import Server
 from flask_app.test_data_forms import DeleteForm, TestDataForm, FieldSearchForm, FieldLengthForm, \
     FieldDataForm, RegisterForm, RegisterFieldDataForm, TpfdfForm, DebugForm, \
     FixedFileForm, PnrOutputForm, HeapForm, EcbLevelForm, UpdateHexFieldDataForm, MacroForm, UpdateMacroForm, \
-    UpdatePnrOutputForm, PnrInputForm, UpdatePnrInputForm, GlobalForm, UpdateGlobalForm, RenameVariation
+    UpdatePnrOutputForm, PnrInputForm, UpdatePnrInputForm, GlobalForm, UpdateGlobalForm, RenameCopyVariation
 from flask_app.user import cookie_login_required
 
 
@@ -687,7 +687,7 @@ def delete_debug(test_data_id: str, seg_name: str) -> Response:
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
 
 
-@tpf2_app.route("/test_data/<string:test_data_id>/types/<string:v_type>/variations/<int:variation>",
+@tpf2_app.route("/test_data/<string:test_data_id>/types/<string:v_type>/variations/<int:variation>/rename",
                 methods=["GET", "POST"])
 @cookie_login_required
 @test_data_required
@@ -705,10 +705,57 @@ def rename_variation(test_data_id: str, v_type: str, variation: int, **kwargs):
     if not td_element:
         flash(f"Invalid variation.")
         return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
-    form = RenameVariation(test_data_id, td_element, v_type)
+    form = RenameCopyVariation(test_data_id, td_element, v_type, "rename")
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     if not form.validate_on_submit():
         return render_template("test_data_form.html", title="Rename Variation", form=form, test_data_id=test_data_id)
     flash(form.response["message"])
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor=variation_types[v_type][1]))
+
+
+@tpf2_app.route("/test_data/<string:test_data_id>/types/<string:v_type>/variations/<int:variation>/copy",
+                methods=["GET", "POST"])
+@cookie_login_required
+@test_data_required
+def copy_variation(test_data_id: str, v_type: str, variation: int, **kwargs):
+    test_data: dict = kwargs[test_data_id]
+    variation_types = {"core": (test_data["cores"], "input-core"),
+                       "pnr": (test_data["pnr"], "input-pnr"),
+                       "tpfdf": (test_data["tpfdf"], "input-tpfdf"),
+                       "fixed_file": (test_data["fixed_files"], "input-file")}
+    if v_type not in variation_types:
+        flash("Invalid variation type.")
+        return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    td_element: dict = next((td_element for td_element in variation_types[v_type][0]
+                             if td_element["variation"] == variation), None)
+    if not td_element:
+        flash(f"Invalid variation.")
+        return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    form = RenameCopyVariation(test_data_id, td_element, v_type, "copy")
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    if not form.validate_on_submit():
+        return render_template("test_data_form.html", title="Copy Variation", form=form, test_data_id=test_data_id)
+    flash(form.response["message"])
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor=variation_types[v_type][1]))
+
+
+@tpf2_app.route("/test_data/<string:test_data_id>/types/<string:v_type>/variations/<int:variation>/delete",
+                methods=["GET"])
+@cookie_login_required
+@test_data_required
+def delete_variation(test_data_id: str, v_type: str, variation: int, **kwargs):
+    test_data: dict = kwargs[test_data_id]
+    variation_types = {"core": (test_data["cores"], "input-core"),
+                       "pnr": (test_data["pnr"], "input-pnr"),
+                       "tpfdf": (test_data["tpfdf"], "input-tpfdf"),
+                       "fixed_file": (test_data["fixed_files"], "input-file")}
+    if v_type not in variation_types:
+        flash("Invalid variation type.")
+        return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
+    response = Server.delete_variation(test_data_id, v_type, variation)
+    if not current_user.is_authenticated:
+        return redirect(url_for("logout"))
+    flash(response["message"])
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor=variation_types[v_type][1]))
