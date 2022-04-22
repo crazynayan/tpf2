@@ -1,6 +1,10 @@
+from types import SimpleNamespace
+from typing import Union
+
 from flask import request
 from flask_login import current_user
 from flask_wtf import FlaskForm
+from munch import Munch
 from wtforms import SelectField, StringField, TextAreaField, SubmitField, ValidationError, HiddenField, BooleanField
 
 from config import Config
@@ -8,9 +12,29 @@ from flask_app.form_prompts import PNR_KEY_PROMPT, PNR_LOCATOR_PROMPT, PNR_TEXT_
     TEMPLATE_NAME_PROMPT, TEMPLATE_DESCRIPTION_PROMPT, VARIATION_PROMPT, VARIATION_NAME_PROMPT, GLOBAL_NAME_PROMPT, \
     IS_GLOBAL_RECORD_PROMPT, GLOBAL_HEX_DATA_PROMPT, GLOBAL_SEG_NAME_PROMPT, GLOBAL_FIELD_DATA_PROMPT, \
     MACRO_FIELD_DATA_PROMPT
-from flask_app.server import Server
+from flask_app.server import Server, RequestType
 from flask_app.template_constants import PNR, GLOBAL, AAA
 from flask_app.test_data_forms import init_variation
+
+
+def get_error_msg(response: Munch, field: Union[list, str], message: bool = False) -> str:
+    if response.get("error", True) is False:
+        return str()
+    if message and response.message:
+        return response.message
+    fields = field if isinstance(field, list) else [field]
+    for field_name in fields:
+        msg = response.error_fields.get(field_name, str())
+        if msg:
+            return msg
+    return str()
+
+
+def init_body(form_data: dict, request_type: SimpleNamespace) -> dict:
+    body = dict()
+    for field_name in request_type.__dict__:
+        body[field_name] = form_data.get(field_name)
+    return body
 
 
 class PnrCreateForm(FlaskForm):
@@ -220,31 +244,31 @@ class PnrUpdateForm(FlaskForm):
     field_data = TextAreaField(PNR_INPUT_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
     save = SubmitField("Update PNR")
 
-    def __init__(self, pnr_template: dict, *args, **kwargs):
+    def __init__(self, template: Munch, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.display_fields = list()
-        self.display_fields.append(("Name", pnr_template["name"]))
-        pwc = f"{' (PNR Working copy)' if pnr_template['locator'] == Config.AAAPNR else str()}"
-        self.display_fields.append(("PNR Locator", f"{pnr_template['locator']}{pwc}"))
-        self.display_fields.append(("Key", pnr_template["key"].upper()))
+        self.display_fields.append(("Name", template.name))
+        pwc = f"{' (PNR Working copy)' if template.locator == Config.AAAPNR else str()}"
+        self.display_fields.append(("PNR Locator", f"{template.locator}{pwc}"))
+        self.display_fields.append(("Key", template.key.upper()))
         self.response: dict = dict()
         if request.method == "GET":
-            self.text.data = pnr_template["text"]
-            self.field_data.data = pnr_template["field_data"]
+            self.text.data = template.text
+            self.field_data.data = template.field_data
         if request.method == "POST":
-            body: dict = {"text": self.text.data, "field_data": self.field_data.data, "id": pnr_template["id"]}
-            self.response = Server.update_pnr_template(body)
+            body: dict = init_body(self.data, RequestType.TEMPLATE_PNR_UPDATE)
+            self.response = Server.update_pnr_template(template.id, body)
+        return
 
     def validate_text(self, _):
-        if "error" in self.response and self.response["error"]:
-            if "message" in self.response and self.response["message"]:
-                raise ValidationError(self.response["message"])
-            if "error_fields" in self.response and "text" in self.response["error_fields"]:
-                raise ValidationError(self.response["error_fields"]["text"])
+        msg = get_error_msg(self.response, "text", message=True)
+        if msg:
+            raise ValidationError(msg)
 
     def validate_field_data(self, _):
-        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["field_data"])
+        msg = get_error_msg(self.response, "field_data")
+        if msg:
+            raise ValidationError(msg)
 
 
 class GlobalUpdateForm(FlaskForm):
