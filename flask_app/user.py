@@ -29,6 +29,22 @@ def cookie_login_required(route_function):
     return decorated_route
 
 
+def error_check(route_function):
+    @wraps(route_function)
+    def decorated_route(*args, **kwargs):
+        try:
+            return route_function(*args, **kwargs)
+        except Server.Timeout:
+            flash("Session timeout. Please login again.")
+            logout_user()
+            return redirect(url_for("login"))
+        except Server.SystemError:
+            flash("System Error. Unable to proceed.")
+            return redirect(url_for("home"))
+
+    return decorated_route
+
+
 class User(UserMixin):
     SEPARATOR: str = "|"
 

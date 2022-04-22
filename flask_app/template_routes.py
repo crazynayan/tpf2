@@ -2,6 +2,7 @@ from urllib.parse import unquote
 
 from flask import url_for, render_template, request, flash
 from flask_login import current_user
+from munch import Munch
 from werkzeug.utils import redirect
 
 from flask_app import tpf2_app
@@ -11,7 +12,17 @@ from flask_app.template_forms import TemplateRenameCopyForm, PnrCreateForm, PnrA
     TemplateLinkMergeForm, TemplateLinkUpdateForm, TemplateDeleteForm, GlobalCreateForm, GlobalAddForm, \
     GlobalUpdateForm, AaaCreateForm, AaaUpdateForm
 from flask_app.test_data_routes import test_data_required
-from flask_app.user import cookie_login_required
+from flask_app.user import cookie_login_required, error_check
+
+
+def flash_message(response: dict) -> None:
+    msg = response.get("message")
+    if msg:
+        flash(msg)
+        return
+    if response.get("error", True):
+        flash("System Error. No changes made.")
+    return
 
 
 @tpf2_app.route("/templates/<string:template_type>")
@@ -120,20 +131,17 @@ def add_pnr_template():
 
 @tpf2_app.route("/templates/pnr/update/<string:template_id>", methods=["GET", "POST"])
 @cookie_login_required
+@error_check
 def update_pnr_template(template_id: str):
-    template: dict = Server.get_template_by_id(template_id)
+    template: Munch = Server.get_template_by_id_orm(template_id)
     if not template:
         flash("Error in updating. Template not found")
         return redirect(url_for("view_pnr_templates"))
     form = PnrUpdateForm(template)
-    name = template["name"]
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
     if not form.validate_on_submit():
-        return render_template("template_form.html", title="Update PNR Template", form=form, name=name)
-    if "message" in form.response:
-        flash(form.response["message"])
-    return redirect(url_for("view_template", name=name))
+        return render_template("template_form.html", title="Update PNR Template", form=form, name=template.name)
+    flash_message(form.response)
+    return redirect(url_for("view_template", name=template.name))
 
 
 @tpf2_app.route("/templates/global/create", methods=["GET", "POST"])
