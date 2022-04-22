@@ -1,23 +1,37 @@
 from base64 import b64decode, b64encode
+from types import SimpleNamespace
 from typing import Dict, List, Union
 from urllib.parse import quote
 
 import requests
 from flask import flash
 from flask_login import current_user, logout_user
+from munch import Munch, DefaultMunch
 from requests import Response
 
 from config import Config
 
 
+class RequestType:
+    VARIATION = SimpleNamespace(new_name=str())
+    TEMPLATE_PNR_UPDATE = SimpleNamespace(field_data=str(), text=str())
+    TEMPLATE_GLOBAL_UPDATE = SimpleNamespace(field_data=str(), hex_data=str(), is_global_record=str())
+    TEMPLATE_AAA_UPDATE = SimpleNamespace(field_data=str())
+
+
 class Server:
+    class Timeout(Exception):
+        pass
+
+    class SystemError(Exception):
+        pass
 
     @staticmethod
-    def _common_request(url: str, method: str = "GET", **kwargs) -> Union[list, dict]:
+    def _send_request(url, method: str = "GET", **kwargs) -> Response:
         request_url = f"{Config.SERVER_URL}{url}"
         if "auth" not in kwargs:
             if current_user.is_anonymous:
-                return dict()
+                return Response()
             auth_header = {"Authorization": f"Bearer {current_user.api_key}"}
             kwargs["headers"] = auth_header
         if method == "GET":
@@ -30,10 +44,24 @@ class Server:
             response: Response = requests.delete(request_url, **kwargs)
         else:
             raise TypeError
+        return response
+
+    @classmethod
+    def _common_request(cls, url: str, method: str = "GET", **kwargs) -> Union[list, dict]:
+        response = cls._send_request(url, method, **kwargs)
         if response.status_code == 401 and current_user.is_authenticated:
             flash("Session timeout. Please login again.")
             logout_user()
         return response.json() if response.status_code == 200 else dict()
+
+    @classmethod
+    def _request_with_exception(cls, url: str, method: str = "GET", **kwargs) -> Union[list, Munch]:
+        response = cls._send_request(url, method, **kwargs)
+        if response.status_code == 401 and current_user.is_authenticated:
+            raise cls.Timeout
+        if response.status_code != 200:
+            raise cls.SystemError
+        return DefaultMunch.fromDict(response.json(), DefaultMunch())
 
     @staticmethod
     def _decode_data(encoded_data) -> List[str]:
@@ -374,6 +402,10 @@ class Server:
         return cls._common_request(f"/templates/{template_id}")
 
     @classmethod
+    def get_template_by_id_orm(cls, template_id: str) -> Munch:
+        return cls._request_with_exception(f"/templates/{template_id}")
+
+    @classmethod
     def rename_template(cls, body: dict) -> dict:
         return cls._common_request(f"/templates/rename", method="POST", json=body)
 
@@ -382,8 +414,8 @@ class Server:
         return cls._common_request(f"/templates/copy", method="POST", json=body)
 
     @classmethod
-    def update_pnr_template(cls, body: dict) -> dict:
-        return cls._common_request(f"/templates/pnr/update", method="POST", json=body)
+    def update_pnr_template(cls, template_id: str, body: dict) -> Munch:
+        return cls._request_with_exception(f"/templates/{template_id}/pnr/update", method="POST", json=body)
 
     @classmethod
     def delete_template_by_id(cls, template_id: str) -> dict:
