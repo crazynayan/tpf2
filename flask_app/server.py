@@ -15,7 +15,7 @@ from config import Config
 class RequestType:
     VARIATION = SimpleNamespace(new_name=str())
     TEMPLATE_PNR_UPDATE = SimpleNamespace(field_data=str(), text=str())
-    TEMPLATE_GLOBAL_UPDATE = SimpleNamespace(field_data=str(), hex_data=str(), is_global_record=str())
+    TEMPLATE_GLOBAL_UPDATE = SimpleNamespace(field_data=str(), hex_data=str(), is_global_record=bool(), seg_name=str())
     TEMPLATE_AAA_UPDATE = SimpleNamespace(field_data=str())
 
 
@@ -386,8 +386,32 @@ class Server:
         return cls._common_request(f"/templates/pnr/create", method="POST", json=body)
 
     @classmethod
+    def create_new_global_template(cls, body: dict) -> dict:
+        return cls._common_request(f"/templates/global/create", method="POST", json=body)
+
+    @classmethod
+    def create_new_aaa_template(cls, body: dict) -> dict:
+        return cls._common_request(f"/templates/aaa/create", method="POST", json=body)
+
+    @classmethod
     def add_to_existing_pnr_template(cls, body: dict) -> dict:
         return cls._common_request(f"/templates/pnr/add", method="POST", json=body)
+
+    @classmethod
+    def add_to_existing_global_template(cls, body: dict) -> dict:
+        return cls._common_request(f"/templates/global/add", method="POST", json=body)
+
+    @classmethod
+    def update_pnr_template(cls, template_id: str, body: dict) -> Munch:
+        return cls._request_with_exception(f"/templates/{template_id}/pnr/update", method="POST", json=body)
+
+    @classmethod
+    def update_global_template(cls, template_id: str, body: dict) -> Munch:
+        return cls._request_with_exception(f"/templates/{template_id}/global/update", method="POST", json=body)
+
+    @classmethod
+    def update_aaa_template(cls, template_id: str, body: dict) -> Munch:
+        return cls._request_with_exception(f"/templates/{template_id}/aaa/update", method="POST", json=body)
 
     @classmethod
     def get_templates(cls, template_type) -> Union[list, dict]:
@@ -414,10 +438,6 @@ class Server:
         return cls._common_request(f"/templates/copy", method="POST", json=body)
 
     @classmethod
-    def update_pnr_template(cls, template_id: str, body: dict) -> Munch:
-        return cls._request_with_exception(f"/templates/{template_id}/pnr/update", method="POST", json=body)
-
-    @classmethod
     def delete_template_by_id(cls, template_id: str) -> dict:
         return cls._common_request(f"/templates/{template_id}", method="DELETE")
 
@@ -442,18 +462,6 @@ class Server:
         return cls._common_request(f"/test_data/{test_data_id}/templates/pnr/link/delete", method="POST", json=body)
 
     @classmethod
-    def create_new_global_template(cls, body: dict) -> dict:
-        return cls._common_request(f"/templates/global/create", method="POST", json=body)
-
-    @classmethod
-    def add_to_existing_global_template(cls, body: dict) -> dict:
-        return cls._common_request(f"/templates/global/add", method="POST", json=body)
-
-    @classmethod
-    def update_global_template(cls, body: dict) -> dict:
-        return cls._common_request(f"/templates/global/update", method="POST", json=body)
-
-    @classmethod
     def merge_global_template(cls, test_data_id: str, body: dict) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/templates/global/merge", method="POST", json=body)
 
@@ -468,14 +476,6 @@ class Server:
     @classmethod
     def delete_link_global_template(cls, test_data_id: str, body: dict) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/templates/global/link/delete", method="POST", json=body)
-
-    @classmethod
-    def create_new_aaa_template(cls, body: dict) -> dict:
-        return cls._common_request(f"/templates/aaa/create", method="POST", json=body)
-
-    @classmethod
-    def update_aaa_template(cls, body: dict) -> dict:
-        return cls._common_request(f"/templates/aaa/update", method="POST", json=body)
 
     @classmethod
     def merge_aaa_template(cls, test_data_id: str, body: dict) -> dict:

@@ -9,9 +9,9 @@ Enter multiple fields and data separated by comma. The field and data should be 
 """
 MACRO_FIELD_DATA_PROMPT: str = """
 Enter multiple fields and data separated by comma. The field and data should be separated by colon. 
-Data should be in hex format. Leave it blank to either init with zeroes or with hex data. An e.g. is as follows
-WA0POR:000DF3,WA0ET2:40
+Data should be in hex format. An e.g. is as follows WA0POR:000DF3,WA0ET2:40
 """
+
 PNR_OUTPUT_FIELD_DATA_PROMPT: str = """
 Enter multiple fields with attributes separated by comma. Format of each field is FieldName:Length:ItemNumber.
  FieldName should be from PNR macros. Length should start with L followed by a number. If it is not specified

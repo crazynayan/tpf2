@@ -26,10 +26,20 @@
                 <br>
                 {{ field(class_="btn btn-primary") }}
             {% elif field.type =='BooleanField' %}
-                <div class="form-check">
-                    <label class="form-check-label">
-                        {{ field(class_="form-check-input") }} {{ field.label.text }}
+                <div class="custom-checkbox custom-control">
+                    {% if field.errors %}
+                        {{ field(class_="custom-control-input is_invalid") }}
+                    {% else %}
+                        {{ field(class_="custom-control-input") }}
+                    {% endif %}
+                    <label class="custom-control-label" for="{{ field.id }}">
+                        {{ field.label.text }}
                     </label>
+                    {% if field.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ field.errors[0] }}
+                        </div>
+                    {% endif %}
                 </div>
                 <br>
             {% else %}

@@ -17,17 +17,17 @@ from flask_app.template_constants import PNR, GLOBAL, AAA
 from flask_app.test_data_forms import init_variation
 
 
-def get_error_msg(response: Munch, field: Union[list, str], message: bool = False) -> str:
+def evaluate_error(response: Munch, field: Union[list, str], message: bool = False) -> None:
     if response.get("error", True) is False:
-        return str()
+        return
     if message and response.message:
-        return response.message
+        raise ValidationError(response.message)
     fields = field if isinstance(field, list) else [field]
     for field_name in fields:
         msg = response.error_fields.get(field_name, str())
         if msg:
-            return msg
-    return str()
+            raise ValidationError(msg)
+    return
 
 
 def init_body(form_data: dict, request_type: SimpleNamespace) -> dict:
@@ -251,7 +251,7 @@ class PnrUpdateForm(FlaskForm):
         pwc = f"{' (PNR Working copy)' if template.locator == Config.AAAPNR else str()}"
         self.display_fields.append(("PNR Locator", f"{template.locator}{pwc}"))
         self.display_fields.append(("Key", template.key.upper()))
-        self.response: dict = dict()
+        self.response: Munch = Munch()
         if request.method == "GET":
             self.text.data = template.text
             self.field_data.data = template.field_data
@@ -261,14 +261,10 @@ class PnrUpdateForm(FlaskForm):
         return
 
     def validate_text(self, _):
-        msg = get_error_msg(self.response, "text", message=True)
-        if msg:
-            raise ValidationError(msg)
+        evaluate_error(self.response, "text", message=True)
 
     def validate_field_data(self, _):
-        msg = get_error_msg(self.response, "field_data")
-        if msg:
-            raise ValidationError(msg)
+        evaluate_error(self.response, "field_data")
 
 
 class GlobalUpdateForm(FlaskForm):
@@ -278,67 +274,51 @@ class GlobalUpdateForm(FlaskForm):
     field_data = TextAreaField(GLOBAL_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
     save = SubmitField("Update Global")
 
-    def __init__(self, global_template: dict, *args, **kwargs):
+    def __init__(self, template: Munch, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.display_fields = list()
-        self.display_fields.append(("Template Name", global_template["name"]))
-        self.display_fields.append(("Global Name", global_template["global_name"]))
-        self.response: dict = dict()
+        self.display_fields.append(("Template Name", template.name))
+        self.display_fields.append(("Global Name", template.global_name))
+        self.response: Munch = Munch()
         if request.method == "GET":
-            self.is_global_record.data = global_template["is_global_record"]
-            self.hex_data.data = global_template["hex_data"]
-            self.field_data.data = global_template["field_data"]
-            self.seg_name.data = global_template["seg_name"]
+            self.is_global_record.data = template.is_global_record
+            self.hex_data.data = template.hex_data
+            self.field_data.data = template.field_data
+            self.seg_name.data = template.seg_name
         if request.method == "POST":
-            body = {"id": global_template["id"], "seg_name": self.seg_name.data.upper(),
-                    "field_data": self.field_data.data, "hex_data": self.hex_data.data,
-                    "is_global_record": self.is_global_record.data}
-            self.response = Server.update_global_template(body)
+            body = init_body(self.data, RequestType.TEMPLATE_GLOBAL_UPDATE)
+            self.response = Server.update_global_template(template.id, body)
 
     def validate_is_global_record(self, _):
-        if "error" in self.response and self.response["error"]:
-            if "message" in self.response and self.response["message"]:
-                raise ValidationError(self.response["message"])
-            if "error_fields" in self.response and "is_global_record" in self.response["error_fields"]:
-                raise ValidationError(self.response["error_fields"]["is_global_record"])
+        evaluate_error(self.response, "is_global_record", message=True)
 
     def validate_hex_data(self, _):
-        if "error_fields" in self.response and "hex_data" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["hex_data"])
+        evaluate_error(self.response, "hex_data")
 
     def validate_field_data(self, _):
-        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["field_data"])
+        evaluate_error(self.response, "field_data")
 
     def validate_seg_name(self, _):
-        if "error_fields" in self.response and "seg_name" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["seg_name"])
+        evaluate_error(self.response, "seg_name")
 
 
 class AaaUpdateForm(FlaskForm):
-    is_global_record = BooleanField(IS_GLOBAL_RECORD_PROMPT)
-    hex_data = StringField(GLOBAL_HEX_DATA_PROMPT)
-    seg_name = StringField(GLOBAL_SEG_NAME_PROMPT)
-    field_data = TextAreaField(GLOBAL_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
+    field_data = TextAreaField(MACRO_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
     save = SubmitField("Update AAA")
 
-    def __init__(self, global_template: dict, *args, **kwargs):
+    def __init__(self, template: Munch, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.display_fields = list()
-        self.display_fields.append(("Template Name", global_template["name"]))
-        self.response: dict = dict()
+        self.display_fields.append(("Template Name", template.name))
+        self.response: Munch = Munch()
         if request.method == "GET":
-            self.field_data.data = global_template["field_data"]
+            self.field_data.data = template.field_data
         if request.method == "POST":
-            body = {"id": global_template["id"], "field_data": self.field_data.data}
-            self.response = Server.update_aaa_template(body)
+            body = init_body(self.data, RequestType.TEMPLATE_AAA_UPDATE)
+            self.response = Server.update_aaa_template(template.id, body)
 
     def validate_field_data(self, _):
-        if "error" in self.response and self.response["error"]:
-            if "message" in self.response and self.response["message"]:
-                raise ValidationError(self.response["message"])
-            if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
-                raise ValidationError(self.response["error_fields"]["field_data"])
+        evaluate_error(self.response, "field_data", message=True)
 
 
 class TemplateRenameCopyForm(FlaskForm):
