@@ -30,8 +30,8 @@ def evaluate_error(response: Munch, field: Union[list, str], message: bool = Fal
     return
 
 
-def init_body(form_data: dict, request_type: SimpleNamespace) -> dict:
-    body = dict()
+def init_body(form_data: dict, request_type: SimpleNamespace) -> Munch:
+    body = Munch()
     for field_name in request_type.__dict__:
         body[field_name] = form_data.get(field_name)
     return body
@@ -175,26 +175,21 @@ class PnrAddForm(FlaskForm):
 
     def __init__(self, name: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.response: dict = dict()
+        self.response: Munch = Munch()
         self.display_fields = [("Name", name)]
         if request.method == "POST":
-            body = {"key": self.key.data, "field_data": self.field_data.data, "text": self.text.data, "name": name}
+            body = init_body(self.data, RequestType.TEMPLATE_PNR_ADD)
+            body.name = name
             self.response = Server.add_to_existing_pnr_template(body)
 
     def validate_key(self, _):
-        if "error" in self.response and self.response["error"]:
-            if "message" in self.response and self.response["message"]:
-                raise ValidationError(self.response["message"])
-            if "error_fields" in self.response and "key" in self.response["error_fields"]:
-                raise ValidationError(self.response["error_fields"]["key"])
+        evaluate_error(self.response, ["key", "name"], message=True)
 
     def validate_text(self, _):
-        if "error_fields" in self.response and "text" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["text"])
+        evaluate_error(self.response, "text")
 
     def validate_field_data(self, _):
-        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["field_data"])
+        evaluate_error(self.response, "field_data")
 
 
 class GlobalAddForm(FlaskForm):
@@ -207,36 +202,27 @@ class GlobalAddForm(FlaskForm):
 
     def __init__(self, name: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.response: dict = dict()
+        self.response: Munch = Munch()
         self.display_fields = [("Name", name)]
         if request.method == "POST":
-            body = {"name": name, "is_global_record": self.is_global_record.data,
-                    "seg_name": self.seg_name.data.upper(), "field_data": self.field_data.data,
-                    "hex_data": self.hex_data.data, "global_name": self.global_name.data}
+            body = init_body(self.data, RequestType.TEMPLATE_GLOBAL_ADD)
+            body.name = name
             self.response = Server.add_to_existing_global_template(body)
 
     def validate_global_name(self, _):
-        if "error" in self.response and self.response["error"]:
-            if "message" in self.response and self.response["message"]:
-                raise ValidationError(self.response["message"])
-            if "error_fields" in self.response and "global_name" in self.response["error_fields"]:
-                raise ValidationError(self.response["error_fields"]["global_name"])
+        evaluate_error(self.response, "global_name", message=True)
 
     def validate_is_global_record(self, _):
-        if "error_fields" in self.response and "is_global_record" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["is_global_record"])
+        evaluate_error(self.response, "is_global_record")
 
     def validate_hex_data(self, _):
-        if "error_fields" in self.response and "hex_data" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["hex_data"])
+        evaluate_error(self.response, "hex_data")
 
     def validate_field_data(self, _):
-        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["field_data"])
+        evaluate_error(self.response, "field_data")
 
     def validate_seg_name(self, _):
-        if "error_fields" in self.response and "seg_name" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["seg_name"])
+        evaluate_error(self.response, "seg_name")
 
 
 class PnrUpdateForm(FlaskForm):

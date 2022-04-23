@@ -146,12 +146,9 @@ def create_aaa_template():
 def add_pnr_template():
     name = unquote(request.args.get("name", str()))
     form = PnrAddForm(name)
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
     if not form.validate_on_submit():
         return render_template("template_form.html", title="Add to PNR Template", form=form, name=name)
-    if "message" in form.response:
-        flash(form.response["message"])
+    flash_message(form.response)
     return redirect(url_for("view_template", name=name))
 
 
@@ -160,12 +157,9 @@ def add_pnr_template():
 def add_global_template():
     name = unquote(request.args.get("name", str()))
     form = GlobalAddForm(name)
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
     if not form.validate_on_submit():
         return render_template("template_form.html", title="Add to Global Template", form=form, name=name)
-    if "message" in form.response:
-        flash(form.response["message"])
+    flash_message(form.response)
     return redirect(url_for("view_template", name=name))
 
 

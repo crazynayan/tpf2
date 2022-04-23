@@ -17,6 +17,9 @@ class RequestType:
     TEMPLATE_PNR_UPDATE = SimpleNamespace(field_data=str(), text=str())
     TEMPLATE_GLOBAL_UPDATE = SimpleNamespace(field_data=str(), hex_data=str(), is_global_record=bool(), seg_name=str())
     TEMPLATE_AAA_UPDATE = SimpleNamespace(field_data=str())
+    TEMPLATE_PNR_ADD = SimpleNamespace(field_data=str(), text=str(), key=str(), name=str())
+    TEMPLATE_GLOBAL_ADD = SimpleNamespace(field_data=str(), hex_data=str(), is_global_record=bool(), seg_name=str(),
+                                          name=str(), global_name=str())
 
 
 class Server:
@@ -394,12 +397,12 @@ class Server:
         return cls._common_request(f"/templates/aaa/create", method="POST", json=body)
 
     @classmethod
-    def add_to_existing_pnr_template(cls, body: dict) -> dict:
-        return cls._common_request(f"/templates/pnr/add", method="POST", json=body)
+    def add_to_existing_pnr_template(cls, body: dict) -> Munch:
+        return cls._request_with_exception(f"/templates/pnr/add", method="POST", json=body)
 
     @classmethod
-    def add_to_existing_global_template(cls, body: dict) -> dict:
-        return cls._common_request(f"/templates/global/add", method="POST", json=body)
+    def add_to_existing_global_template(cls, body: dict) -> Munch:
+        return cls._request_with_exception(f"/templates/global/add", method="POST", json=body)
 
     @classmethod
     def update_pnr_template(cls, template_id: str, body: dict) -> Munch:
