@@ -15,10 +15,9 @@ from flask_app.test_data_routes import test_data_required
 from flask_app.user import cookie_login_required, error_check
 
 
-def flash_message(response: dict) -> None:
-    msg = response.get("message")
-    if msg:
-        flash(msg)
+def flash_message(response: Munch) -> None:
+    if response.message:
+        flash(response.message)
         return
     if response.get("error", True):
         flash("System Error. No changes made.")
@@ -27,122 +26,103 @@ def flash_message(response: dict) -> None:
 
 @tpf2_app.route("/templates/<string:template_type>")
 @cookie_login_required
+@error_check
 def view_templates(template_type: str):
     tc = TemplateConstant(template_type)
     if not tc.is_type_valid:
         flash("Invalid Template Type")
         return redirect(url_for("home"))
     templates = Server.get_templates(tc.type.lower())
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
     return render_template("template_list.html", title=f"{tc.type} templates", templates=templates, tc=tc)
 
 
 @tpf2_app.route("/templates/name", methods=["GET", "POST"])
 @cookie_login_required
+@error_check
 def view_template():
     name = unquote(request.args.get("name", str()))
     templates = Server.get_template_by_name(name)
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
     if not templates:
         flash("Template not found.")
         return redirect(url_for("home"))
-    tc = TemplateConstant(templates[0]["type"])
+    tc = TemplateConstant(templates[0].type)
     if not tc.is_type_valid:
         flash("Invalid Template Type")
         return redirect(url_for("home"))
     form = TemplateDeleteForm(name)
     if not form.validate_on_submit():
-        return render_template("template_view.html", title="Template", templates=templates, form=form, name=name,
-                               tc=tc)
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    if "message" in form.response:
-        flash(form.response["message"])
+        return render_template("template_view.html", title="Template", templates=templates, form=form, name=name, tc=tc)
+    flash_message(form.response)
     return redirect(url_for("view_template", name=name)) if form.template_id.data \
         else redirect(url_for("view_templates", template_type=tc.type))
 
 
 @tpf2_app.route("/templates/rename", methods=["GET", "POST"])
 @cookie_login_required
+@error_check
 def rename_template():
     name = unquote(request.args.get("name", str()))
     templates = Server.get_template_by_name(name)
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
     if not templates:
         return redirect(url_for("view_template", name=name))
     form = TemplateRenameCopyForm(templates[0], action="rename")
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
     if not form.validate_on_submit():
         return render_template("template_form.html", title="Rename Template", form=form, name=name)
-    if "message" in form.response:
-        flash(form.response["message"])
+    flash_message(form.response)
     return redirect(url_for("view_template", name=form.name.data))
 
 
 @tpf2_app.route("/templates/copy", methods=["GET", "POST"])
 @cookie_login_required
+@error_check
 def copy_template():
     name = unquote(request.args.get("name", str()))
     templates = Server.get_template_by_name(name)
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
     if not templates:
         return redirect(url_for("view_template", name=name))
     form = TemplateRenameCopyForm(templates[0], action="copy")
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
     if not form.validate_on_submit():
         return render_template("template_form.html", title="Copy Template", form=form, name=name)
-    if "message" in form.response:
-        flash(form.response["message"])
+    flash_message(form.response)
     return redirect(url_for("view_template", name=form.name.data))
 
 
 @tpf2_app.route("/templates/pnr/create", methods=["GET", "POST"])
 @cookie_login_required
+@error_check
 def create_pnr_template():
     form = PnrCreateForm()
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
     if not form.validate_on_submit():
         return render_template("template_form.html", title="Create PNR Template", form=form, name=str())
-    if "message" in form.response:
-        flash(form.response["message"])
+    flash_message(form.response)
     return redirect(url_for("view_template", name=form.name.data))
 
 
 @tpf2_app.route("/templates/global/create", methods=["GET", "POST"])
 @cookie_login_required
+@error_check
 def create_global_template():
     form = GlobalCreateForm()
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
     if not form.validate_on_submit():
         return render_template("template_form.html", title="Create Global Template", form=form, name=str())
-    if "message" in form.response:
-        flash(form.response["message"])
+    flash_message(form.response)
     return redirect(url_for("view_template", name=form.name.data))
 
 
 @tpf2_app.route("/templates/aaa/create", methods=["GET", "POST"])
 @cookie_login_required
+@error_check
 def create_aaa_template():
     form = AaaCreateForm()
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
     if not form.validate_on_submit():
         return render_template("template_form.html", title="Create AAA Template", form=form, name=str())
-    if "message" in form.response:
-        flash(form.response["message"])
+    flash_message(form.response)
     return redirect(url_for("view_template", name=form.name.data))
 
 
 @tpf2_app.route("/templates/pnr/add", methods=["GET", "POST"])
 @cookie_login_required
+@error_check
 def add_pnr_template():
     name = unquote(request.args.get("name", str()))
     form = PnrAddForm(name)
@@ -154,6 +134,7 @@ def add_pnr_template():
 
 @tpf2_app.route("/templates/global/add", methods=["GET", "POST"])
 @cookie_login_required
+@error_check
 def add_global_template():
     name = unquote(request.args.get("name", str()))
     form = GlobalAddForm(name)
@@ -167,7 +148,7 @@ def add_global_template():
 @cookie_login_required
 @error_check
 def update_pnr_template(template_id: str):
-    template: Munch = Server.get_template_by_id_orm(template_id)
+    template: Munch = Server.get_template_by_id(template_id)
     if not template:
         flash("Error in updating. Template not found")
         return redirect(url_for("view_pnr_templates"))
@@ -182,7 +163,7 @@ def update_pnr_template(template_id: str):
 @cookie_login_required
 @error_check
 def update_global_template(template_id: str):
-    template: Munch = Server.get_template_by_id_orm(template_id)
+    template: Munch = Server.get_template_by_id(template_id)
     if not template:
         flash("Error in updating. Template not found")
         return redirect(url_for("view_pnr_templates"))
@@ -197,7 +178,7 @@ def update_global_template(template_id: str):
 @cookie_login_required
 @error_check
 def update_aaa_template(template_id: str):
-    template: Munch = Server.get_template_by_id_orm(template_id)
+    template: Munch = Server.get_template_by_id(template_id)
     if not template:
         flash("Error in updating. Template not found")
         return redirect(url_for("view_pnr_templates"))

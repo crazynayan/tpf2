@@ -49,38 +49,28 @@ class PnrCreateForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.response: dict = dict()
+        self.response: Munch = Munch()
         if request.method == "POST":
-            body = {"key": self.key.data, "locator": self.locator.data, "field_data": self.field_data.data,
-                    "text": self.text.data, "name": self.name.data, "description": self.description.data}
+            body = init_body(self.data, RequestType.TEMPLATE_PNR_CREATE)
             self.response = Server.create_new_pnr_template(body)
 
     def validate_name(self, _):
-        if "error" in self.response and self.response["error"]:
-            if "message" in self.response and self.response["message"]:
-                raise ValidationError(self.response["message"])
-            if "error_fields" in self.response and "name" in self.response["error_fields"]:
-                raise ValidationError(self.response["error_fields"]["name"])
+        evaluate_error(self.response, "name", message=True)
 
     def validate_description(self, _):
-        if "error_fields" in self.response and "description" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["description"])
+        evaluate_error(self.response, "description")
 
     def validate_key(self, _):
-        if "error_fields" in self.response and "key" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["key"])
+        evaluate_error(self.response, "key")
 
     def validate_locator(self, _):
-        if "error_fields" in self.response and "locator" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["locator"])
+        evaluate_error(self.response, "locator")
 
     def validate_text(self, _):
-        if "error_fields" in self.response and "text" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["text"])
+        evaluate_error(self.response, "text")
 
     def validate_field_data(self, _):
-        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["field_data"])
+        evaluate_error(self.response, "field_data")
 
 
 class GlobalCreateForm(FlaskForm):
@@ -96,44 +86,31 @@ class GlobalCreateForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.response: dict = dict()
+        self.response: Munch = Munch()
         if request.method == "POST":
-            body = {"global_name": self.global_name.data, "is_global_record": self.is_global_record.data,
-                    "field_data": self.field_data.data, "hex_data": self.hex_data.data,
-                    "seg_name": self.seg_name.data.upper(), "name": self.name.data,
-                    "description": self.description.data}
+            body = init_body(self.data, RequestType.TEMPLATE_GLOBAL_CREATE)
             self.response = Server.create_new_global_template(body)
 
     def validate_name(self, _):
-        if "error" in self.response and self.response["error"]:
-            if "message" in self.response and self.response["message"]:
-                raise ValidationError(self.response["message"])
-            if "error_fields" in self.response and "name" in self.response["error_fields"]:
-                raise ValidationError(self.response["error_fields"]["name"])
+        evaluate_error(self.response, "name", message=True)
 
     def validate_description(self, _):
-        if "error_fields" in self.response and "description" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["description"])
+        evaluate_error(self.response, "description")
 
     def validate_global_name(self, _):
-        if "error_fields" in self.response and "global_name" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["global_name"])
+        evaluate_error(self.response, "global_name")
 
     def validate_is_global_record(self, _):
-        if "error_fields" in self.response and "is_global_record" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["is_global_record"])
+        evaluate_error(self.response, "is_global_record")
 
     def validate_hex_data(self, _):
-        if "error_fields" in self.response and "hex_data" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["hex_data"])
+        evaluate_error(self.response, "hex_data")
 
     def validate_field_data(self, _):
-        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["field_data"])
+        evaluate_error(self.response, "field_data")
 
     def validate_seg_name(self, _):
-        if "error_fields" in self.response and "seg_name" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["seg_name"])
+        evaluate_error(self.response, "seg_name")
 
 
 class AaaCreateForm(FlaskForm):
@@ -145,25 +122,19 @@ class AaaCreateForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.response: dict = dict()
+        self.response: Munch = Munch()
         if request.method == "POST":
-            body = {"field_data": self.field_data.data, "name": self.name.data, "description": self.description.data}
+            body = init_body(self.data, RequestType.TEMPLATE_AAA_CREATE)
             self.response = Server.create_new_aaa_template(body)
 
     def validate_name(self, _):
-        if "error" in self.response and self.response["error"]:
-            if "message" in self.response and self.response["message"]:
-                raise ValidationError(self.response["message"])
-            if "error_fields" in self.response and "name" in self.response["error_fields"]:
-                raise ValidationError(self.response["error_fields"]["name"])
+        evaluate_error(self.response, "name", message=True)
 
     def validate_description(self, _):
-        if "error_fields" in self.response and "description" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["description"])
+        evaluate_error(self.response, "description")
 
     def validate_field_data(self, _):
-        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["field_data"])
+        evaluate_error(self.response, "field_data")
 
 
 class PnrAddForm(FlaskForm):
@@ -210,7 +181,7 @@ class GlobalAddForm(FlaskForm):
             self.response = Server.add_to_existing_global_template(body)
 
     def validate_global_name(self, _):
-        evaluate_error(self.response, "global_name", message=True)
+        evaluate_error(self.response, ["name", "global_name"], message=True)
 
     def validate_is_global_record(self, _):
         evaluate_error(self.response, "is_global_record")
@@ -312,32 +283,23 @@ class TemplateRenameCopyForm(FlaskForm):
     description = TextAreaField(TEMPLATE_DESCRIPTION_PROMPT, render_kw={"rows": "5"})
     save = SubmitField("Template")
 
-    def __init__(self, template: dict, action: str, *args, **kwargs):
+    def __init__(self, template: Munch, action: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.display_fields = [("Existing Name", template["name"])]
-        self.response: dict = dict()
+        self.display_fields = [("Existing Name", template.name)]
+        self.response: Munch = Munch()
         self.save.label.text = "Rename Template" if action == "rename" else "Copy Template"
         if request.method == "GET" and action == "rename":
-            self.name.data = template["name"]
-            self.description.data = template["description"]
+            self.name.data = template.name
+            self.description.data = template.description
         if request.method == "POST":
-            body = {"old_name": template["name"], "new_name": self.name.data, "description": self.description.data}
+            body = {"old_name": template.name, "new_name": self.name.data, "description": self.description.data}
             self.response = Server.rename_template(body) if action == "rename" else Server.copy_template(body)
 
     def validate_name(self, _):
-        if "error" in self.response and self.response["error"]:
-            if "message" in self.response and self.response["message"]:
-                raise ValidationError(self.response["message"])
-            if "error_fields" in self.response:
-                if "old_name" in self.response["error_fields"]:
-                    raise ValidationError(self.response["error_fields"]["old_name"])
-                if "new_name" in self.response["error_fields"]:
-                    raise ValidationError(self.response["error_fields"]["new_name"])
-        return
+        evaluate_error(self.response, ["new_name", "old_name"], message=True)
 
     def validate_description(self, _):
-        if "error_fields" in self.response and "description" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["description"])
+        evaluate_error(self.response, "description")
 
 
 class TemplateDeleteForm(FlaskForm):
@@ -346,7 +308,7 @@ class TemplateDeleteForm(FlaskForm):
 
     def __init__(self, name: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.response: dict = dict()
+        self.response: Munch = Munch()
         if request.method == "POST":
             if self.template_id.data:
                 self.response = Server.delete_template_by_id(self.template_id.data)

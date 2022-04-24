@@ -21,26 +21,27 @@
     <br>
     <div class="row">
         <div class="col-md-3">
-            <a class="btn btn-success btn-block text-center {{ tc.is_add_button_disabled }}"
+            <a class="btn btn-success btn-block text-center {{ tc.is_add_button_disabled }} {{ templates[0].class_display }}"
                href="{{ url_for(tc.add, name=name) }}">
                 <span class="oi oi-plus"></span> Add to Template
             </a>
         </div>
         <div class="col-md-3">
-            <a class="btn btn-success btn-block text-center"
+            <a class="btn btn-success btn-block text-center "
                href="{{ url_for('copy_template', name=name) }}">
                 <span class="oi oi-clipboard"></span> Copy Template
             </a>
         </div>
         <div class="col-md-3">
-            <a class="btn btn-warning btn-block text-center"
+            <a class="btn btn-warning btn-block text-center {{ templates[0].class_display }}"
                href="{{ url_for('rename_template', name=name) }}">
                 <span class="oi oi-pencil"></span> Rename Template
             </a>
         </div>
         <div class="col-md-3">
             <button type="button" id="deleteTestDataButton" class="btn btn-block btn-danger"
-                    data-toggle="modal" data-target="#deleteConfirmation" data-id="all">
+                    data-toggle="modal" data-target="#deleteConfirmation"
+                    data-id="all" {{ templates[0].class_display }}>
                 <span class="oi oi-trash"></span> Delete Template
             </button>
         </div>
@@ -66,7 +67,7 @@
                     <td class="text-center d-none d-md-table-cell">{{ tc.get_data_type(template) }}</td>
                     <td class="text-center d-none d-md-table-cell">{{ tc.get_data(template) }}</td>
                     <td class="text-center">
-                        <a class="btn btn-warning"
+                        <a class="btn btn-warning {{ template.class_display }}"
                            href="{{ url_for(tc.update, template_id=template.id) }}"
                            title="Edit Template">
                             <span class="oi oi-pencil"></span>
@@ -74,7 +75,7 @@
                     </td>
                     <td class="text-center">
                         {% if templates|length > 1 %}
-                            <button type="button" class="btn btn-danger"
+                            <button type="button" class="btn btn-danger" {{ template.class_display }}
                                     data-toggle="modal" data-target="#deleteConfirmation" data-id="{{ template.id }}">
                                 <span class="oi oi-trash"></span>
                             </button>

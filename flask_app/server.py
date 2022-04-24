@@ -20,6 +20,11 @@ class RequestType:
     TEMPLATE_PNR_ADD = SimpleNamespace(field_data=str(), text=str(), key=str(), name=str())
     TEMPLATE_GLOBAL_ADD = SimpleNamespace(field_data=str(), hex_data=str(), is_global_record=bool(), seg_name=str(),
                                           name=str(), global_name=str())
+    TEMPLATE_PNR_CREATE = SimpleNamespace(field_data=str(), text=str(), key=str(), name=str(), locator=str(),
+                                          description=str())
+    TEMPLATE_GLOBAL_CREATE = SimpleNamespace(field_data=str(), hex_data=str(), is_global_record=bool(), seg_name=str(),
+                                             name=str(), global_name=str(), description=str())
+    TEMPLATE_AAA_CREATE = SimpleNamespace(name=str(), description=str(), field_data=str())
 
 
 class Server:
@@ -385,16 +390,16 @@ class Server:
         return response["variations"] if response else list()
 
     @classmethod
-    def create_new_pnr_template(cls, body: dict) -> dict:
-        return cls._common_request(f"/templates/pnr/create", method="POST", json=body)
+    def create_new_pnr_template(cls, body: dict) -> Munch:
+        return cls._request_with_exception(f"/templates/pnr/create", method="POST", json=body)
 
     @classmethod
-    def create_new_global_template(cls, body: dict) -> dict:
-        return cls._common_request(f"/templates/global/create", method="POST", json=body)
+    def create_new_global_template(cls, body: dict) -> Munch:
+        return cls._request_with_exception(f"/templates/global/create", method="POST", json=body)
 
     @classmethod
-    def create_new_aaa_template(cls, body: dict) -> dict:
-        return cls._common_request(f"/templates/aaa/create", method="POST", json=body)
+    def create_new_aaa_template(cls, body: dict) -> Munch:
+        return cls._request_with_exception(f"/templates/aaa/create", method="POST", json=body)
 
     @classmethod
     def add_to_existing_pnr_template(cls, body: dict) -> Munch:
@@ -417,36 +422,35 @@ class Server:
         return cls._request_with_exception(f"/templates/{template_id}/aaa/update", method="POST", json=body)
 
     @classmethod
-    def get_templates(cls, template_type) -> Union[list, dict]:
-        return cls._common_request(f"/templates/{template_type.lower()}")
+    def get_templates(cls, template_type) -> Union[list, Munch]:
+        return cls._request_with_exception(f"/templates/{template_type.lower()}")
 
     @classmethod
-    def get_template_by_name(cls, name: str) -> Union[list, dict]:
-        return cls._common_request(f"/templates/name", params={"name": name})
+    def get_template_by_name(cls, name: str) -> Union[list, Munch]:
+        templates = cls._request_with_exception(f"/templates/name", params={"name": name})
+        for template in templates:
+            template.class_display = "disabled" if current_user.email != template.owner else str()
+        return templates
 
     @classmethod
-    def get_template_by_id(cls, template_id: str) -> dict:
-        return cls._common_request(f"/templates/{template_id}")
-
-    @classmethod
-    def get_template_by_id_orm(cls, template_id: str) -> Munch:
+    def get_template_by_id(cls, template_id: str) -> Munch:
         return cls._request_with_exception(f"/templates/{template_id}")
 
     @classmethod
-    def rename_template(cls, body: dict) -> dict:
-        return cls._common_request(f"/templates/rename", method="POST", json=body)
+    def rename_template(cls, body: dict) -> Munch:
+        return cls._request_with_exception(f"/templates/rename", method="POST", json=body)
 
     @classmethod
-    def copy_template(cls, body: dict) -> dict:
-        return cls._common_request(f"/templates/copy", method="POST", json=body)
+    def copy_template(cls, body: dict) -> Munch:
+        return cls._request_with_exception(f"/templates/copy", method="POST", json=body)
 
     @classmethod
-    def delete_template_by_id(cls, template_id: str) -> dict:
-        return cls._common_request(f"/templates/{template_id}", method="DELETE")
+    def delete_template_by_id(cls, template_id: str) -> Munch:
+        return cls._request_with_exception(f"/templates/{template_id}", method="DELETE")
 
     @classmethod
-    def delete_template_by_name(cls, body: dict) -> dict:
-        return cls._common_request(f"/templates/name/delete", method="POST", json=body)
+    def delete_template_by_name(cls, body: dict) -> Munch:
+        return cls._request_with_exception(f"/templates/name/delete", method="POST", json=body)
 
     @classmethod
     def merge_pnr_template(cls, test_data_id: str, body: dict) -> dict:
