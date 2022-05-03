@@ -25,6 +25,9 @@ class RequestType:
     TEMPLATE_GLOBAL_CREATE = SimpleNamespace(field_data=str(), hex_data=str(), is_global_record=bool(), seg_name=str(),
                                              name=str(), global_name=str(), description=str())
     TEMPLATE_AAA_CREATE = SimpleNamespace(name=str(), description=str(), field_data=str())
+    TEMPLATE_MERGE_LINK = SimpleNamespace(variation=int(), variation_name=str(), template_name=str())
+    TEMPLATE_LINK_UPDATE = SimpleNamespace(variation=int(), new_template_name=str(), template_name=str())
+    TEMPLATE_LINK_DELETE = SimpleNamespace(variation=int(), template_name=str())
 
 
 class Server:
@@ -426,6 +429,10 @@ class Server:
         return cls._request_with_exception(f"/templates/{template_type.lower()}")
 
     @classmethod
+    def get_templates_and_test_data_variations(cls, template_type: str, test_data_id: str) -> Munch:
+        return cls._request_with_exception(f"/templates/{template_type}/test_data/{test_data_id}")
+
+    @classmethod
     def get_template_by_name(cls, name: str) -> Union[list, Munch]:
         templates = cls._request_with_exception(f"/templates/name", params={"name": name})
         for template in templates:
@@ -453,20 +460,9 @@ class Server:
         return cls._request_with_exception(f"/templates/name/delete", method="POST", json=body)
 
     @classmethod
-    def merge_pnr_template(cls, test_data_id: str, body: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/templates/pnr/merge", method="POST", json=body)
-
-    @classmethod
-    def create_link_pnr_template(cls, test_data_id: str, body: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/templates/pnr/link/create", method="POST", json=body)
-
-    @classmethod
-    def update_link_pnr_template(cls, test_data_id: str, body: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/templates/pnr/link/update", method="POST", json=body)
-
-    @classmethod
-    def delete_link_pnr_template(cls, test_data_id: str, body: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/templates/pnr/link/delete", method="POST", json=body)
+    def merge_link_template(cls, test_data_id: str, body: dict, template_type: str, action_type: str) -> Munch:
+        url = f"/test_data/{test_data_id}/templates/{template_type}/{action_type}"
+        return cls._request_with_exception(url, method="POST", json=body)
 
     @classmethod
     def merge_global_template(cls, test_data_id: str, body: dict) -> dict:

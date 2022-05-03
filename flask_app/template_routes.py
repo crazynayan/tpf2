@@ -6,11 +6,11 @@ from munch import Munch
 from werkzeug.utils import redirect
 
 from flask_app import tpf2_app
-from flask_app.server import Server
-from flask_app.template_constants import TemplateConstant, PNR, GLOBAL, AAA
+from flask_app.server import Server, RequestType
+from flask_app.template_constants import TemplateConstant, GLOBAL, AAA, LINK_DELETE
 from flask_app.template_forms import TemplateRenameCopyForm, PnrCreateForm, PnrAddForm, PnrUpdateForm, \
     TemplateLinkMergeForm, TemplateLinkUpdateForm, TemplateDeleteForm, GlobalCreateForm, GlobalAddForm, \
-    GlobalUpdateForm, AaaCreateForm, AaaUpdateForm
+    GlobalUpdateForm, AaaCreateForm, AaaUpdateForm, TemplateMergeLinkForm, TemplateUpdateLinkForm
 from flask_app.test_data_routes import test_data_required
 from flask_app.user import cookie_login_required, error_check
 
@@ -19,8 +19,13 @@ def flash_message(response: Munch) -> None:
     if response.message:
         flash(response.message)
         return
-    if response.get("error", True):
-        flash("System Error. No changes made.")
+    if not response.get("error", True):
+        return
+    for _, error_msg in response.error_fields.items():
+        if error_msg:
+            flash(error_msg)
+            return
+    flash("System Error. No changes made.")
     return
 
 
@@ -189,65 +194,47 @@ def update_aaa_template(template_id: str):
     return redirect(url_for("view_template", name=template.name))
 
 
-@tpf2_app.route("/test_data/<string:test_data_id>/templates/pnr/merge", methods=["GET", "POST"])
+@tpf2_app.route("/test_data/<test_data_id>/templates/<template_type>/<action_type>", methods=["GET", "POST"])
 @cookie_login_required
-def merge_pnr_template(test_data_id: str):
-    form = TemplateLinkMergeForm(test_data_id, template_type=PNR, action_type="merge")
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
+@error_check
+def merge_link_template(test_data_id: str, template_type: str, action_type: str):
+    form = TemplateMergeLinkForm(test_data_id, template_type, action_type)
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Merge PNR Template", form=form, test_data_id=test_data_id)
-    flash(form.response["message"])
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-pnr"))
+        return render_template("test_data_form.html", title=f"{action_type.title()} {template_type.upper()} Template",
+                               form=form, test_data_id=test_data_id)
+    flash_message(form.response)
+    anchor = TemplateConstant(template_type).anchor
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor=anchor))
 
 
-@tpf2_app.route("/test_data/<string:test_data_id>/templates/pnr/link/create", methods=["GET", "POST"])
-@cookie_login_required
-def create_link_pnr_template(test_data_id: str):
-    form = TemplateLinkMergeForm(test_data_id, template_type=PNR, action_type="link")
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Link PNR Template", form=form, test_data_id=test_data_id)
-    flash(form.response["message"])
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-pnr"))
-
-
-@tpf2_app.route("/test_data/<test_data_id>/templates/<name>/variations/<int:variation>/pnr/update",
+@tpf2_app.route("/test_data/<test_data_id>/templates/<template_type>/<t_name>/variations/<int:variation>/<v_name>/",
                 methods=["GET", "POST"])
 @cookie_login_required
-@test_data_required
-def update_link_pnr_template(test_data_id: str, name: str, variation: int, **kwargs):
-    test_data: dict = kwargs[test_data_id]
-    template_name: str = unquote(name)
-    td_pnr: dict = next((pnr for pnr in test_data["pnr"] if pnr["link"] == template_name
-                         and pnr["variation"] == variation), dict())
-    if not td_pnr:
-        flash("No PNR element found with this template name.")
-        return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
-    form = TemplateLinkUpdateForm(test_data_id, td_pnr, PNR)
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
+@error_check
+def update_link_template(test_data_id: str, template_type: str, t_name: str, variation: int, v_name: str):
+    element: Munch = Munch(test_data_id=test_data_id, template_type=template_type, template_name=unquote(t_name),
+                           variation=variation, variation_name=unquote(v_name))
+    form = TemplateUpdateLinkForm(element)
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Update Link to PNR Template", form=form,
+        return render_template("test_data_form.html", title=f"Update Link to {template_type} Template", form=form,
                                test_data_id=test_data_id)
-    flash(form.response["message"])
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-pnr"))
+    flash_message(form.response)
+    anchor = TemplateConstant(template_type).anchor
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor=anchor))
 
 
-@tpf2_app.route("/test_data/<test_data_id>/templates/<name>/variations/<int:variation>/pnr/delete", methods=["GET"])
+@tpf2_app.route("/test_data/<test_data_id>/templates/<template_type>/<t_name>/variations/<int:variation>/",
+                methods=["GET"])
 @cookie_login_required
-def delete_link_pnr_template(test_data_id: str, name: str, variation: int):
-    template_name: str = unquote(name)
-    body = {"template_name": template_name, "variation": variation, "variation_name": str()}
-    response = Server.delete_link_pnr_template(test_data_id, body)
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    if response["message"]:
-        flash(response["message"])
-    for error_label in response["error_fields"]:
-        flash(response["error_fields"][error_label])
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-pnr"))
+@error_check
+def delete_link_template(test_data_id: str, template_type: str, t_name: str, variation: int):
+    body = RequestType.TEMPLATE_LINK_DELETE
+    body.template_name = unquote(t_name)
+    body.variation = variation
+    response = Server.merge_link_template(test_data_id, body.__dict__, template_type, LINK_DELETE)
+    flash_message(response)
+    anchor = TemplateConstant(template_type).anchor
+    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor=anchor))
 
 
 @tpf2_app.route("/test_data/<string:test_data_id>/templates/global/merge", methods=["GET", "POST"])

@@ -1,6 +1,7 @@
 PNR, GLOBAL, AAA = "PNR", "Global", "AAA"
 CREATE, ADD, UPDATE, UNIQUE_TAG = "create", "add", "update", "unique_tag"
 TEMPLATE_TYPES = (PNR, GLOBAL, AAA)
+MERGE, LINK_CREATE, LINK_UPDATE, LINK_DELETE = "merge", "link", "link_update", "link_delete"
 
 URL: dict = {
     PNR: {
@@ -79,3 +80,7 @@ class TemplateConstant:
     @property
     def is_add_button_disabled(self) -> str:
         return "disabled" if self.type == AAA else str()
+
+    @property
+    def anchor(self) -> str:
+        return "input-pnr" if self.type is PNR else "input-core"

@@ -13,7 +13,7 @@ from flask_app.form_prompts import PNR_KEY_PROMPT, PNR_LOCATOR_PROMPT, PNR_TEXT_
     IS_GLOBAL_RECORD_PROMPT, GLOBAL_HEX_DATA_PROMPT, GLOBAL_SEG_NAME_PROMPT, GLOBAL_FIELD_DATA_PROMPT, \
     MACRO_FIELD_DATA_PROMPT
 from flask_app.server import Server, RequestType
-from flask_app.template_constants import PNR, GLOBAL, AAA
+from flask_app.template_constants import PNR, GLOBAL, AAA, LINK_UPDATE
 from flask_app.test_data_forms import init_variation
 
 
@@ -316,6 +316,33 @@ class TemplateDeleteForm(FlaskForm):
                 self.response = Server.delete_template_by_name({"name": name})
 
 
+class TemplateMergeLinkForm(FlaskForm):
+    variation = SelectField(VARIATION_PROMPT, coerce=int)
+    variation_name = StringField(VARIATION_NAME_PROMPT)
+    template_name = SelectField("Select a template")
+    save = SubmitField("Template with Test Data")
+
+    def __init__(self, test_data_id: str, template_type: str, action_type: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        rsp: Munch = Server.get_templates_and_test_data_variations(template_type, test_data_id)
+        self.variation.choices = rsp.variation_choices
+        self.template_name.choices = [(template.name, template.name) for template in rsp.templates]
+        self.save.label.text = f"{action_type.title()} {self.save.label.text}"
+        self.response: Munch = Munch()
+        if request.method == "POST":
+            body = init_body(self.data, RequestType.TEMPLATE_MERGE_LINK)
+            self.response = Server.merge_link_template(test_data_id, body, template_type, action_type)
+
+    def validate_variation(self, _):
+        evaluate_error(self.response, "variation", message=True)
+
+    def validate_variation_name(self, _):
+        evaluate_error(self.response, "variation_name")
+
+    def validate_template_name(self, _):
+        evaluate_error(self.response, "template_name")
+
+
 class TemplateLinkMergeForm(FlaskForm):
     variation = SelectField(VARIATION_PROMPT, coerce=int)
     variation_name = StringField(VARIATION_NAME_PROMPT)
@@ -337,16 +364,12 @@ class TemplateLinkMergeForm(FlaskForm):
         if request.method == "POST":
             body["template_name"] = self.template_name.data
             if action_type == "merge":
-                if template_type == PNR:
-                    self.response = Server.merge_pnr_template(test_data_id, body)
-                elif template_type == GLOBAL:
+                if template_type == GLOBAL:
                     self.response = Server.merge_global_template(test_data_id, body)
                 elif template_type == AAA:
                     self.response = Server.merge_aaa_template(test_data_id, body)
             else:
-                if template_type == PNR:
-                    self.response = Server.create_link_pnr_template(test_data_id, body)
-                elif template_type == GLOBAL:
+                if template_type == GLOBAL:
                     self.response = Server.create_link_global_template(test_data_id, body)
                 elif template_type == AAA:
                     self.response = Server.create_link_aaa_template(test_data_id, body)
@@ -367,6 +390,32 @@ class TemplateLinkMergeForm(FlaskForm):
             raise ValidationError(self.response["error_fields"]["template_name"])
 
 
+class TemplateUpdateLinkForm(FlaskForm):
+    new_template_name = SelectField("Select a template")
+    save = SubmitField("Update links")
+
+    def __init__(self, element: Munch, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.display_fields = list()
+        self.display_fields.append(("Variation", element.variation_name))
+        self.display_fields.append(("Template Name", element.template_name))
+        templates: Munch = Server.get_templates(template_type=element.template_type)
+        self.new_template_name.choices = [(template.name, template.name) for template in templates]
+        self.response = Munch()
+        if request.method == "POST":
+            body = RequestType.TEMPLATE_LINK_UPDATE
+            body.template_name = element.template_name
+            body.variation = element.variation
+            body.new_template_name = self.new_template_name.data
+            self.response = Server.merge_link_template(element.test_data_id, body.__dict__, element.template_type,
+                                                       LINK_UPDATE)
+        else:
+            self.new_template_name.data = element.template_name
+
+    def validate_new_template_name(self, _):
+        evaluate_error(self.response, "new_template_name", message=True)
+
+
 class TemplateLinkUpdateForm(FlaskForm):
     template_name = SelectField("Select a template")
     save = SubmitField("Update links")
@@ -385,9 +434,7 @@ class TemplateLinkUpdateForm(FlaskForm):
         if request.method == "POST":
             body = {"variation_name": self.template_name.data, "template_name": td_element["link"],
                     "variation": td_element["variation"]}
-            if template_type == PNR:
-                self.response = Server.update_link_pnr_template(test_data_id, body)
-            elif template_type == GLOBAL:
+            if template_type == GLOBAL:
                 self.response = Server.update_link_global_template(test_data_id, body)
             elif template_type == AAA:
                 self.response = Server.update_link_aaa_template(test_data_id, body)

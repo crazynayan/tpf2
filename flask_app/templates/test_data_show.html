@@ -609,13 +609,13 @@
                 </div>
                 <div class="col-md">
                     <a class="btn btn-block btn-warning"
-                       href="{{ url_for('merge_pnr_template', test_data_id=test_data.id) }}">
+                       href="{{ url_for('merge_link_template', test_data_id=test_data.id, template_type='PNR', action_type='merge') }}">
                         <span class="oi oi-loop"></span> Merge
                     </a>
                 </div>
                 <div class="col-md">
                     <a class="btn btn-block btn-warning"
-                       href="{{ url_for('create_link_pnr_template', test_data_id=test_data.id) }}">
+                       href="{{ url_for('merge_link_template', test_data_id=test_data.id, template_type='PNR', action_type='link') }}">
                         <span class="oi oi-link-intact"></span> Link
                     </a>
                 </div>
@@ -670,40 +670,45 @@
                         <div class="col-md-2 font-weight-bold">
                             {{ pnr.key.upper() }}
                         </div>
-                        {% if edit_mode %}
-                            <div class="col-md-1">
-                                {% if pnr.link %}
-                                    <a class="badge badge-warning edit-icon"
-                                       href="{{ url_for('update_link_pnr_template', test_data_id=test_data.id,
-                                           variation=pnr.variation, name=pnr.link) }}">
-                                        &#9998;
-                                    </a>
-                                    <a class="badge badge-danger"
-                                       href="{{ url_for('delete_link_pnr_template', test_data_id=test_data.id,
-                                           variation=pnr.variation, name=pnr.link) }}">
-                                        X
-                                    </a>
-                                {% else %}
-                                    <a class="badge badge-warning edit-icon"
-                                       href="{{ url_for('update_input_pnr', test_data_id=test_data.id, pnr_input_id=pnr.id) }}">
-                                        &#9998;
-                                    </a>
-                                    <a class="badge badge-danger"
-                                       href="{{ url_for('delete_input_pnr', test_data_id=test_data.id, pnr_input_id=pnr.id) }}">
-                                        X
-                                    </a>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                        {% if pnr.data %}
-                            <div class="col-md-7">
+                        <div class="col-md-6">
+                            {% if pnr.data %}
                                 <kbd>{{ pnr.data }}</kbd>
-                            </div>
-                        {% endif %}
-                        {% if pnr.link %}
-                            <div class="col-md-7">
-                                {{ pnr.link_status|title }} link from {{ pnr.link }}
-                            </div>
+                            {% endif %}
+                            {% if pnr.link %}
+                                {{ pnr.link }}
+                            {% endif %}
+                        </div>
+                        {% if edit_mode %}
+                            {% if pnr.link %}
+                                <div class="col-md-1">
+                                    <a class="badge badge-warning badge-pill"
+                                       href="{{ url_for('update_link_template', test_data_id=test_data.id,
+                                                        variation=pnr.variation, t_name=pnr.link, template_type='PNR',
+                                                        v_name=pnr.variation_name) }}">
+                                        <span class="oi oi-pencil"></span> Link
+                                    </a>
+                                </div>
+                                <div class="col-md-1">
+                                    <a class="badge badge-danger badge-pill"
+                                       href="{{ url_for('delete_link_template', test_data_id=test_data.id,
+                                           variation=pnr.variation, t_name=pnr.link, template_type='PNR') }}">
+                                        <span class="oi oi-x"></span> Link
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div class="col-md-1">
+                                    <a class="badge badge-warning badge-pill"
+                                       href="{{ url_for('update_input_pnr', test_data_id=test_data.id, pnr_input_id=pnr.id) }}">
+                                        <span class="oi oi-pencil"></span> {{ pnr.key.title()[:4] }}
+                                    </a>
+                                </div>
+                                <div class="col-md-1">
+                                    <a class="badge badge-danger badge-pill"
+                                       href="{{ url_for('delete_input_pnr', test_data_id=test_data.id, pnr_input_id=pnr.id) }}">
+                                        <span class="oi oi-x"></span> {{ pnr.key.title()[:4] }}
+                                    </a>
+                                </div>
+                            {% endif %}
                         {% endif %}
                     </div>
                     {% for field_data in pnr.field_data %}
