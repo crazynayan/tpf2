@@ -2,7 +2,6 @@ from types import SimpleNamespace
 from typing import Union
 
 from flask import request
-from flask_login import current_user
 from flask_wtf import FlaskForm
 from munch import Munch
 from wtforms import SelectField, StringField, TextAreaField, SubmitField, ValidationError, HiddenField, BooleanField
@@ -14,7 +13,6 @@ from flask_app.form_prompts import PNR_KEY_PROMPT, PNR_LOCATOR_PROMPT, PNR_TEXT_
     MACRO_FIELD_DATA_PROMPT
 from flask_app.server import Server, RequestType
 from flask_app.template_constants import PNR, GLOBAL, AAA, LINK_UPDATE
-from flask_app.test_data_forms import init_variation
 
 
 def evaluate_error(response: Munch, field: Union[list, str], message: bool = False) -> None:
@@ -343,53 +341,6 @@ class TemplateMergeLinkForm(FlaskForm):
         evaluate_error(self.response, "template_name")
 
 
-class TemplateLinkMergeForm(FlaskForm):
-    variation = SelectField(VARIATION_PROMPT, coerce=int)
-    variation_name = StringField(VARIATION_NAME_PROMPT)
-    template_name = SelectField("Select a template")
-    save = SubmitField("Template with Test Data")
-
-    def __init__(self, test_data_id: str, template_type: str, action_type: str, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        v_type = "pnr" if template_type == PNR else "core"
-        body: dict = init_variation(self.variation, self.variation_name, test_data_id, v_type)
-        if not current_user.is_authenticated:
-            return
-        templates: dict = Server.get_templates(template_type=template_type)
-        if not current_user.is_authenticated:
-            return
-        self.template_name.choices = [(template["name"], template["name"]) for template in templates]
-        self.response = dict()
-        self.save.label.text = f"{action_type.title()} {self.save.label.text}"
-        if request.method == "POST":
-            body["template_name"] = self.template_name.data
-            if action_type == "merge":
-                if template_type == GLOBAL:
-                    self.response = Server.merge_global_template(test_data_id, body)
-                elif template_type == AAA:
-                    self.response = Server.merge_aaa_template(test_data_id, body)
-            else:
-                if template_type == GLOBAL:
-                    self.response = Server.create_link_global_template(test_data_id, body)
-                elif template_type == AAA:
-                    self.response = Server.create_link_aaa_template(test_data_id, body)
-
-    def validate_variation(self, _):
-        if "error" in self.response and self.response["error"]:
-            if "message" in self.response and self.response["message"]:
-                raise ValidationError(self.response["message"])
-            if "error_fields" in self.response and "variation" in self.response["error_fields"]:
-                raise ValidationError(self.response["error_fields"]["variation"])
-
-    def validate_variation_name(self, _):
-        if "error_fields" in self.response and "variation_name" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["variation_name"])
-
-    def validate_template_name(self, _):
-        if "error_fields" in self.response and "template_name" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["template_name"])
-
-
 class TemplateUpdateLinkForm(FlaskForm):
     new_template_name = SelectField("Select a template")
     save = SubmitField("Update links")
@@ -414,37 +365,3 @@ class TemplateUpdateLinkForm(FlaskForm):
 
     def validate_new_template_name(self, _):
         evaluate_error(self.response, "new_template_name", message=True)
-
-
-class TemplateLinkUpdateForm(FlaskForm):
-    template_name = SelectField("Select a template")
-    save = SubmitField("Update links")
-
-    def __init__(self, test_data_id: str, td_element: dict, template_type: str, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.display_fields = list()
-        variation_name = f" ({td_element['variation_name']})" if td_element["variation_name"] else str()
-        self.display_fields.append(("Variation", f"{td_element['variation']}{variation_name}"))
-        self.display_fields.append(("Template Name", td_element["link"]))
-        templates: dict = Server.get_templates(template_type=template_type)
-        if not current_user.is_authenticated:
-            return
-        self.template_name.choices = [(template["name"], template["name"]) for template in templates]
-        self.response = dict()
-        if request.method == "POST":
-            body = {"variation_name": self.template_name.data, "template_name": td_element["link"],
-                    "variation": td_element["variation"]}
-            if template_type == GLOBAL:
-                self.response = Server.update_link_global_template(test_data_id, body)
-            elif template_type == AAA:
-                self.response = Server.update_link_aaa_template(test_data_id, body)
-        else:
-            self.template_name.data = td_element["link"]
-
-    def validate_template_name(self, _):
-        if "error" in self.response and self.response["error"]:
-            if "message" in self.response and self.response["message"]:
-                raise ValidationError(self.response["message"])
-            if "error_fields" in self.response:
-                for error_label in self.response["error_fields"]:
-                    raise ValidationError(self.response["error_fields"][error_label])

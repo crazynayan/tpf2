@@ -465,38 +465,6 @@ class Server:
         return cls._request_with_exception(url, method="POST", json=body)
 
     @classmethod
-    def merge_global_template(cls, test_data_id: str, body: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/templates/global/merge", method="POST", json=body)
-
-    @classmethod
-    def create_link_global_template(cls, test_data_id: str, body: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/templates/global/link/create", method="POST", json=body)
-
-    @classmethod
-    def update_link_global_template(cls, test_data_id: str, body: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/templates/global/link/update", method="POST", json=body)
-
-    @classmethod
-    def delete_link_global_template(cls, test_data_id: str, body: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/templates/global/link/delete", method="POST", json=body)
-
-    @classmethod
-    def merge_aaa_template(cls, test_data_id: str, body: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/templates/aaa/merge", method="POST", json=body)
-
-    @classmethod
-    def create_link_aaa_template(cls, test_data_id: str, body: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/templates/aaa/link/create", method="POST", json=body)
-
-    @classmethod
-    def update_link_aaa_template(cls, test_data_id: str, body: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/templates/aaa/link/update", method="POST", json=body)
-
-    @classmethod
-    def delete_link_aaa_template(cls, test_data_id: str, body: dict) -> dict:
-        return cls._common_request(f"/test_data/{test_data_id}/templates/aaa/link/delete", method="POST", json=body)
-
-    @classmethod
     def rename_variation(cls, test_data_id: str, v_type: str, variation: int, body: dict) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/input/types/{v_type}/variations/{variation}/rename",
                                    method="POST", json=body)

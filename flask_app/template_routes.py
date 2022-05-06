@@ -1,17 +1,15 @@
 from urllib.parse import unquote
 
 from flask import url_for, render_template, request, flash
-from flask_login import current_user
 from munch import Munch
 from werkzeug.utils import redirect
 
 from flask_app import tpf2_app
 from flask_app.server import Server, RequestType
-from flask_app.template_constants import TemplateConstant, GLOBAL, AAA, LINK_DELETE
+from flask_app.template_constants import TemplateConstant, LINK_DELETE
 from flask_app.template_forms import TemplateRenameCopyForm, PnrCreateForm, PnrAddForm, PnrUpdateForm, \
-    TemplateLinkMergeForm, TemplateLinkUpdateForm, TemplateDeleteForm, GlobalCreateForm, GlobalAddForm, \
+    TemplateDeleteForm, GlobalCreateForm, GlobalAddForm, \
     GlobalUpdateForm, AaaCreateForm, AaaUpdateForm, TemplateMergeLinkForm, TemplateUpdateLinkForm
-from flask_app.test_data_routes import test_data_required
 from flask_app.user import cookie_login_required, error_check
 
 
@@ -235,129 +233,3 @@ def delete_link_template(test_data_id: str, template_type: str, t_name: str, var
     flash_message(response)
     anchor = TemplateConstant(template_type).anchor
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor=anchor))
-
-
-@tpf2_app.route("/test_data/<string:test_data_id>/templates/global/merge", methods=["GET", "POST"])
-@cookie_login_required
-def merge_global_template(test_data_id: str):
-    form = TemplateLinkMergeForm(test_data_id, template_type=GLOBAL, action_type="merge")
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Merge Global Template", form=form,
-                               test_data_id=test_data_id)
-    flash(form.response["message"])
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-core"))
-
-
-@tpf2_app.route("/test_data/<string:test_data_id>/templates/global/link/create", methods=["GET", "POST"])
-@cookie_login_required
-def create_link_global_template(test_data_id: str):
-    form = TemplateLinkMergeForm(test_data_id, template_type=GLOBAL, action_type="link")
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Link Global Template", form=form,
-                               test_data_id=test_data_id)
-    flash(form.response["message"])
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-core"))
-
-
-@tpf2_app.route("/test_data/<test_data_id>/templates/<name>/variations/<int:variation>/global/update",
-                methods=["GET", "POST"])
-@cookie_login_required
-@test_data_required
-def update_link_global_template(test_data_id: str, name: str, variation: int, **kwargs):
-    test_data: dict = kwargs[test_data_id]
-    template_name: str = unquote(name)
-    td_core: dict = next((core for core in test_data["cores"] if core["link"] == template_name
-                          and core["variation"] == variation), dict())
-    if not td_core:
-        flash("No Global link found with this template name.")
-        return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
-    form = TemplateLinkUpdateForm(test_data_id, td_core, GLOBAL)
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Update Link to Global Template", form=form,
-                               test_data_id=test_data_id)
-    flash(form.response["message"])
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-core"))
-
-
-@tpf2_app.route("/test_data/<test_data_id>/templates/<name>/variations/<int:variation>/global/delete", methods=["GET"])
-@cookie_login_required
-def delete_link_global_template(test_data_id: str, name: str, variation: int):
-    template_name: str = unquote(name)
-    body = {"template_name": template_name, "variation": variation, "variation_name": str()}
-    response = Server.delete_link_global_template(test_data_id, body)
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    if response["message"]:
-        flash(response["message"])
-    for error_label in response["error_fields"]:
-        flash(response["error_fields"][error_label])
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-core"))
-
-
-@tpf2_app.route("/test_data/<string:test_data_id>/templates/aaa/merge", methods=["GET", "POST"])
-@cookie_login_required
-def merge_aaa_template(test_data_id: str):
-    form = TemplateLinkMergeForm(test_data_id, template_type=AAA, action_type="merge")
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Merge AAA Template", form=form,
-                               test_data_id=test_data_id)
-    flash(form.response["message"])
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-core"))
-
-
-@tpf2_app.route("/test_data/<string:test_data_id>/templates/aaa/link/create", methods=["GET", "POST"])
-@cookie_login_required
-def create_link_aaa_template(test_data_id: str):
-    form = TemplateLinkMergeForm(test_data_id, template_type=AAA, action_type="link")
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Link AAA Template", form=form,
-                               test_data_id=test_data_id)
-    flash(form.response["message"])
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-core"))
-
-
-@tpf2_app.route("/test_data/<test_data_id>/templates/<name>/variations/<int:variation>/aaa/update",
-                methods=["GET", "POST"])
-@cookie_login_required
-@test_data_required
-def update_link_aaa_template(test_data_id: str, name: str, variation: int, **kwargs):
-    test_data: dict = kwargs[test_data_id]
-    template_name: str = unquote(name)
-    td_core: dict = next((core for core in test_data["cores"] if core["link"] == template_name
-                          and core["variation"] == variation), dict())
-    if not td_core:
-        flash("No AAA link found with this template name.")
-        return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
-    form = TemplateLinkUpdateForm(test_data_id, td_core, AAA)
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Update Link to AAA Template", form=form,
-                               test_data_id=test_data_id)
-    flash(form.response["message"])
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-core"))
-
-
-@tpf2_app.route("/test_data/<test_data_id>/templates/<name>/variations/<int:variation>/aaa/delete", methods=["GET"])
-@cookie_login_required
-def delete_link_aaa_template(test_data_id: str, name: str, variation: int):
-    template_name: str = unquote(name)
-    body = {"template_name": template_name, "variation": variation, "variation_name": str()}
-    response = Server.delete_link_aaa_template(test_data_id, body)
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    if response["message"]:
-        flash(response["message"])
-    for error_label in response["error_fields"]:
-        flash(response["error_fields"][error_label])
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-core"))
