@@ -1,4 +1,4 @@
-from base64 import b64decode, b64encode
+from base64 import b64decode
 from types import SimpleNamespace
 from typing import Dict, List, Union
 from urllib.parse import quote
@@ -261,18 +261,6 @@ class Server:
     @classmethod
     def add_output_regs(cls, test_data_id: str, reg_dict: dict) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/output/regs", method="PATCH", json=reg_dict)
-
-    @classmethod
-    def add_input_field(cls, test_data_id: str, macro_name: str, field_data: dict) -> dict:
-        field_data["data"] = b64encode(bytes.fromhex(field_data["data"])).decode()
-        return cls._common_request(f"/test_data/{test_data_id}/input/cores/{macro_name}/fields",
-                                   method="PATCH", json=field_data)
-
-    @classmethod
-    def delete_input_field(cls, test_data_id: str, macro_name: str, field_name: str) -> dict:
-        field_name = quote(field_name)
-        return cls._common_request(f"/test_data/{test_data_id}/input/cores/{macro_name}/fields/{field_name}",
-                                   method="DELETE")
 
     @classmethod
     def add_input_macro(cls, test_data_id: str, body: dict) -> dict:

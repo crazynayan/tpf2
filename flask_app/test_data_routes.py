@@ -10,7 +10,7 @@ from wtforms import BooleanField
 from flask_app import tpf2_app
 from flask_app.server import Server
 from flask_app.test_data_forms import DeleteForm, TestDataForm, FieldSearchForm, FieldLengthForm, \
-    FieldDataForm, RegisterForm, RegisterFieldDataForm, TpfdfForm, DebugForm, \
+    RegisterForm, RegisterFieldDataForm, TpfdfForm, DebugForm, \
     FixedFileForm, PnrOutputForm, HeapForm, EcbLevelForm, UpdateHexFieldDataForm, MacroForm, UpdateMacroForm, \
     UpdatePnrOutputForm, PnrInputForm, UpdatePnrInputForm, GlobalForm, UpdateGlobalForm, RenameCopyVariation
 from flask_app.user import cookie_login_required
@@ -226,53 +226,6 @@ def delete_output_field(test_data_id: str, macro_name: str, field_name: str):
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="output-core"))
 
 
-@tpf2_app.route("/test_data/<string:test_data_id>/input/fields", methods=["GET", "POST"])
-@cookie_login_required
-def search_input_fields(test_data_id: str) -> Response:
-    return _search_field("add_input_field", test_data_id)
-
-
-@tpf2_app.route("/test_data/<string:test_data_id>/input/cores/<string:macro_name>/fields/<string:field_name>",
-                methods=["GET", "POST"])
-@cookie_login_required
-def add_input_field(test_data_id: str, macro_name: str, field_name: str):
-    field_name = unquote(field_name)
-    form = FieldDataForm()
-    variations = Server.get_variations(test_data_id, "core")
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    form.variation.choices = [(item["variation"], f"{item['variation_name']} ({item['variation']})")
-                              for item in variations]
-    form.variation.choices.append((-1, "New Variation"))
-    if not form.validate_on_submit():
-        return render_template("test_data_form.html", title=f"{field_name} ({macro_name})", form=form,
-                               test_data_id=test_data_id)
-    field_dict = {"field": field_name, "data": form.field_data.data}
-    if form.variation.data == -1:
-        field_dict["variation"] = variations[-1]["variation"] + 1 if variations else 0
-        field_dict["variation_name"] = form.variation_name.data
-    else:
-        field_dict["variation"] = form.variation.data
-        field_dict["variation_name"] = str()
-    response = Server.add_input_field(test_data_id, macro_name, field_dict)
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    if not response:
-        flash("Error in creating fields")
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
-
-
-@tpf2_app.route("/test_data/<string:test_data_id>/input/cores/<string:macro_name>/fields/<string:field_name>/delete")
-@cookie_login_required
-def delete_input_field(test_data_id: str, macro_name: str, field_name: str):
-    response = Server.delete_input_field(test_data_id, macro_name, field_name)
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    if not response:
-        flash("Error in deleting field")
-    return redirect(url_for("confirm_test_data", test_data_id=test_data_id, _anchor="input-core"))
-
-
 @tpf2_app.route("/test_data/<string:test_data_id>/input/heap", methods=["GET", "POST"])
 @cookie_login_required
 def add_heap(test_data_id: str):
@@ -362,7 +315,7 @@ def add_macro(test_data_id: str):
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Update Default Fields", form=form,
+        return render_template("test_data_form.html", title="Add Fields", form=form,
                                test_data_id=test_data_id)
     flash(form.response["message"])
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
@@ -383,7 +336,7 @@ def update_macro(test_data_id: str, macro_name: str, variation: int, **kwargs):
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Update Default Fields", form=form,
+        return render_template("test_data_form.html", title="Update Fields", form=form,
                                test_data_id=test_data_id)
     flash(form.response["message"])
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
