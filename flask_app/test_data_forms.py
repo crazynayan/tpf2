@@ -179,19 +179,6 @@ class FieldLengthForm(FlaskForm):
         return
 
 
-class FieldDataForm(FlaskForm):
-    variation = SelectField(VARIATION_PROMPT, coerce=int)
-    variation_name = StringField(VARIATION_NAME_PROMPT)
-    field_data = StringField("Enter Data - Input hex characters. Odd number of digit will be considered a number. "
-                             "Prefix with 0 to make the number a digit. Non hex characters are considered as text. "
-                             "Prefix with quote to enforce text.", validators=[InputRequired()])
-    save = SubmitField("Save & Continue - Add Further Data")
-
-    @staticmethod
-    def validate_field_data(_, field_data: StringField) -> None:
-        field_data.data = form_validate_field_data(field_data.data)
-
-
 def init_variation(variation: SelectField, variation_name: StringField, test_data_id: str, v_type: str) -> dict:
     variations = Server.get_variations(test_data_id, v_type)
     if not current_user.is_authenticated:
@@ -393,9 +380,7 @@ class UpdateHexFieldDataForm(FlaskForm):
 
 
 class UpdateMacroForm(FlaskForm):
-    field_data = TextAreaField("Enter multiple fields and data separated by comma. The field and data should be "
-                               "separated by colon. Data should be in hex format. Leave it blank to either init with "
-                               "zeroes or with hex data", render_kw={"rows": "5"})
+    field_data = TextAreaField(MACRO_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
     save = SubmitField("Save & Continue - Add Further Data")
 
     def __init__(self, test_data_id: str, core: dict, *args, **kwargs):
