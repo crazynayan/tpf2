@@ -104,8 +104,6 @@ class Server:
             for field_data in core["field_data"]:
                 field_data["data"] = cls._decode_data(field_data["data"])
         for pnr in test_data["pnr"]:
-            for field_data in pnr["field_data"]:
-                field_data["data"] = cls._decode_data(field_data["data"])
             if "field_data_item" in pnr:
                 for field_data in pnr["field_data_item"]:
                     field_data["data"] = cls._decode_data(field_data["data"])
