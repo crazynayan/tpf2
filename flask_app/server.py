@@ -464,3 +464,8 @@ class Server:
     def delete_variation(cls, test_data_id: str, v_type: str, variation: int) -> dict:
         return cls._common_request(f"/test_data/{test_data_id}/input/types/{v_type}/variations/{variation}/delete",
                                    method="DELETE")
+
+    @classmethod
+    def update_comment(cls, test_data_id: str, result_id: int, body: dict) -> Munch:
+        url = f"/test_data/{test_data_id}/results/{result_id}/comment"
+        return cls._request_with_exception(url, method="POST", json=body)
