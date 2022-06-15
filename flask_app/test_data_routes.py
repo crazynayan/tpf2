@@ -93,16 +93,7 @@ def run_test_data(test_data_id: str):
     if not test_data:
         flash("Error in running test data")
         return redirect(url_for("get_test_data", test_data_id=test_data_id))
-    if len(test_data["outputs"]) > 1:
-        test_data_variation = {"core": False, "pnr": False, "tpfdf": False, "file": False}
-        for variation_type in test_data_variation:
-            if any(output["variation"][variation_type] != test_data["outputs"][0]["variation"][variation_type]
-                   for output in test_data["outputs"]):
-                test_data_variation[variation_type] = True
-        return render_template("test_data_variation.html", title="Results", test_data=test_data,
-                               test_data_variation=test_data_variation)
-    return render_template("test_data_result.html", title="Results", test_data=test_data,
-                           output=test_data["outputs"][0])
+    return render_template("test_data_variation.html", title="Results", test_data=test_data)
 
 
 @tpf2_app.route("/test_data/create", methods=["GET", "POST"])
