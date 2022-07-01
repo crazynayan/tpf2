@@ -365,3 +365,33 @@ class TemplateUpdateLinkForm(FlaskForm):
 
     def validate_new_template_name(self, _):
         evaluate_error(self.response, "new_template_name", message=True)
+
+
+class CommentUpdateForm(FlaskForm):
+    comment = TextAreaField("Enter comment", render_kw={"rows": "5"})
+    save = SubmitField("Save")
+
+    def __init__(self, test_result: Munch, comment_type: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        ref = {
+            "user_comment": ("Ending At", test_result.last_node),
+            "pnr_comment": ("PNR Data", test_result.pnr_field_data),
+            "core_comment": ("Field Data", test_result.core_field_data),
+            "general_comment": ("General Observation", "A common comment for the entire result.")
+        }
+        self.display_fields = list()
+        self.display_fields.append(("Name", test_result.name))
+        self.display_fields.append(("Result No.", test_result.result_id))
+        if comment_type in ref:
+            self.display_fields.append(ref[comment_type])
+        self.response = Munch()
+        if request.method == "POST":
+            body = RequestType.RESULT_COMMENT_UPDATE
+            body.comment_type = comment_type
+            body.comment = self.comment.data
+            self.response = Server.update_comment(test_result.id, body.__dict__)
+        else:
+            self.comment.data = test_result.get(comment_type)
+
+    def validate_comment(self, _):
+        evaluate_error(self.response, ["comment", "comment_type"], message=True)

@@ -4,6 +4,7 @@ from typing import Optional
 from flask import flash, redirect, url_for, render_template, request, Response, make_response, current_app
 from flask_login import UserMixin, current_user, login_user, logout_user
 from flask_wtf import FlaskForm
+from munch import Munch
 from werkzeug.urls import url_parse
 from wtforms import PasswordField, SubmitField
 from wtforms.fields.html5 import EmailField
@@ -115,3 +116,17 @@ def logout() -> Response:
     response: Response = make_response(redirect(url_for("home")))
     response.set_cookie("user_data", str(), max_age=0, secure=Config.CI_SECURITY, httponly=True, samesite="Strict")
     return response
+
+
+def flash_message(response: Munch) -> None:
+    if response.message:
+        flash(response.message)
+        return
+    if not response.get("error", True):
+        return
+    for _, error_msg in response.error_fields.items():
+        if error_msg:
+            flash(error_msg)
+            return
+    flash("System Error. No changes made.")
+    return

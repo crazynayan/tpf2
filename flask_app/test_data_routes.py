@@ -9,11 +9,12 @@ from wtforms import BooleanField
 
 from flask_app import tpf2_app
 from flask_app.server import Server
+from flask_app.template_forms import CommentUpdateForm
 from flask_app.test_data_forms import DeleteForm, TestDataForm, FieldSearchForm, FieldLengthForm, \
     RegisterForm, RegisterFieldDataForm, TpfdfForm, DebugForm, \
     FixedFileForm, PnrOutputForm, HeapForm, EcbLevelForm, UpdateHexFieldDataForm, MacroForm, UpdateMacroForm, \
     UpdatePnrOutputForm, PnrInputForm, UpdatePnrInputForm, GlobalForm, UpdateGlobalForm, RenameCopyVariation
-from flask_app.user import cookie_login_required
+from flask_app.user import cookie_login_required, error_check, flash_message
 
 
 def test_data_required(func):
@@ -84,6 +85,21 @@ def get_test_data(test_data_id):
     return redirect(url_for("get_my_test_data"))
 
 
+@tpf2_app.route("/test_results", methods=["GET", "POST"])
+@cookie_login_required
+@error_check
+def get_test_results():
+    name = request.args.get("name", str())
+    test_results = Server.get_test_result_list() if not name else Server.get_test_result_by_name(name)
+    html = "test_result_list.html" if not name else "test_result_view.html"
+    form = DeleteForm()
+    if not form.validate_on_submit():
+        return render_template(html, title="Saved Test Results", tr=test_results, form=form)
+    rsp = Server.delete_test_result(name=form.deleted_item.data)
+    flash_message(rsp)
+    return redirect(url_for("get_test_results"))
+
+
 @tpf2_app.route("/test_data/<string:test_data_id>/run")
 @cookie_login_required
 def run_test_data(test_data_id: str):
@@ -94,6 +110,32 @@ def run_test_data(test_data_id: str):
         flash("Error in running test data")
         return redirect(url_for("get_test_data", test_data_id=test_data_id))
     return render_template("test_data_variation.html", title="Results", test_data=test_data)
+
+
+@tpf2_app.route("/test_results/<test_data_id>/save_test_results")
+@cookie_login_required
+@error_check
+def save_test_results(test_data_id: str):
+    name = request.args.get("name", str())
+    rsp = Server.save_test_results(test_data_id, name)
+    flash_message(rsp)
+    return redirect(url_for("get_test_results"))
+
+
+@tpf2_app.route("/test_results/<test_result_id>/comment", methods=["GET", "POST"])
+@cookie_login_required
+@error_check
+def update_comment(test_result_id: str):
+    rsp = Server.get_comment(test_result_id)
+    if rsp.error:
+        flash_message(rsp)
+        return redirect(url_for("get_test_results"))
+    comment_type = request.args.get("comment_type", str())
+    form = CommentUpdateForm(rsp.data[0], comment_type)
+    if not form.validate_on_submit():
+        return render_template("test_result_form.html", name=rsp.data[0].name, title="Edit Comment", form=form)
+    flash_message(form.response)
+    return redirect(url_for("get_test_results", name=rsp.data[0].name))
 
 
 @tpf2_app.route("/test_data/create", methods=["GET", "POST"])

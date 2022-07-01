@@ -10,21 +10,7 @@ from flask_app.template_constants import TemplateConstant, LINK_DELETE
 from flask_app.template_forms import TemplateRenameCopyForm, PnrCreateForm, PnrAddForm, PnrUpdateForm, \
     TemplateDeleteForm, GlobalCreateForm, GlobalAddForm, \
     GlobalUpdateForm, AaaCreateForm, AaaUpdateForm, TemplateMergeLinkForm, TemplateUpdateLinkForm
-from flask_app.user import cookie_login_required, error_check
-
-
-def flash_message(response: Munch) -> None:
-    if response.message:
-        flash(response.message)
-        return
-    if not response.get("error", True):
-        return
-    for _, error_msg in response.error_fields.items():
-        if error_msg:
-            flash(error_msg)
-            return
-    flash("System Error. No changes made.")
-    return
+from flask_app.user import cookie_login_required, error_check, flash_message
 
 
 @tpf2_app.route("/templates/<string:template_type>")

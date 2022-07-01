@@ -28,6 +28,7 @@ class RequestType:
     TEMPLATE_MERGE_LINK = SimpleNamespace(variation=int(), variation_name=str(), template_name=str())
     TEMPLATE_LINK_UPDATE = SimpleNamespace(variation=int(), new_template_name=str(), template_name=str())
     TEMPLATE_LINK_DELETE = SimpleNamespace(variation=int(), template_name=str())
+    RESULT_COMMENT_UPDATE = SimpleNamespace(comment_type=str(), comment=str())
 
 
 class Server:
@@ -466,6 +467,27 @@ class Server:
                                    method="DELETE")
 
     @classmethod
-    def update_comment(cls, test_data_id: str, result_id: int, body: dict) -> Munch:
-        url = f"/test_data/{test_data_id}/results/{result_id}/comment"
+    def save_test_results(cls, test_data_id: str, name: str) -> Munch:
+        return cls._request_with_exception(f"/test_data/{test_data_id}/save_results", method="POST",
+                                           json={"name": name})
+
+    @classmethod
+    def get_test_result_list(cls) -> Munch:
+        return cls._request_with_exception("/test_results")
+
+    @classmethod
+    def get_test_result_by_name(cls, name: str) -> Munch:
+        return cls._request_with_exception("/test_results", params={"name": name})
+
+    @classmethod
+    def update_comment(cls, test_result_id: str, body: dict) -> Munch:
+        url = f"/test_results/{test_result_id}/comment"
         return cls._request_with_exception(url, method="POST", json=body)
+
+    @classmethod
+    def get_comment(cls, test_result_id: str) -> Munch:
+        return cls._request_with_exception(f"/test_results/{test_result_id}")
+
+    @classmethod
+    def delete_test_result(cls, name: str) -> Munch:
+        return cls._request_with_exception(f"/test_results/delete", method="DELETE", params={"name": name})

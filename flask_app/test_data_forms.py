@@ -3,7 +3,7 @@ from typing import List
 from flask import request
 from flask_login import current_user
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, BooleanField, IntegerField, SelectField, TextAreaField
+from wtforms import StringField, SubmitField, BooleanField, IntegerField, SelectField, TextAreaField, HiddenField
 from wtforms.validators import InputRequired, ValidationError, NumberRange, Length
 from wtforms.widgets import Input
 
@@ -124,6 +124,7 @@ class TestDataForm(FlaskForm):
 
 
 class DeleteForm(FlaskForm):
+    deleted_item = HiddenField()
     submit = SubmitField("Yes - Delete")
 
 

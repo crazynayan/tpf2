@@ -14,33 +14,39 @@
     </div>
     <br>
     <div class="row">
-        <div class="col-md-3">
+        <div class="col-md-2">
             <a class="btn btn-primary btn-block text-center"
                href="{{ url_for('run_test_data', test_data_id=test_data.id) }}">
-                <span class="oi oi-task"></span> Run Test Data
+                <span class="oi oi-task"></span> Run
             </a>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
+            <a class="btn btn-success btn-block text-center"
+               href="{{ url_for('save_test_results', test_data_id=test_data.id, name=test_data.name) }}">
+                <span class="oi oi-tag"></span> Save
+            </a>
+        </div>
+        <div class="col-md-2">
             <a class="btn btn-success btn-block text-center"
                href="{{ url_for('copy_test_data', test_data_id=test_data.id) }}">
-                <span class="oi oi-clipboard"></span> Copy Test Data
+                <span class="oi oi-clipboard"></span> Copy
             </a>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <a class="btn btn-warning btn-block text-center {{ test_data.class_display }}"
                href="{{ url_for('confirm_test_data', test_data_id=test_data.id) }}">
-                <span class="oi oi-pencil"></span> Edit Test Data
+                <span class="oi oi-pencil"></span> Edit
             </a>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             {% if test_data.class_display %}
                 <a class="btn btn-danger btn-block text-center {{ test_data.class_display }}">
-                    <span class="oi oi-trash"></span> Delete Test Data
+                    <span class="oi oi-trash"></span> Delete
                 </a>
             {% else %}
                 <button type="button" id="deleteTestDataButton" class="btn btn-block btn-danger"
                         data-toggle="modal" data-target="#deleteConfirmation">
-                    <span class="oi oi-trash"></span> Delete Test Data
+                    <span class="oi oi-trash"></span> Delete
                 </button>
             {% endif %}
         </div>
