@@ -9,7 +9,7 @@ from wtforms import BooleanField
 
 from flask_app import tpf2_app
 from flask_app.server import Server
-from flask_app.template_forms import CommentUpdateForm
+from flask_app.template_forms import CommentUpdateForm, SaveResultForm
 from flask_app.test_data_forms import DeleteForm, TestDataForm, FieldSearchForm, FieldLengthForm, \
     RegisterForm, RegisterFieldDataForm, TpfdfForm, DebugForm, \
     FixedFileForm, PnrOutputForm, HeapForm, EcbLevelForm, UpdateHexFieldDataForm, MacroForm, UpdateMacroForm, \
@@ -112,14 +112,17 @@ def run_test_data(test_data_id: str):
     return render_template("test_data_variation.html", title="Results", test_data=test_data)
 
 
-@tpf2_app.route("/test_results/<test_data_id>/save_test_results")
+@tpf2_app.route("/test_results/<test_data_id>/save_test_results", methods=["GET", "POST"])
 @cookie_login_required
 @error_check
 def save_test_results(test_data_id: str):
     name = request.args.get("name", str())
-    rsp = Server.save_test_results(test_data_id, name)
-    flash_message(rsp)
-    return redirect(url_for("get_test_results"))
+    seg_name = request.args.get("seg_name", str())
+    form = SaveResultForm(test_data_id, name, seg_name)
+    if not form.validate_on_submit():
+        return render_template("test_data_form.html", test_data_id=test_data_id, form=form, title="Save Test Result")
+    flash_message(form.response)
+    return redirect(url_for("get_test_results", name=name))
 
 
 @tpf2_app.route("/test_results/<test_result_id>/comment", methods=["GET", "POST"])

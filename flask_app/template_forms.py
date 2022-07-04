@@ -395,3 +395,22 @@ class CommentUpdateForm(FlaskForm):
 
     def validate_comment(self, _):
         evaluate_error(self.response, ["comment", "comment_type"], message=True)
+
+
+class SaveResultForm(FlaskForm):
+    name = StringField("Enter Test Result Name (It must be unique)")
+    save = SubmitField("Save Test Result")
+
+    def __init__(self, test_data_id, test_data_name, seg_name, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.display_fields = list()
+        self.display_fields.append(("Test Data Name", test_data_name))
+        self.display_fields.append(("Start Seg", seg_name))
+        self.response = Munch()
+        if request.method == "POST":
+            self.response = Server.save_test_results(test_data_id, self.name.data)
+        else:
+            self.name.data = test_data_name
+
+    def validate_name(self, _):
+        evaluate_error(self.response, "name", message=True)
