@@ -26,10 +26,12 @@
         <tr>
             <th scope="col">
                 Overall Comment for the whole result
-                <a class="badge badge-warning badge-pill"
-                   href="{{ url_for('update_comment', test_result_id=tr.results[0].id, comment_type='general_comment') }}">
-                    <span class="oi oi-pencil"></span> Edit
-                </a>
+                {% if current_user.email == tr.results[0].owner %}
+                    <a class="badge badge-warning badge-pill"
+                       href="{{ url_for('update_comment', test_result_id=tr.results[0].id, comment_type='general_comment') }}">
+                        <span class="oi oi-pencil"></span> Edit
+                    </a>
+                {% endif %}
             </th>
         </tr>
         </thead>
@@ -129,10 +131,12 @@
                 {% endif %}
                 <td>
                     {{ result.user_comment }}
-                    <a class="badge badge-warning badge-pill"
-                       href="{{ url_for('update_comment', test_result_id=result.id, comment_type='user_comment') }}">
-                        <span class="oi oi-pencil"></span> Edit
-                    </a>
+                    {% if current_user.email == tr.results[0].owner %}
+                        <a class="badge badge-warning badge-pill"
+                           href="{{ url_for('update_comment', test_result_id=result.id, comment_type='user_comment') }}">
+                            <span class="oi oi-pencil"></span> Edit
+                        </a>
+                    {% endif %}
                 </td>
             </tr>
         {% endfor %}
@@ -201,10 +205,12 @@
                     {% endfor %}
                     <td>
                         {{ result.core_comment }}
-                        <a class="badge badge-warning badge-pill"
-                           href="{{ url_for('update_comment', test_result_id=result.id, comment_type='core_comment') }}">
-                            <span class="oi oi-pencil"></span> Edit
-                        </a>
+                        {% if current_user.email == tr.results[0].owner %}
+                            <a class="badge badge-warning badge-pill "
+                               href="{{ url_for('update_comment', test_result_id=result.id, comment_type='core_comment') }}">
+                                <span class="oi oi-pencil"></span> Edit
+                            </a>
+                        {% endif %}
                     </td>
                 </tr>
             {% endfor %}
@@ -275,10 +281,12 @@
                     {% endfor %}
                     <td>
                         {{ result.pnr_comment }}
-                        <a class="badge badge-warning badge-pill"
-                           href="{{ url_for('update_comment', test_result_id=result.id, comment_type='pnr_comment') }}">
-                            <span class="oi oi-pencil"></span> Edit
-                        </a>
+                        {% if current_user.email == tr.results[0].owner %}
+                            <a class="badge badge-warning badge-pill"
+                               href="{{ url_for('update_comment', test_result_id=result.id, comment_type='pnr_comment') }}">
+                                <span class="oi oi-pencil"></span> Edit
+                            </a>
+                        {% endif %}
                     </td>
                 </tr>
             {% endfor %}
