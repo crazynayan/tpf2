@@ -15,7 +15,8 @@
                 <th class="" scope="col">Name</th>
                 <th class="text-center d-none d-md-table-cell" scope="col">Segment</th>
                 <th class="text-center d-none d-md-table-cell" scope="col">Owner</th>
-                <th class="text-center" scope="col">Action</th>
+                <th class="text-center" scope="col">Open</th>
+                <th class="text-center" scope="col">Delete</th>
             </tr>
             </thead>
             <tbody>
@@ -29,11 +30,14 @@
                         <a class="btn btn-primary"
                            href="{{ url_for('get_test_results', name=test_result.name) }}"
                            title="Open Test Data">
-                            <span class="oi oi-target"></span> Open
+                            <span class="oi oi-target"></span>
                         </a>
+                    </td>
+                    <td class="text-center">
                         <button type="button" class="btn btn-danger" data-toggle="modal"
-                                data-target="#deleteConfirmation" data-delete-name="{{ test_result.name }}">
-                            <span class="oi oi-trash"></span> Delete
+                                data-target="#deleteConfirmation" data-delete-name="{{ test_result.name }}"
+                                {% if current_user.email != test_result.owner %}disabled{% endif %}>
+                            <span class="oi oi-trash"></span>
                         </button>
                     </td>
                 </tr>
