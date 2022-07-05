@@ -122,7 +122,7 @@ def save_test_results(test_data_id: str):
     if not form.validate_on_submit():
         return render_template("test_data_form.html", test_data_id=test_data_id, form=form, title="Save Test Result")
     flash_message(form.response)
-    return redirect(url_for("get_test_results", name=name))
+    return redirect(url_for("get_test_results", name=form.name.data))
 
 
 @tpf2_app.route("/test_results/<test_result_id>/comment", methods=["GET", "POST"])
