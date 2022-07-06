@@ -1,3 +1,8 @@
+from typing import Union
+
+from munch import Munch
+from wtforms import ValidationError
+
 VARIATION_PROMPT: str = "Select variation or choose 'New Variation' to create a new variation"
 VARIATION_NAME_PROMPT: str = "New Variation Name - Leave it blank for existing variation"
 
@@ -10,6 +15,11 @@ Enter multiple fields and data separated by comma. The field and data should be 
 MACRO_FIELD_DATA_PROMPT: str = """
 Enter multiple fields and data separated by comma. The field and data should be separated by colon. 
 Data should be in hex format. An e.g. is as follows WA0POR:000DF3,WA0ET2:40
+"""
+
+ECB_FIELD_DATA_PROMPT: str = """
+Enter multiple ECB fields and data separated by comma. The field and data should be separated by colon. 
+Data should be in hex format. An e.g. is as follows EBW000:010203,EBSW01:60
 """
 
 PNR_OUTPUT_FIELD_DATA_PROMPT: str = """
@@ -46,3 +56,16 @@ GLOBAL_FIELD_DATA_PROMPT: str = """
 
 TEMPLATE_NAME_PROMPT: str = "Enter a name that uniquely identifies your template"
 TEMPLATE_DESCRIPTION_PROMPT: str = "Enter the purpose of the template"
+
+
+def evaluate_error(response: Munch, field: Union[list, str], message: bool = False) -> None:
+    if response.get("error", True) is False:
+        return
+    if message and response.message:
+        raise ValidationError(response.message)
+    fields = field if isinstance(field, list) else [field]
+    for field_name in fields:
+        msg = response.error_fields.get(field_name, str())
+        if msg:
+            raise ValidationError(msg)
+    return

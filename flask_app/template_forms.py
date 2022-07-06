@@ -1,31 +1,17 @@
 from types import SimpleNamespace
-from typing import Union
 
 from flask import request
 from flask_wtf import FlaskForm
 from munch import Munch
-from wtforms import SelectField, StringField, TextAreaField, SubmitField, ValidationError, HiddenField, BooleanField
+from wtforms import SelectField, StringField, TextAreaField, SubmitField, HiddenField, BooleanField
 
 from config import Config
 from flask_app.form_prompts import PNR_KEY_PROMPT, PNR_LOCATOR_PROMPT, PNR_TEXT_PROMPT, PNR_INPUT_FIELD_DATA_PROMPT, \
     TEMPLATE_NAME_PROMPT, TEMPLATE_DESCRIPTION_PROMPT, VARIATION_PROMPT, VARIATION_NAME_PROMPT, GLOBAL_NAME_PROMPT, \
     IS_GLOBAL_RECORD_PROMPT, GLOBAL_HEX_DATA_PROMPT, GLOBAL_SEG_NAME_PROMPT, GLOBAL_FIELD_DATA_PROMPT, \
-    MACRO_FIELD_DATA_PROMPT
+    MACRO_FIELD_DATA_PROMPT, evaluate_error
 from flask_app.server import Server, RequestType
 from flask_app.template_constants import PNR, GLOBAL, AAA, LINK_UPDATE
-
-
-def evaluate_error(response: Munch, field: Union[list, str], message: bool = False) -> None:
-    if response.get("error", True) is False:
-        return
-    if message and response.message:
-        raise ValidationError(response.message)
-    fields = field if isinstance(field, list) else [field]
-    for field_name in fields:
-        msg = response.error_fields.get(field_name, str())
-        if msg:
-            raise ValidationError(msg)
-    return
 
 
 def init_body(form_data: dict, request_type: SimpleNamespace) -> Munch:

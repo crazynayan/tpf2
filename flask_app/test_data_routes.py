@@ -346,14 +346,14 @@ def delete_global(test_data_id: str, core_id: str):
 
 @tpf2_app.route("/test_data/<string:test_data_id>/input/macro", methods=["GET", "POST"])
 @cookie_login_required
+@error_check
 def add_macro(test_data_id: str):
-    form = MacroForm(test_data_id)
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
+    macro_name = request.args.get("macro_name", str())
+    form = MacroForm(test_data_id, macro_name)
     if not form.validate_on_submit():
-        return render_template("test_data_form.html", title="Add Fields", form=form,
+        return render_template("test_data_form.html", title=f"Add {macro_name} Fields", form=form,
                                test_data_id=test_data_id)
-    flash(form.response["message"])
+    flash_message(form.response)
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
 
 

@@ -12,7 +12,7 @@ from flask_app import tpf2_app
 from flask_app.form_prompts import OLD_FIELD_DATA_PROMPT, PNR_OUTPUT_FIELD_DATA_PROMPT, PNR_INPUT_FIELD_DATA_PROMPT, \
     PNR_KEY_PROMPT, PNR_LOCATOR_PROMPT, PNR_TEXT_PROMPT, VARIATION_PROMPT, VARIATION_NAME_PROMPT, GLOBAL_NAME_PROMPT, \
     IS_GLOBAL_RECORD_PROMPT, GLOBAL_HEX_DATA_PROMPT, GLOBAL_SEG_NAME_PROMPT, GLOBAL_FIELD_DATA_PROMPT, \
-    MACRO_FIELD_DATA_PROMPT
+    MACRO_FIELD_DATA_PROMPT, ECB_FIELD_DATA_PROMPT, evaluate_error
 from flask_app.server import Server
 
 
@@ -248,36 +248,27 @@ class HeapForm(FlaskForm):
 class MacroForm(FlaskForm):
     variation = SelectField(VARIATION_PROMPT, coerce=int)
     variation_name = StringField(VARIATION_NAME_PROMPT)
-    macro_name = SelectField("Select a data macro", validators=[InputRequired()])
     field_data = TextAreaField(MACRO_FIELD_DATA_PROMPT, render_kw={"rows": "5"})
     save = SubmitField("Save & Continue - Add Further Data")
 
-    def __init__(self, test_data_id: str, *args, **kwargs):
+    def __init__(self, test_data_id: str, macro_name: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         body = init_variation(self.variation, self.variation_name, test_data_id, "core")
+        if macro_name == "EB0EB":
+            self.field_data.label.text = ECB_FIELD_DATA_PROMPT
         self.response: dict = dict()
-        self.macro_name.choices = [(macro_name, macro_name) for macro_name in Config.DEFAULT_MACROS]
         if request.method == "POST":
-            body["macro_name"] = self.macro_name.data
+            body["macro_name"] = macro_name
             body["field_data"] = self.field_data.data
             self.response = Server.add_input_macro(test_data_id, body)
 
     def validate_variation(self, variation):
-        if "error" in self.response and self.response["error"] and \
-                "message" in self.response and self.response["message"]:
-            raise ValidationError(self.response["message"])
-        if "error_fields" in self.response and "variation" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["variation"])
+        evaluate_error(self.response, "variation", message=True)
         if variation.data == -1:
             variation.data = 0
 
-    def validate_macro_name(self, _) -> None:
-        if "error_fields" in self.response and "macro_name" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["macro_name"])
-
     def validate_field_data(self, _):
-        if "error_fields" in self.response and "field_data" in self.response["error_fields"]:
-            raise ValidationError(self.response["error_fields"]["field_data"])
+        evaluate_error(self.response, "field_data")
 
 
 class EcbLevelForm(FlaskForm):
