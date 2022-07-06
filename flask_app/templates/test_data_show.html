@@ -250,55 +250,55 @@
                             Input - Fields
                         </div>
                         <div class="col-md-1">
-                            <a class="badge badge-success badge-pill "
+                            <a class="badge badge-success badge-pill" title="Add Global"
                                href="{{ url_for('add_global', test_data_id=test_data.id) }}">
                                 <span class="oi oi-plus"></span> Global
                             </a>
                         </div>
                         <div class="col-md-1">
-                            <a class="badge badge-warning badge-pill"
+                            <a class="badge badge-warning badge-pill" title="Merge Global Template"
                                href="{{ url_for('merge_link_template', test_data_id=test_data.id, template_type='Global', action_type='merge') }}">
                                 <span class="oi oi-loop"></span> Global
                             </a>
                         </div>
                         <div class="col-md-1">
-                            <a class="badge badge-warning badge-pill"
+                            <a class="badge badge-warning badge-pill" title="Link Global Template"
                                href="{{ url_for('merge_link_template', test_data_id=test_data.id, template_type='Global', action_type='link') }}">
                                 <span class="oi oi-link-intact"></span> Global
                             </a>
                         </div>
                         <div class="col-md-1">
-                            <a class="badge badge-success badge-pill"
-                               href="{{ url_for('add_macro', test_data_id=test_data.id) }}">
+                            <a class="badge badge-success badge-pill" title="Add AAA field"
+                               href="{{ url_for('add_macro', test_data_id=test_data.id, macro_name="WA0AA") }}">
                                 <span class="oi oi-plus"></span> AAA
                             </a>
                         </div>
                         <div class="col-md-1">
-                            <a class="badge badge-warning badge-pill"
+                            <a class="badge badge-warning badge-pill" title="Merge AAA Template"
                                href="{{ url_for('merge_link_template', test_data_id=test_data.id, template_type='AAA', action_type='merge') }}">
                                 <span class="oi oi-loop"></span> AAA
                             </a>
                         </div>
                         <div class="col-md-1">
-                            <a class="badge badge-warning badge-pill"
+                            <a class="badge badge-warning badge-pill" title="Link AAA Template"
                                href="{{ url_for('merge_link_template', test_data_id=test_data.id, template_type='AAA', action_type='link') }}">
                                 <span class="oi oi-link-intact"></span> AAA
                             </a>
                         </div>
                         <div class="col-md-1">
-                            <a class="badge badge-success badge-pill"
+                            <a class="badge badge-success badge-pill" title="Add Heap"
                                href="{{ url_for('add_heap', test_data_id=test_data.id) }}">
                                 <span class="oi oi-plus"></span> Heap
                             </a>
                         </div>
                         <div class="col-md-1">
-                            <a class="badge badge-success badge-pill"
-                               href="{{ url_for('add_macro', test_data_id=test_data.id) }}">
+                            <a class="badge badge-success badge-pill" title="Add ECB Field"
+                               href="{{ url_for('add_macro', test_data_id=test_data.id, macro_name="EB0EB") }}">
                                 <span class="oi oi-plus"></span> ECB Field
                             </a>
                         </div>
                         <div class="col-md-1">
-                            <a class="badge badge-success badge-pill"
+                            <a class="badge badge-success badge-pill" title="Add ECB Level"
                                href="{{ url_for('add_ecb_level', test_data_id=test_data.id) }}">
                                 <span class="oi oi-plus"></span> ECB Level
                             </a>
