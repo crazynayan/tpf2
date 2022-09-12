@@ -1,5 +1,3 @@
-from types import SimpleNamespace
-
 from flask import request
 from flask_wtf import FlaskForm
 from munch import Munch
@@ -9,16 +7,9 @@ from config import Config
 from flask_app.form_prompts import PNR_KEY_PROMPT, PNR_LOCATOR_PROMPT, PNR_TEXT_PROMPT, PNR_INPUT_FIELD_DATA_PROMPT, \
     TEMPLATE_NAME_PROMPT, TEMPLATE_DESCRIPTION_PROMPT, VARIATION_PROMPT, VARIATION_NAME_PROMPT, GLOBAL_NAME_PROMPT, \
     IS_GLOBAL_RECORD_PROMPT, GLOBAL_HEX_DATA_PROMPT, GLOBAL_SEG_NAME_PROMPT, GLOBAL_FIELD_DATA_PROMPT, \
-    MACRO_FIELD_DATA_PROMPT, evaluate_error
+    MACRO_FIELD_DATA_PROMPT, evaluate_error, init_body
 from flask_app.server import Server, RequestType
 from flask_app.template_constants import PNR, GLOBAL, AAA, LINK_UPDATE
-
-
-def init_body(form_data: dict, request_type: SimpleNamespace) -> Munch:
-    body = Munch()
-    for field_name in request_type.__dict__:
-        body[field_name] = form_data.get(field_name)
-    return body
 
 
 class PnrCreateForm(FlaskForm):

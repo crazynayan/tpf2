@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from typing import Union
 
 from munch import Munch
@@ -69,3 +70,10 @@ def evaluate_error(response: Munch, field: Union[list, str], message: bool = Fal
         if msg:
             raise ValidationError(msg)
     return
+
+
+def init_body(form_data: dict, request_type: SimpleNamespace) -> Munch:
+    body = Munch()
+    for field_name in request_type.__dict__:
+        body[field_name] = form_data.get(field_name)
+    return body

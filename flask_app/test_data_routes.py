@@ -143,26 +143,13 @@ def update_comment(test_result_id: str):
 
 @tpf2_app.route("/test_data/create", methods=["GET", "POST"])
 @cookie_login_required
+@error_check
 def create_test_data():
     form = TestDataForm()
-    form_validation_successful = form.validate_on_submit()
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    if not form_validation_successful:
+    if not form.validate_on_submit():
         return render_template("test_data_form.html", title="Create Test Data", form=form)
-    test_data: dict = {
-        "name": form.name.data,
-        "seg_name": form.seg_name.data,
-        "owner": current_user.email,
-        "stop_segments": form.stop_segment_list,
-    }
-    response: dict = Server.create_test_data(test_data)
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    if not response:
-        flash("Error in creating test data")
-        return redirect(url_for("create_test_data"))
-    return redirect(url_for("confirm_test_data", test_data_id=response["id"]))
+    flash_message(form.response)
+    return redirect(url_for("confirm_test_data", test_data_id=form.response.id))
 
 
 @tpf2_app.route("/test_data/<string:test_data_id>/copy")
@@ -185,13 +172,7 @@ def rename_test_data(test_data_id, **kwargs):
     if not form.validate_on_submit():
         return render_template("test_data_form.html", title="Edit Test Data Header", form=form,
                                test_data_id=test_data_id)
-    response: dict = Server.rename_test_data(test_data_id, {"name": form.name.data, "seg_name": form.seg_name.data,
-                                                            "stop_segments": form.stop_segment_list})
-    if not current_user.is_authenticated:
-        return redirect(url_for("logout"))
-    if not response:
-        flash("Error in renaming test data")
-        return redirect(url_for("rename_test_data", test_data_id=test_data_id))
+    flash_message(form.response)
     return redirect(url_for("confirm_test_data", test_data_id=test_data_id))
 
 

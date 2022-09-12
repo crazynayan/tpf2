@@ -29,6 +29,7 @@ class RequestType:
     TEMPLATE_LINK_UPDATE = SimpleNamespace(variation=int(), new_template_name=str(), template_name=str())
     TEMPLATE_LINK_DELETE = SimpleNamespace(variation=int(), template_name=str())
     RESULT_COMMENT_UPDATE = SimpleNamespace(comment_type=str(), comment=str())
+    TEST_DATA_CREATE = SimpleNamespace(name=str(), seg_name=str(), stop_segments=str(), startup_script=str())
 
 
 class Server:
@@ -187,8 +188,7 @@ class Server:
             return dict()
         test_data["outputs"] = test_data["outputs"][0]
         test_data["class_display"] = "disabled" if test_data["owner"] != current_user.email else str()
-        test_data["stop_seg_string"] = ", ".join(test_data["stop_segments"]) if test_data["stop_segments"] else \
-            "No Stop Segments"
+        test_data["stop_seg_string"] = ", ".join(test_data["stop_segments"]) if test_data["stop_segments"] else str()
         test_data["cores"].sort(key=lambda item: (item["variation"], item["ecb_level"], item["heap_name"],
                                                   item["macro_name"], item["global_name"]))
         test_data["pnr"].sort(key=lambda item: (item["variation"], item["locator"], item["key"]))
@@ -231,12 +231,12 @@ class Server:
         return cls._common_request(f"/fields/{field_name}")
 
     @classmethod
-    def create_test_data(cls, header: dict) -> dict:
-        return cls._common_request(f"/test_data", method="POST", json=header)
+    def create_test_data(cls, header: dict) -> Munch:
+        return cls._request_with_exception(f"/test_data", method="POST", json=header)
 
     @classmethod
     def rename_test_data(cls, test_data_id: str, header: dict):
-        return cls._common_request(f"/test_data/{test_data_id}/rename", method="PATCH", json=header)
+        return cls._request_with_exception(f"/test_data/{test_data_id}/rename", method="POST", json=header)
 
     @classmethod
     def copy_test_data(cls, test_data_id: str):

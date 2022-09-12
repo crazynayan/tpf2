@@ -3,6 +3,7 @@ from typing import List
 from flask import request
 from flask_login import current_user
 from flask_wtf import FlaskForm
+from munch import Munch
 from wtforms import StringField, SubmitField, BooleanField, IntegerField, SelectField, TextAreaField, HiddenField
 from wtforms.validators import InputRequired, ValidationError, NumberRange, Length
 from wtforms.widgets import Input
@@ -12,8 +13,8 @@ from flask_app import tpf2_app
 from flask_app.form_prompts import OLD_FIELD_DATA_PROMPT, PNR_OUTPUT_FIELD_DATA_PROMPT, PNR_INPUT_FIELD_DATA_PROMPT, \
     PNR_KEY_PROMPT, PNR_LOCATOR_PROMPT, PNR_TEXT_PROMPT, VARIATION_PROMPT, VARIATION_NAME_PROMPT, GLOBAL_NAME_PROMPT, \
     IS_GLOBAL_RECORD_PROMPT, GLOBAL_HEX_DATA_PROMPT, GLOBAL_SEG_NAME_PROMPT, GLOBAL_FIELD_DATA_PROMPT, \
-    MACRO_FIELD_DATA_PROMPT, ECB_FIELD_DATA_PROMPT, evaluate_error
-from flask_app.server import Server
+    MACRO_FIELD_DATA_PROMPT, ECB_FIELD_DATA_PROMPT, evaluate_error, init_body
+from flask_app.server import Server, RequestType
 
 
 def form_validate_field_data(data: str) -> str:
@@ -79,48 +80,36 @@ def form_validate_macro_name(macro_name: str) -> str:
 
 
 class TestDataForm(FlaskForm):
-    name = StringField("Name of Test Data (Must be unique in the system)", validators=[InputRequired()])
-    seg_name = StringField("Segment Name (Must exists in the system)", validators=[InputRequired()])
+    name = StringField("Name of Test Data (Must be unique in the system)")
+    seg_name = StringField("Segment Name (Must exists in the system)")
     stop_segments = StringField("Stop Segment Name List (Separate multiple segments with comma). Optional")
+    startup_script = TextAreaField("Enter script in ASM to run at startup", render_kw={"rows": "7"})
     save = SubmitField("Save & Continue - Add Further Data")
 
     def __init__(self, test_data: dict = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.segments: List[str] = list()
-        self.stop_segment_list: List[str] = list()
-        self.test_data: dict = test_data if test_data else dict()
+        if request.method == "POST":
+            body = init_body(self.data, RequestType.TEST_DATA_CREATE)
+            self.response: Munch = Server.create_test_data(body) if not test_data \
+                else Server.rename_test_data(test_data["id"], body)
         if test_data and request.method == "GET":
             self.name.data = test_data["name"]
             self.seg_name.data = test_data["seg_name"]
-            stop_segments: List[str] = test_data["stop_segments"]
-            self.stop_segments.data = ", ".join(stop_segments)
+            # stop_segments: List[str] = test_data["stop_segments"]
+            self.stop_segments.data = test_data["stop_seg_string"]
+            self.startup_script.data = test_data["startup_script"]
 
-    def validate_seg_name(self, seg_name: StringField):
-        seg_name.data = seg_name.data.upper()
-        segment: str = seg_name.data
-        if not self.segments:
-            response = Server.segments()
-            self.segments: List[str] = response["segments"] if "segments" in response else list()
-        if segment not in self.segments:
-            raise ValidationError(f"{segment} not found")
-        return
+    def validate_name(self, _):
+        evaluate_error(self.response, "name", message=True)
 
-    def validate_stop_segments(self, stop_segments: StringField):
-        stop_segments.data = stop_segments.data.upper().strip()
-        if not stop_segments.data:
-            return
-        self.stop_segment_list: List[str] = stop_segments.data.split(",")
-        self.stop_segment_list = [segment.strip() for segment in self.stop_segment_list]
-        invalid_segments: List[str] = [segment for segment in self.stop_segment_list
-                                       if len(segment) != 4 or not segment.isalnum()]
-        if invalid_segments:
-            raise ValidationError(f"{', '.join(invalid_segments)} are invalid segments.")
-        return
+    def validate_seg_name(self, _):
+        evaluate_error(self.response, "seg_name")
 
-    def validate_name(self, name: StringField):
-        if (not self.test_data or self.test_data["name"] != name.data) and Server.get_test_data_by_name(name.data):
-            raise ValidationError(f"The name '{name.data}' already exists - Please use an unique name")
-        return
+    def validate_stop_segments(self, _):
+        evaluate_error(self.response, "stop_segments")
+
+    def validate_startup_script(self, _):
+        evaluate_error(self.response, "startup_script")
 
 
 class DeleteForm(FlaskForm):

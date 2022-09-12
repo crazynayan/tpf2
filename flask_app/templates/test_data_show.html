@@ -42,9 +42,26 @@
             Stop
         </div>
         <div class="col-md-10">
-            {{ test_data.stop_seg_string }}
+            {% if test_data.stop_segments %}
+                {{ test_data.stop_seg_string }}
+            {% else %}
+                No Stop Segments
+            {% endif %}
         </div>
     </div>
+    <div class="row">
+        <div class="col-md-2 text-center font-weight-bold">
+            Startup
+        </div>
+        <div class="col-md-10">
+            {% if test_data.startup_script %}
+                Startup Script exists. Edit Header to view the script.
+            {% else %}
+                No Startup Script
+            {% endif %}
+        </div>
+    </div>
+
     {% if output %}
         {#  Debug #}
         {% if edit_mode or test_data.outputs.debug %}
