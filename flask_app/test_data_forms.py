@@ -674,7 +674,7 @@ class DebugForm(FlaskForm):
         segments: List[str] = response["segments"] if "segments" in response else list()
         for seg_name in seg_list.data.split(","):
             seg_name = seg_name.upper()
-            if seg_name not in segments:
+            if seg_name not in segments and seg_name != "STARTUP":
                 raise ValidationError(f"Segment {seg_name} not present in the database")
             updated_seg_list.append(seg_name)
         seg_list.data = ",".join(updated_seg_list)
