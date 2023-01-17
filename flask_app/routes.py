@@ -32,11 +32,11 @@ def upload_segments():
     if not form.validate_on_submit():
         if not current_user.is_authenticated:
             return redirect(url_for("logout"))
-        return render_template("upload_form.html", form=form, title="Upload Listing", response=dict())
+        return render_template("upload_form.html", form=form, title="Upload", response=dict())
     response: dict = Server.upload_segment(form.blob_name)
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
-    return render_template("upload_form.html", form=form, title="Upload Listing", response=response)
+    return render_template("upload_form.html", form=form, title="Upload", response=response)
 
 
 @tpf2_app.route("/segments/<string:seg_name>/instructions")

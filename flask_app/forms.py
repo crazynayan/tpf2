@@ -12,7 +12,7 @@ from flask_app.server import Server
 
 
 class UploadForm(FlaskForm):
-    listing = FileField("Choose file only with lst extension", validators=[FileAllowed(["lst"])])
+    listing = FileField("Choose file only with asm or lst extension", validators=[FileAllowed(["lst", "asm"])])
     submit = SubmitField("Upload")
 
     def __init__(self, *args, **kwargs):
