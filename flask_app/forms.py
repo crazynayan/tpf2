@@ -1,4 +1,5 @@
 import os
+from types import SimpleNamespace
 
 from flask_login import current_user
 from flask_wtf import FlaskForm
@@ -9,6 +10,27 @@ from wtforms import FileField, SubmitField, ValidationError
 
 from config import Config
 from flask_app.server import Server
+
+
+class Bucket:
+    BUCKETS = SimpleNamespace()
+    BUCKETS.GENERAL = "tpf-general"
+    BUCKETS.SABRE = "tpf-listings"
+    BUCKETS.SML = "tpf-sml"
+    DOMAINS = SimpleNamespace()
+    DOMAINS.GENERAL = "general"
+    DOMAINS.BASE = "base"
+    DOMAINS.SABRE = "sabre"
+    DOMAINS.SML = "sml"
+
+    @classmethod
+    def get_bucket(cls):
+        domain = current_user.domain
+        if domain == cls.DOMAINS.SABRE:
+            return cls.BUCKETS.SABRE
+        elif domain == cls.DOMAINS.SML:
+            return cls.BUCKETS.SML
+        return cls.BUCKETS.GENERAL
 
 
 class UploadForm(FlaskForm):
@@ -35,6 +57,6 @@ class UploadForm(FlaskForm):
         file_storage.save(file_path)
         # noinspection PyPackageRequirements
         from google.cloud.storage import Client
-        blob = Client().bucket(Config.BUCKET).blob(filename)
+        blob = Client().bucket(Bucket.get_bucket()).blob(filename)
         blob.upload_from_filename(file_path)
         self.blob_name = filename

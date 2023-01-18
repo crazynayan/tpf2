@@ -49,15 +49,18 @@ def error_check(route_function):
 class User(UserMixin):
     SEPARATOR: str = "|"
 
-    def __init__(self, email: str = None, api_key: str = None, initial: str = None, role: str = None):
+    def __init__(self, email: str = None, api_key: str = None, initial: str = None, role: str = None,
+                 domain: str = None):
         super().__init__()
         self.email: str = email.replace(self.SEPARATOR, "") if email else str()
         self.api_key: str = api_key if api_key else str()
         self.initial: str = initial if initial else str()
         self.role: str = role if role else str()
+        self.domain: str = domain if domain else str()
 
     def __repr__(self):
-        return f"{self.email}{self.SEPARATOR}{self.api_key}{self.SEPARATOR}{self.initial}{self.SEPARATOR}{self.role}"
+        return f"{self.email}{self.SEPARATOR}{self.api_key}{self.SEPARATOR}{self.initial}{self.SEPARATOR}{self.role}" \
+               f"{self.SEPARATOR}{self.domain}"
 
     def check_password(self, password: str) -> bool:
         user_response: dict = Server().authenticate(self.email, password)
@@ -67,6 +70,7 @@ class User(UserMixin):
             self.email = user_response["email"].replace(self.SEPARATOR, "")
             self.initial = user_response["initial"].replace(self.SEPARATOR, "")
             self.role = user_response["role"].replace(self.SEPARATOR, "")
+            self.domain = user_response["domain"].replace(self.SEPARATOR, "")
             self.api_key = user_response["token"].replace(self.SEPARATOR, "")
         except KeyError:
             return False
@@ -80,8 +84,8 @@ class User(UserMixin):
 def load_user(user_data: str) -> Optional[User]:
     if User.SEPARATOR not in user_data:
         return None
-    email, token, initial, role = user_data.split(User.SEPARATOR)
-    return User(email, token, initial, role)
+    email, token, initial, role, domain = user_data.split(User.SEPARATOR)
+    return User(email, token, initial, role, domain)
 
 
 class LoginForm(FlaskForm):
