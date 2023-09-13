@@ -610,8 +610,8 @@ def add_fixed_file(test_data_id: str):
             pool_file["file_items"][0]["macro_name"] = form.pool_macro_name.data
             pool_file["file_items"][0]["field_data"] = _convert_field_data(form.pool_item_field_data.data)
             pool_file["file_items"][0]["count_field"] = form.pool_item_count.data
-            fixed_file["file_items"][0]["adjust"] = form.pool_item_adjust.data
-            fixed_file["file_items"][0]["repeat"] = form.pool_item_repeat.data
+            pool_file["file_items"][0]["adjust"] = form.pool_item_adjust.data
+            pool_file["file_items"][0]["repeat"] = form.pool_item_repeat.data
     if not Server.add_fixed_file(test_data_id, fixed_file):
         if not current_user.is_authenticated:
             return redirect(url_for("logout"))
