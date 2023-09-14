@@ -5,6 +5,12 @@
         <div class="col-md">
             <h1>{{ title }}</h1>
         </div>
+        <div class="col-md text-right">
+            <a class="btn btn-primary"
+               href="{{ url_for('get_my_test_data') }}">
+                <span class="oi oi-phone"> </span> Test Data
+            </a>
+        </div>
     </div>
     <br>
     {% if tr.headers %}

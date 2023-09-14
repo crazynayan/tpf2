@@ -62,7 +62,7 @@ def get_my_test_data():
     if not current_user.is_authenticated:
         return redirect(url_for("logout"))
     my_list = [test_data for test_data in test_data_list if test_data["owner"] == current_user.email]
-    return render_template("test_data_list.html", title="My Test Data", test_data_list=my_list, all_flag=False)
+    return render_template("test_data_list.html", title="Test Data", test_data_list=my_list, all_flag=False)
 
 
 @tpf2_app.route("/test_data/<string:test_data_id>", methods=["GET", "POST"])
@@ -94,7 +94,7 @@ def get_test_results():
     html = "test_result_list.html" if not name else "test_result_view.html"
     form = DeleteForm()
     if not form.validate_on_submit():
-        return render_template(html, title="Saved Test Results", tr=test_results, form=form)
+        return render_template(html, title="Test Results", tr=test_results, form=form)
     rsp = Server.delete_test_result(name=form.deleted_item.data)
     flash_message(rsp)
     return redirect(url_for("get_test_results"))

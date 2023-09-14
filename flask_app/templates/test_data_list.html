@@ -5,10 +5,22 @@
         <div class="col-md">
             <h1>{{ title }}</h1>
         </div>
-        <div class="col-md text-right">
-            <a class="btn btn-success text-right"
+        <div class="col-md">
+            <a class="btn btn-success"
                href="{{ url_for('create_test_data') }}">
                 <span class="oi oi-plus"> </span> Create Test Data
+            </a>
+        </div>
+        <div class="col-md">
+            <a class="btn btn-primary"
+               href="{{ url_for('get_all_test_data') }}">
+                <span class="oi oi-people"> </span> All Test Data
+            </a>
+        </div>
+        <div class="col-md text-right">
+            <a class="btn btn-primary"
+               href="{{ url_for('get_test_results') }}">
+                <span class="oi oi-tablet"> </span> Test Results
             </a>
         </div>
     </div>
